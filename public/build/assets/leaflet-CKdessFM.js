@@ -1,0 +1,1 @@
+import{l as e}from"./leaflet-src-AE7ZWHXA.js";import"./_commonjsHelpers-D6-XlEtG.js";const o="/build/assets/marker-icon-2x-_ZA0WGCc.png",r="/build/assets/marker-icon-hN30_KVU.png",a="/build/assets/marker-shadow-f7SaPCxT.png";delete e.Icon.Default.prototype._getIconUrl;e.Icon.Default.mergeOptions({iconRetinaUrl:o,iconUrl:r,shadowUrl:a});try{window.leaFlet=e}catch{}

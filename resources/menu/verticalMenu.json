@@ -1,0 +1,105 @@
+{
+  "menu": [
+    {
+      "name": "Dashboard GIS",
+      "icon": "menu-icon icon-base ti tabler-map-2",
+      "url": "/",
+      "slug": "gis.dashboard"
+    },
+    {
+      "name": "Peta GIS",
+      "icon": "menu-icon icon-base ti tabler-map",
+      "slug": "gis",
+      "submenu": [
+        {
+          "name": "Peta Interaktif",
+          "url": "gis/map",
+          "slug": "gis.map"
+        },
+        {
+          "name": "Lapisan GIS",
+          "url": "gis/layers",
+          "slug": "gis.layers"
+        }
+      ]
+    },
+    {
+      "name": "Laporan Insiden",
+      "icon": "menu-icon icon-base ti tabler-alert-triangle",
+      "slug": "incidents",
+      "submenu": [
+        {
+          "name": "Semua Insiden",
+          "url": "incidents",
+          "slug": "incidents.index"
+        },
+        {
+          "name": "Sinkhole",
+          "url": "incidents?category=sinkhole",
+          "slug": "incidents.index"
+        },
+        {
+          "name": "Cerun / Tanah Runtuh",
+          "url": "incidents?category=slope",
+          "slug": "incidents.index"
+        },
+        {
+          "name": "Tambah Insiden",
+          "url": "incidents/create",
+          "slug": "incidents.create"
+        }
+      ]
+    },
+    {
+      "name": "Survey & Upload",
+      "icon": "menu-icon icon-base ti tabler-upload",
+      "slug": "survey",
+      "submenu": [
+        {
+          "name": "Upload Data",
+          "url": "survey/upload",
+          "slug": "survey.upload"
+        },
+        {
+          "name": "Senarai Survey",
+          "url": "survey",
+          "slug": "survey.index"
+        }
+      ]
+    },
+    {
+      "name": "Engineer Review",
+      "icon": "menu-icon icon-base ti tabler-clipboard-check",
+      "slug": "engineer",
+      "submenu": [
+        {
+          "name": "Pending Review",
+          "url": "engineer/pending",
+          "slug": "engineer.pending"
+        },
+        {
+          "name": "Approved",
+          "url": "engineer/approved",
+          "slug": "engineer.approved"
+        }
+      ]
+    },
+    {
+      "name": "Pengurusan",
+      "icon": "menu-icon icon-base ti tabler-settings",
+      "slug": "admin",
+      "submenu": [
+        {
+          "name": "Pengguna",
+          "url": "admin/users",
+          "slug": "admin.users"
+        },
+        {
+          "name": "Tetapan",
+          "url": "admin/settings",
+          "slug": "admin.settings"
+        }
+      ]
+    }
+  ]
+}

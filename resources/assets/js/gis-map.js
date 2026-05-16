@@ -348,5 +348,42 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  /* ── Layers panel toggle ── */
+  const layersPanel = document.getElementById('gisLayersPanel');
+  const btnToggle = document.getElementById('btnToggleLayers');
+  const btnClose = document.getElementById('btnCloseLayers');
+  if (layersPanel && btnToggle) {
+    btnToggle.addEventListener('click', () => {
+      layersPanel.style.display = layersPanel.style.display === 'none' ? 'block' : 'none';
+    });
+    if (btnClose) {
+      btnClose.addEventListener('click', () => {
+        layersPanel.style.display = 'none';
+      });
+    }
+    let activeGisLayer = null;
+    document.querySelectorAll('.gis-layer-pick').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        if (!id) return;
+        fetch(`/api/layers/${id}/geojson`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (activeGisLayer) map.removeLayer(activeGisLayer);
+            activeGisLayer = L.geoJSON(data, {
+              style: {
+                color: '#60a5fa',
+                weight: 2.5,
+                opacity: 1,
+                fillColor: '#60a5fa',
+                fillOpacity: 0.25
+              }
+            }).addTo(map);
+            if (activeGisLayer.getBounds().isValid()) map.fitBounds(activeGisLayer.getBounds(), { padding: [20, 20] });
+          });
+      });
+    });
+  }
+
   setTimeout(() => map.invalidateSize(), 400);
 });

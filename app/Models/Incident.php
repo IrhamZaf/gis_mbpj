@@ -12,6 +12,12 @@ class Incident extends Model
 
     public const CATEGORY_SLOPE = 'slope';
 
+    /** Kod laporan cerun: CN1, CN2, … */
+    public const CODE_PREFIX_SLOPE = 'CN';
+
+    /** Kod laporan sinkhole: SH1, SH2, … */
+    public const CODE_PREFIX_SINKHOLE = 'SH';
+
     public const RISK_SAFE = 'selamat';
 
     public const RISK_MONITOR = 'pemantauan';
@@ -47,22 +53,26 @@ class Incident extends Model
             if ($incident->incident_number) {
                 return;
             }
-            $prefix = $incident->category === self::CATEGORY_SLOPE ? 'CR' : 'SH';
-            $year = $incident->date_reported
-                ? (\is_string($incident->date_reported)
-                    ? substr($incident->date_reported, 0, 4)
-                    : $incident->date_reported->format('Y'))
-                : date('Y');
-            $pattern = "{$prefix}-{$year}-";
-            $last = static::query()
-                ->where('incident_number', 'like', $pattern.'%')
-                ->orderByDesc('incident_number')
-                ->value('incident_number');
-            $next = 1;
-            if ($last && preg_match('/-(\d+)$/', $last, $m)) {
-                $next = (int) $m[1] + 1;
+            $prefix = $incident->category === self::CATEGORY_SLOPE
+                ? self::CODE_PREFIX_SLOPE
+                : self::CODE_PREFIX_SINKHOLE;
+
+            // Terima CN1, CN1-ATC5A, dll. — ambil digit selepas prefix untuk urutan.
+            $regex = '/^'.preg_quote($prefix, '/').'(\d+)/';
+
+            $maxSeq = 0;
+            $candidates = static::query()
+                ->where('category', $incident->category)
+                ->where('incident_number', 'like', $prefix.'%')
+                ->pluck('incident_number');
+
+            foreach ($candidates as $num) {
+                if (preg_match($regex, (string) $num, $m)) {
+                    $maxSeq = max($maxSeq, (int) $m[1]);
+                }
             }
-            $incident->incident_number = $pattern.str_pad((string) $next, 4, '0', STR_PAD_LEFT);
+
+            $incident->incident_number = $prefix.((string) ($maxSeq + 1));
         });
     }
 
@@ -83,7 +93,7 @@ class Incident extends Model
 
     public function surveys(): HasMany
     {
-        return $this->hasMany(SurveyData::class);
+        return $this->hasMany(SurveyData::class)->orderByDesc('version')->orderByDesc('id');
     }
 
     public function timeline(): HasMany

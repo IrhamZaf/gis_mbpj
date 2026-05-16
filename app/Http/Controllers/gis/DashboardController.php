@@ -4,6 +4,8 @@ namespace App\Http\Controllers\gis;
 
 use App\Http\Controllers\Controller;
 use App\Models\Incident;
+use App\Models\SurveyData;
+use App\Models\SurveyUpload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -22,7 +24,15 @@ class DashboardController extends Controller
 
         $notifications = $request->user()->notifications()->limit(10)->get();
 
-        return view('dashboard', compact('stats', 'recentIncidents', 'notifications'));
+        $surveyForEngineer = ['files' => 0, 'pending_review' => 0];
+        if ($request->user()->isEngineer() || $request->user()->isAdmin()) {
+            $surveyForEngineer['files'] = SurveyUpload::query()->count();
+            $surveyForEngineer['pending_review'] = SurveyData::query()
+                ->where('review_status', SurveyData::REVIEW_PENDING)
+                ->count();
+        }
+
+        return view('dashboard', compact('stats', 'recentIncidents', 'notifications', 'surveyForEngineer'));
     }
 
     public function stats(): JsonResponse

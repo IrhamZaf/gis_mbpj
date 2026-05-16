@@ -3,3 +3,24 @@
 // .card {
 //    background-color: #fd0000;
 //  }
+
+/* Logo MBPJ (jenama aplikasi — digunakan oleh _partials/macros) */
+.gis-mbpj-brand-logo {
+  display: block;
+  object-fit: contain;
+  max-height: 2.75rem;
+  max-width: 3.5rem;
+  width: auto;
+  height: auto;
+}
+
+.app-brand .gis-mbpj-brand-logo,
+.layout-menu .app-brand .gis-mbpj-brand-logo {
+  max-height: 2.5rem;
+  max-width: 3.25rem;
+}
+
+.authentication-wrapper .app-brand .gis-mbpj-brand-logo {
+  max-height: 3rem;
+  max-width: 4rem;
+}

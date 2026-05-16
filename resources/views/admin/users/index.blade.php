@@ -23,7 +23,13 @@
         <tr>
           <td>{{ $u->name }}</td>
           <td>{{ $u->email }}</td>
-          <td>{{ $u->role }}</td>
+          <td>@switch($u->role)
+            @case('admin') Admin @break
+            @case('surveyor') Surveyor MBPJ (legasi) @break
+            @case('engineer') Jurutera @break
+            @case('vendor') Surveyor dilantik @break
+            @default {{ $u->role }}
+            @endswitch</td>
           <td class="text-end">
             <a class="btn btn-sm btn-text-secondary" href="{{ route('admin.users.edit', $u) }}">Edit</a>
             @if($u->id !== auth()->id())

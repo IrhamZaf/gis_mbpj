@@ -13,7 +13,9 @@ class MapController extends Controller
 {
     public function index(): View
     {
-        return view('map');
+        $layers = GisLayer::query()->where('is_active', true)->orderBy('name')->get();
+
+        return view('map', compact('layers'));
     }
 
     public function layers(): View

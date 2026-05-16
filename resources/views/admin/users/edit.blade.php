@@ -19,8 +19,20 @@
       <div class="mb-3">
         <label class="form-label">Peranan</label>
         <select name="role" class="form-select" required>
-          @foreach (['admin','surveyor','engineer'] as $r)
-          <option value="{{ $r }}" @selected($user->role === $r)>{{ $r }}</option>
+          @php
+            $roleLabels = [
+                'admin' => 'Admin',
+                'engineer' => 'Jurutera',
+                'vendor' => 'Surveyor dilantik (luar)',
+                'surveyor' => 'Surveyor MBPJ (legasi — tidak digunakan)',
+            ];
+            $roles = ['admin', 'engineer', 'vendor'];
+            if ($user->role === 'surveyor') {
+                array_unshift($roles, 'surveyor');
+            }
+          @endphp
+          @foreach ($roles as $r)
+          <option value="{{ $r }}" @selected($user->role === $r)>{{ $roleLabels[$r] }}</option>
           @endforeach
         </select>
       </div>

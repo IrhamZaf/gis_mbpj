@@ -3,6 +3,13 @@
 @section('title', 'Pending Review')
 
 @section('content')
+<div class="alert alert-primary d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4" role="region" aria-label="Fail laporan surveyor">
+  <div>
+    <strong>Fail laporan surveyor</strong>
+    <span class="d-block small mb-0">Senarai semua dokumen yang dimuat naik oleh surveyor untuk insiden.</span>
+  </div>
+  <a href="{{ route('engineer.survey.files') }}" class="btn btn-sm btn-light">Lihat senarai fail</a>
+</div>
 <div class="card">
   <div class="card-header"><h5 class="mb-0">Insiden menunggu semakan</h5></div>
   <div class="table-responsive">

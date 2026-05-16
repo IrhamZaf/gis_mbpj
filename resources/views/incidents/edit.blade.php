@@ -33,6 +33,16 @@
       @method('PUT')
       <div class="row g-4">
         <div class="col-md-6">
+          <label class="form-label">No. rujukan</label>
+          <input type="text" name="incident_number" class="form-control @error('incident_number') is-invalid @enderror"
+            maxlength="96" required value="{{ old('incident_number', $incident->incident_number) }}"
+            pattern="[A-Za-z0-9\-]+" title="Huruf, nombor dan sempang (-) sahaja" />
+          <div class="form-text">Contoh: CN1-ATC5A, SH2-ZONE3. Mesti unik dalam sistem.</div>
+          @error('incident_number')
+          <div class="invalid-feedback">{{ $message }}</div>
+          @enderror
+        </div>
+        <div class="col-md-6">
           <label class="form-label">Kategori</label>
           <select name="category" class="form-select" required>
             <option value="sinkhole" @selected($incident->category === 'sinkhole')>Sinkhole</option>

@@ -29,7 +29,7 @@ class AdminUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'in:admin,surveyor,engineer'],
+            'role' => ['required', 'in:admin,engineer,vendor'],
         ]);
         $data['password'] = Hash::make($data['password']);
         User::query()->create([
@@ -53,7 +53,7 @@ class AdminUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'in:admin,surveyor,engineer'],
+            'role' => ['required', 'in:admin,surveyor,engineer,vendor'],
         ]);
         if (! empty($data['password'])) {
             $user->password = Hash::make($data['password']);

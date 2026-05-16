@@ -35,7 +35,7 @@ class AuthController extends Controller
 
         /** @var User $user */
         $user = Auth::user();
-        if (! in_array($user->role, [User::ROLE_ADMIN, User::ROLE_SURVEYOR, User::ROLE_ENGINEER], true)) {
+        if (! in_array($user->role, [User::ROLE_ADMIN, User::ROLE_SURVEYOR, User::ROLE_ENGINEER, User::ROLE_VENDOR], true)) {
             Auth::logout();
 
             throw ValidationException::withMessages([

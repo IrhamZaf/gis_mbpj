@@ -2,19 +2,24 @@
 
 namespace App\Http\Controllers\gis;
 
+use App\Http\Controllers\Concerns\ServesSurveyUploadFiles;
 use App\Http\Controllers\Controller;
 use App\Models\Incident;
 use App\Models\IncidentMedia;
 use App\Models\IncidentTimeline;
+use App\Models\SurveyUpload;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class IncidentController extends Controller
 {
+    use ServesSurveyUploadFiles;
+
     public function index(Request $request): View
     {
         $category = $request->string('category')->toString();
@@ -70,9 +75,38 @@ class IncidentController extends Controller
 
     public function show(Incident $incident): View
     {
-        $incident->load(['media', 'timeline.performer', 'reviews.engineer', 'surveys.surveyor', 'reporter', 'engineer']);
+        $incident->load(['media', 'timeline.performer', 'reviews.engineer', 'surveys.surveyor', 'surveys.uploads', 'reporter', 'engineer']);
 
         return view('incidents.show', compact('incident'));
+    }
+
+    /**
+     * Muat turun fail hantaran survey yang dipautkan kepada insiden ini (semua peranan yang boleh buka halaman insiden).
+     */
+    public function downloadSurveyUpload(Incident $incident, SurveyUpload $upload)
+    {
+        $upload->load('survey');
+        if (! $upload->survey || (int) $upload->survey->incident_id !== (int) $incident->id) {
+            abort(404);
+        }
+        if (! Storage::disk('public')->exists($upload->file_path)) {
+            abort(404);
+        }
+
+        return Storage::disk('public')->download($upload->file_path, $upload->original_name ?: basename($upload->file_path));
+    }
+
+    /**
+     * Pratonton PDF / imej / TXT dalam pelayar (untuk jurutera & peranan lain yang buka halaman insiden).
+     */
+    public function viewSurveyUpload(Incident $incident, SurveyUpload $upload)
+    {
+        $upload->load('survey');
+        if (! $upload->survey || (int) $upload->survey->incident_id !== (int) $incident->id) {
+            abort(404);
+        }
+
+        return $this->surveyUploadInlineResponse($upload);
     }
 
     public function edit(Incident $incident): View
@@ -89,6 +123,13 @@ class IncidentController extends Controller
         $oldStatus = $incident->status;
 
         $validated = $request->validate([
+            'incident_number' => [
+                'required',
+                'string',
+                'max:96',
+                Rule::unique('incidents', 'incident_number')->ignore($incident->id),
+                'regex:/^[A-Za-z0-9\-]+$/',
+            ],
             'category' => ['required', 'in:sinkhole,slope'],
             'date_reported' => ['required', 'date'],
             'latitude' => ['required', 'numeric'],
@@ -166,7 +207,10 @@ class IncidentController extends Controller
         if ($user->isAdmin()) {
             return;
         }
-        if ($incident->reported_by === $user->id && $user->isSurveyor()) {
+        if ($user->isEngineer()) {
+            return;
+        }
+        if ($incident->reported_by === $user->id && ($user->isSurveyor() || $user->isVendor())) {
             return;
         }
         abort(403);
@@ -175,7 +219,7 @@ class IncidentController extends Controller
     protected function authorizeSurveyorOrAdmin(): void
     {
         $user = request()->user();
-        if ($user->isAdmin() || $user->isSurveyor()) {
+        if ($user->canCreateIncidents()) {
             return;
         }
         abort(403);

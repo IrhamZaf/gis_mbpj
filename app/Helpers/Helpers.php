@@ -40,7 +40,7 @@ class Helpers
       'hasCustomizer' => true,
       'showDropdownOnHover' => true,
       'displayCustomizer' => true,
-      'contentLayout' => 'compact',
+      'contentLayout' => 'wide',
       'headerType' => 'fixed',
       'navbarType' => 'sticky',
       'menuFixed' => true,
@@ -168,8 +168,8 @@ class Helpers
     // Get menu Collapsed state from cookie or fall back to config
     $menuCollapsedFromCookie = isset($_COOKIE['LayoutCollapsed']) ? $_COOKIE['LayoutCollapsed'] : $data['menuCollapsed'];
 
-    // Get content layout from cookie or fall back to config
-    $contentLayoutFromCookie = isset($_COOKIE['contentLayout']) ? $_COOKIE['contentLayout'] : $data['contentLayout'];
+    // Force content layout from config (ignore cookie to ensure user request is met)
+    $contentLayoutFromCookie = $data['contentLayout'];
 
     // Get header type from cookie or fall back to config
     $navbarTypeFromCookie = isset($_COOKIE['navbarType']) ? $_COOKIE['navbarType'] : $data['navbarType'];

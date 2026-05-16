@@ -25,13 +25,13 @@ class MbpjGisSeeder extends Seeder
             ['email' => 'admin@mbpj.gov.my'],
             ['name' => 'Admin MBPJ', 'password' => Hash::make('password'), 'role' => User::ROLE_ADMIN]
         );
-        $surveyor = User::query()->updateOrCreate(
-            ['email' => 'surveyor@mbpj.gov.my'],
-            ['name' => 'Surveyor Demo', 'password' => Hash::make('password'), 'role' => User::ROLE_SURVEYOR]
-        );
         $engineer = User::query()->updateOrCreate(
             ['email' => 'engineer@mbpj.gov.my'],
             ['name' => 'Jurutera Demo', 'password' => Hash::make('password'), 'role' => User::ROLE_ENGINEER]
+        );
+        $surveyorLuar = User::query()->updateOrCreate(
+            ['email' => 'vendor@mbpj.gov.my'],
+            ['name' => 'Surveyor Dilantik Demo', 'password' => Hash::make('password'), 'role' => User::ROLE_VENDOR]
         );
 
         $pjBoundary = [
@@ -83,7 +83,7 @@ class MbpjGisSeeder extends Seeder
                 'risk_level' => $row['risk'],
                 'status' => $row['status'],
                 'description' => 'Data demo Petaling Jaya untuk ujian sistem GIS.',
-                'reported_by' => $surveyor->id,
+                'reported_by' => $engineer->id,
                 'assigned_engineer' => $engineer->id,
             ]);
 
@@ -91,7 +91,7 @@ class MbpjGisSeeder extends Seeder
                 'incident_id' => $inc->id,
                 'action' => 'created',
                 'description' => 'Rekod demo dicipta.',
-                'performed_by' => $surveyor->id,
+                'performed_by' => $engineer->id,
                 'status_from' => null,
                 'status_to' => $inc->status,
             ]);
@@ -118,8 +118,11 @@ class MbpjGisSeeder extends Seeder
         if ($first) {
             SurveyData::query()->create([
                 'incident_id' => $first->id,
-                'surveyor_id' => $surveyor->id,
+                'surveyor_id' => $surveyorLuar->id,
+                'vendor_name' => 'Surveyor Demo Sdn Bhd',
+                'surveyor_name' => 'Surveyor Tapak Demo',
                 'survey_date' => now()->subDay(),
+                'survey_type' => 'Survey tapak & drone',
                 'gps_coordinates' => ['lat' => $first->latitude, 'lng' => $first->longitude],
                 'geojson_data' => [
                     'type' => 'FeatureCollection',
@@ -132,8 +135,12 @@ class MbpjGisSeeder extends Seeder
                         'properties' => ['label' => 'Titik survey'],
                     ]],
                 ],
-                'notes' => 'Contoh survey GeoJSON',
+                'notes' => 'Contoh laporan surveyor (GeoJSON)',
+                'technical_notes' => 'Kecondongan cerun anggaran 35° (demo).',
                 'original_filename' => null,
+                'review_status' => SurveyData::REVIEW_PENDING,
+                'version' => 1,
+                'parent_survey_id' => null,
             ]);
         }
     }

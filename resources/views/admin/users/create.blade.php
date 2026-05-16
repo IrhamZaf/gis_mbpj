@@ -19,8 +19,8 @@
         <label class="form-label">Peranan</label>
         <select name="role" class="form-select" required>
           <option value="admin">Admin</option>
-          <option value="surveyor">Surveyor</option>
-          <option value="engineer">Engineer</option>
+          <option value="engineer">Jurutera</option>
+          <option value="vendor">Surveyor dilantik (luar)</option>
         </select>
       </div>
       <div class="mb-3">

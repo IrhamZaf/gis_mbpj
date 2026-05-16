@@ -104,7 +104,12 @@
     <a class="nav-link {{ request()->routeIs('incidents.*') ? 'active' : '' }}" href="{{ route('incidents.index') }}">
       <i class="icon-base ti tabler-alert-triangle d-block mb-1"></i> Insiden
     </a>
-    @if(auth()->user()->isAdmin() || auth()->user()->isSurveyor())
+    @if(auth()->user()->isEngineer() || auth()->user()->isAdmin())
+    <a class="nav-link {{ request()->routeIs('engineer.*') ? 'active' : '' }}" href="{{ route('engineer.index') }}">
+      <i class="icon-base ti tabler-clipboard-check d-block mb-1"></i> Semakan
+    </a>
+    @endif
+    @if(auth()->user()->canAccessSurveyUploadModule())
     <a class="nav-link {{ request()->routeIs('survey.*') ? 'active' : '' }}" href="{{ route('survey.index') }}">
       <i class="icon-base ti tabler-upload d-block mb-1"></i> Survey
     </a>

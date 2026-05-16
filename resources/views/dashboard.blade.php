@@ -98,6 +98,32 @@ $configData = Helper::appClasses();
   </div>
 </div>
 
+@if(auth()->user()->isEngineer() || auth()->user()->isAdmin())
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="card border-primary border shadow-none">
+      <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3 py-4">
+        <div class="d-flex align-items-start gap-3">
+          <div class="avatar avatar-md">
+            <span class="avatar-initial rounded bg-label-primary"><i class="ti tabler-files ti-md"></i></span>
+          </div>
+          <div>
+            <h5 class="mb-1">Fail laporan surveyor</h5>
+            <p class="mb-0 text-muted small">
+              {{ number_format($surveyForEngineer['files']) }} fail dimuat naik ·
+              {{ number_format($surveyForEngineer['pending_review']) }} hantaran menunggu semakan jurutera
+            </p>
+          </div>
+        </div>
+        <a href="{{ route('engineer.index', ['tab' => 'files']) }}" class="btn btn-primary">
+          <i class="ti tabler-list-details me-1"></i>Lihat senarai fail
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+@endif
+
 <div class="row g-4 mb-4">
   <div class="col-xl-9">
     <div class="card gis-map-card overflow-hidden">

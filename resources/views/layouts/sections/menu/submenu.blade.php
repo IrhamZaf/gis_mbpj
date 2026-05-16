@@ -5,6 +5,12 @@ use Illuminate\Support\Facades\Route;
 <ul class="menu-sub">
   @if (isset($menu))
     @foreach ($menu as $submenu)
+    @php
+      $subRole = auth()->check() ? auth()->user()->role : null;
+      if (isset($submenu->roles) && is_array($submenu->roles) && $subRole && ! in_array($subRole, $submenu->roles, true)) {
+        continue;
+      }
+    @endphp
 
     {{-- active menu method --}}
     @php

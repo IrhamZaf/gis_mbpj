@@ -1,0 +1,1 @@
+document.addEventListener(`DOMContentLoaded`,function(e){(function(){let e=document.querySelectorAll(`#twoFactorAuthInputSms`);e&&e.forEach(function(e){e.addEventListener(`input`,t=>{let n=t.target.value.replace(/\D/g,``);e.value=formatGeneral(n,{blocks:[3,3,4],delimiters:[` `,` `]})}),registerCursorTracker({input:e,delimiter:` `})})})()});

@@ -1,0 +1,50 @@
+document.addEventListener(`DOMContentLoaded`,function(e){let t,n,r,i;t=config.colors.textMuted,n=config.colors.headingColor,r=config.colors.borderColor,i=config.fontFamily;let a={donut:{series1:`color-mix(in sRGB, `+config.colors.success+` 80%, `+config.colors.black+`)`,series2:`color-mix(in sRGB, `+config.colors.success+` 90%, `+config.colors.black+`)`,series3:config.colors.success,series4:`color-mix(in sRGB, `+config.colors.success+` 80%, `+config.colors.cardColor+`)`,series5:`color-mix(in sRGB, `+config.colors.success+` 60%, `+config.colors.cardColor+`)`,series6:`color-mix(in sRGB, `+config.colors.success+` 40%, `+config.colors.cardColor+`)`}},o=document.querySelector(`#leadsReportChart`),s={chart:{height:170,width:150,parentHeightOffset:0,type:`donut`},labels:[`36h`,`56h`,`16h`,`32h`,`56h`,`16h`],series:[23,35,10,20,35,23],colors:[a.donut.series1,a.donut.series2,a.donut.series3,a.donut.series4,a.donut.series5,a.donut.series6],stroke:{width:0},dataLabels:{enabled:!1,formatter:function(e,t){return parseInt(e)+`%`}},legend:{show:!1},tooltip:{theme:!1},grid:{padding:{top:0}},plotOptions:{pie:{donut:{size:`70%`,labels:{show:!0,value:{fontSize:`1.125rem`,fontFamily:i,color:n,fontWeight:500,offsetY:-20,formatter:function(e){return parseInt(e)+`%`}},name:{offsetY:20,fontFamily:i},total:{show:!0,fontSize:`.9375rem`,label:`Total`,color:t,formatter:function(e){return`231h`}}}}}}};o!==null&&new ApexCharts(o,s).render();let c=document.querySelector(`#horizontalBarChart`),l={chart:{height:300,type:`bar`,toolbar:{show:!1}},plotOptions:{bar:{horizontal:!0,barHeight:`60%`,distributed:!0,startingShape:`rounded`,borderRadiusApplication:`end`,borderRadius:7}},grid:{strokeDashArray:10,borderColor:r,xaxis:{lines:{show:!0}},yaxis:{lines:{show:!1}},padding:{top:-35,bottom:-12}},colors:[config.colors.primary,config.colors.info,config.colors.success,config.colors.secondary,config.colors.danger,config.colors.warning],fill:{opacity:[1,1,1,1,1,1]},dataLabels:{enabled:!0,style:{colors:[config.colors.white],fontWeight:400,fontSize:`13px`,fontFamily:i},formatter:function(e,t){return l.labels[t.dataPointIndex]},offsetX:0,dropShadow:{enabled:!1}},labels:[`UI Design`,`UX Design`,`Music`,`Animation`,`React`,`SEO`],series:[{data:[35,20,14,12,10,9]}],xaxis:{categories:[`6`,`5`,`4`,`3`,`2`,`1`],axisBorder:{show:!1},axisTicks:{show:!1},labels:{style:{colors:t,fontFamily:i,fontSize:`13px`},formatter:function(e){return`${e}%`}}},yaxis:{max:35,labels:{style:{colors:[t],fontFamily:i,fontSize:`13px`}}},tooltip:{enabled:!0,style:{fontSize:`12px`},onDatasetHover:{highlightDataSeries:!1},custom:function({series:e,seriesIndex:t,dataPointIndex:n,w:r}){return`<div class="px-3 py-2"><span>`+e[t][n]+`%</span></div>`}},legend:{show:!1}};c!==null&&new ApexCharts(c,l).render();function u(e,t,r){return{chart:{height:r==`true`?58:48,width:r==`true`?58:38,type:`radialBar`},plotOptions:{radialBar:{hollow:{size:r==`true`?`50%`:`25%`},dataLabels:{show:r==`true`,value:{offsetY:-10,fontSize:`15px`,fontWeight:500,fontFamily:i,color:n}},track:{background:config.colors_label.secondary}}},stroke:{lineCap:`round`},colors:[e],grid:{padding:{top:r==`true`?-12:-15,bottom:r==`true`?-17:-15,left:r==`true`?-17:-5,right:-15}},series:[t],labels:r==`true`?[``]:[`Progress`]}}let d=document.querySelectorAll(`.chart-progress`);d&&d.forEach(function(e){let t=config.colors[e.dataset.color],n=e.dataset.series,r=e.dataset.progress_variant,i=u(t,n,r);new ApexCharts(e,i).render()});let f=document.querySelector(`.datatables-academy-course`),p={angular:`<span class="badge bg-label-danger rounded p-1_5"><i class="icon-base ti tabler-brand-angular icon-28px"></i></span>`,figma:`<span class="badge bg-label-warning rounded p-1_5"><i class="icon-base ti tabler-brand-figma icon-28px"></i></span>`,react:`<span class="badge bg-label-info rounded p-1_5"><i class="icon-base ti tabler-brand-react icon-28px"></i></span>`,art:`<span class="badge bg-label-success rounded p-1_5"><i class="icon-base ti tabler-color-swatch icon-28px"></i></span>`,fundamentals:`<span class="badge bg-label-primary rounded p-1_5"><i class="icon-base ti tabler-diamond icon-28px"></i></span>`};if(f){let e=document.createElement(`h5`);e.classList.add(`card-title`,`mb-0`,`text-nowrap`,`text-md-start`,`text-center`),e.innerHTML=`Course you are taking`,new DataTable(f,{ajax:assetsPath+`json/app-academy-dashboard.json`,columns:[{data:`id`},{data:`id`,orderable:!1,render:DataTable.render.select()},{data:`course name`},{data:`time`},{data:`progress`},{data:`status`}],columnDefs:[{className:`control`,searchable:!1,orderable:!1,responsivePriority:2,targets:0,render:function(e,t,n,r){return``}},{targets:1,orderable:!1,searchable:!1,responsivePriority:3,checkboxes:!0,render:function(){return`<input type="checkbox" class="dt-checkboxes form-check-input">`},checkboxes:{selectAllRender:`<input type="checkbox" class="form-check-input">`}},{targets:2,responsivePriority:2,render:(e,t,n)=>{let{logo:r,course:i,user:a,image:o}=n,s=o?`<img src="${assetsPath}img/avatars/${o}" alt="Avatar" class="rounded-circle">`:(()=>{let e=[`success`,`danger`,`warning`,`info`,`dark`,`primary`,`secondary`];return`<span class="avatar-initial rounded-circle bg-label-${e[Math.floor(Math.random()*e.length)]}">${(a.match(/\b\w/g)||[]).reduce((e,t)=>e+t.toUpperCase(),``)}</span>`})();return`
+                  <div class="d-flex align-items-center">
+                      <span class="me-4">${p[r]}</span>
+                      <div>
+                          <a class="text-heading text-truncate fw-medium mb-2 text-wrap" href="${baseUrl}app/academy/course-details">
+                              ${i}
+                          </a>
+                          <div class="d-flex align-items-center mt-1">
+                              <div class="avatar-wrapper me-2">
+                                  <div class="avatar avatar-xs">
+                                      ${s}
+                                  </div>
+                              </div>
+                              <small class="text-nowrap text-heading">${a}</small>
+                          </div>
+                      </div>
+                  </div>
+              `}},{targets:3,responsivePriority:3,render:e=>{let t=moment.duration(e),n=Math.floor(t.asHours());return`<span class="fw-medium text-nowrap text-heading">${`${n}h ${Math.floor(t.asMinutes())-n*60}m`}</span>`}},{targets:4,render:(e,t,n)=>{let{status:r,number:i}=n;return`
+                  <div class="d-flex align-items-center gap-3">
+                      <p class="fw-medium mb-0 text-heading">${r}</p>
+                      <div class="progress w-100" style="height: 8px;">
+                          <div
+                              class="progress-bar"
+                              style="width: ${r}"
+                              aria-valuenow="${r}"
+                              aria-valuemin="0"
+                              aria-valuemax="100">
+                          </div>
+                      </div>
+                      <small>${i}</small>
+                  </div>
+              `}},{targets:5,render:(e,t,n)=>{let{user_number:r,note:i,view:a}=n;return`
+                  <div class="d-flex align-items-center justify-content-between">
+                      <div class="d-flex align-items-center">
+                          <i class="icon-base ti tabler-users icon-lg me-1_5 text-primary"></i>
+                          <span>${r}</span>
+                      </div>
+                      <div class="d-flex align-items-center">
+                          <i class="icon-base ti tabler-book icon-lg me-1_5 text-info"></i>
+                          <span>${i}</span>
+                      </div>
+                      <div class="d-flex align-items-center">
+                          <i class="icon-base ti tabler-video icon-lg me-1_5 text-danger"></i>
+                          <span>${a}</span>
+                      </div>
+                  </div>
+              `}}],select:{style:`multi`,selector:`td:nth-child(2)`},order:[[2,`desc`]],layout:{topStart:{rowClass:`row card-header border-bottom mx-0 px-3 py-0`,features:[e]},topEnd:{search:{placeholder:`Search Course`,text:`_INPUT_`}},bottomStart:{rowClass:`row mx-3 justify-content-between`,features:[`info`]},bottomEnd:`paging`},lengthMenu:[5],language:{paginate:{next:`<i class="icon-base ti tabler-chevron-right scaleX-n1-rtl icon-18px"></i>`,previous:`<i class="icon-base ti tabler-chevron-left scaleX-n1-rtl icon-18px"></i>`,first:`<i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>`,last:`<i class="icon-base ti tabler-chevrons-right scaleX-n1-rtl icon-18px"></i>`}},responsive:{details:{display:DataTable.Responsive.display.modal({header:function(e){return`Details of `+e.data().order}}),type:`column`,renderer:function(e,t,n){let r=n.map(function(e){return e.title===``?``:`<tr data-dt-row="${e.rowIndex}" data-dt-column="${e.columnIndex}">
+                      <td>${e.title}:</td>
+                      <td>${e.data}</td>
+                    </tr>`}).join(``);if(r){let e=document.createElement(`div`);e.classList.add(`table-responsive`);let t=document.createElement(`table`);e.appendChild(t),t.classList.add(`table`),t.classList.add(`datatables-basic`);let n=document.createElement(`tbody`);return n.innerHTML=r,t.appendChild(n),e}return!1}}}})}setTimeout(()=>{[{selector:`.dt-search .form-control`,classToRemove:`form-control-sm`},{selector:`.dt-length .form-select`,classToRemove:`form-select-sm`},{selector:`.dt-layout-table`,classToRemove:`row mt-2`},{selector:`.dt-layout-full`,classToRemove:`col-md col-12`,classToAdd:`table-responsive`}].forEach(({selector:e,classToRemove:t,classToAdd:n})=>{document.querySelectorAll(e).forEach(e=>{t.split(` `).forEach(t=>e.classList.remove(t)),n&&e.classList.add(n)})})},100)});

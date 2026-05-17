@@ -1,0 +1,14 @@
+document.addEventListener(`DOMContentLoaded`,function(){let e=Array.from(document.querySelectorAll(`.card-collapsible`)),t=Array.from(document.querySelectorAll(`.card-expand`)),n=Array.from(document.querySelectorAll(`.card-close`)),r=document.getElementById(`sortable-4`);e.forEach(function(e){e.addEventListener(`click`,function(t){t.preventDefault(),new bootstrap.Collapse(e.closest(`.card`).querySelector(`.collapse`)),e.closest(`.card-header`).classList.toggle(`collapsed`),Helpers._toggleClass(e.firstElementChild,`tabler-chevron-down`,`tabler-chevron-up`)})}),t.forEach(function(e){e.addEventListener(`click`,function(t){t.preventDefault(),Helpers._toggleClass(e.firstElementChild,`tabler-arrows-maximize`,`tabler-arrows-minimize`),e.closest(`.card`).classList.toggle(`card-fullscreen`)})}),document.addEventListener(`keyup`,function(e){if(e.preventDefault(),e.key===`Escape`){let e=document.querySelector(`.card-fullscreen`);e&&(Helpers._toggleClass(e.querySelector(`.card-expand`).firstElementChild,`tabler-arrows-maximize`,`tabler-arrows-minimize`),e.classList.toggle(`card-fullscreen`))}}),n.forEach(function(e){e.addEventListener(`click`,function(t){t.preventDefault(),e.closest(`.card`).classList.add(`d-none`)})}),r&&Sortable.create(r,{animation:500,handle:`.card`});let i=document.querySelectorAll(`.card-reload`);i&&(document.querySelectorAll(`.card-action`).forEach((e,t)=>{e.dataset.cardId=`card-${t+1}`}),i.forEach(e=>{e.addEventListener(`click`,function(t){t.preventDefault();let n=e.closest(`.card-action`);if(!n){console.error(`Closest card with .card-action class not found!`);return}let r=n.dataset.cardId;Block.standard(`[data-card-id="${r}"]`,{backgroundColor:document.documentElement.getAttribute(`data-bs-theme`)===`dark`?`rgba(`+window.Helpers.getCssVar(`pure-black-rgb`)+`, 0.5)`:`rgba(`+window.Helpers.getCssVar(`white-rgb`)+`, 0.5)`,svgSize:`0px`});let i=n.querySelector(`.notiflix-block`);i&&(i.innerHTML=`
+          <div class="sk-fold sk-primary">
+            <div class="sk-fold-cube"></div>
+            <div class="sk-fold-cube"></div>
+            <div class="sk-fold-cube"></div>
+            <div class="sk-fold-cube"></div>
+          </div>
+          <h5>LOADING...</h5>
+        `),setTimeout(function(){Block.remove(`[data-card-id="${r}"]`);let e=n.querySelector(`.card-alert`);e&&(e.innerHTML=`
+              <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <span class="fw-medium">Holy grail!</span> Your success/error message here.
+              </div>
+            `)},2500)})}))});

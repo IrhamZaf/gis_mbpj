@@ -2,11 +2,11 @@
 
 namespace App\Livewire\Surveyor;
 
+use App\Livewire\Concerns\AppliesSurveyMetadata;
+use App\Livewire\Concerns\StoresSurveyAttachments;
 use App\Models\Report;
-use App\Models\ReportAttachment;
 use App\Models\ReportCategory;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -16,6 +16,8 @@ use Livewire\WithFileUploads;
 #[Title('Cipta Laporan')]
 class ReportCreate extends Component
 {
+    use AppliesSurveyMetadata;
+    use StoresSurveyAttachments;
     use WithFileUploads;
 
     public int $category_id = 0;
@@ -34,20 +36,24 @@ class ReportCreate extends Component
         'location_name' => 'nullable|string',
         'latitude'      => 'nullable|numeric|between:-90,90',
         'longitude'     => 'nullable|numeric|between:-180,180',
-        'files.*'       => 'nullable|file|max:10240',
+        'files.*'       => 'nullable|file|max:20480',
     ];
 
     protected array $messages = [
         'category_id.required' => 'Sila pilih kategori laporan.',
         'title.required'       => 'Sila masukkan tajuk laporan.',
         'description.required' => 'Sila masukkan keterangan.',
-        'files.*.max'          => 'Saiz fail maksimum 10MB.',
+        'files.*.max'          => 'Saiz fail maksimum 20MB.',
     ];
 
-    public function setCoordinates($lat, $lng)
+    public function setCoordinates($lat, $lng, $label = null)
     {
         $this->latitude  = round($lat, 7);
         $this->longitude = round($lng, 7);
+
+        if ($label && trim($this->location_name) === '') {
+            $this->location_name = mb_substr(trim($label), 0, 255);
+        }
     }
 
     public function setGisData($data)
@@ -58,6 +64,11 @@ class ReportCreate extends Component
     public function removeFile($index)
     {
         array_splice($this->files, $index, 1);
+    }
+
+    public function updatedFiles(): void
+    {
+        $this->applyMetadataFromUploadedFiles($this->files);
     }
 
     public function saveDraft()
@@ -73,6 +84,8 @@ class ReportCreate extends Component
     private function saveReport(string $status)
     {
         $this->validate();
+        $this->applyMetadataFromUploadedFiles($this->files);
+        $this->validateSurveyFiles($this->files, $this->latitude, $this->longitude);
 
         $report = Report::create([
             'category_id'   => $this->category_id,
@@ -87,18 +100,7 @@ class ReportCreate extends Component
             'submitted_at'  => $status === 'submitted' ? now() : null,
         ]);
 
-        // Upload files
-        foreach ($this->files as $file) {
-            $path = $file->store('reports/' . $report->id, 'public');
-
-            ReportAttachment::create([
-                'report_id' => $report->id,
-                'file_name' => $file->getClientOriginalName(),
-                'file_path' => $path,
-                'file_type' => $file->getMimeType(),
-                'file_size' => $file->getSize(),
-            ]);
-        }
+        $this->storeAttachments($report, $this->files, $this->latitude, $this->longitude);
 
         $msg = $status === 'submitted' ? 'Laporan berjaya dihantar.' : 'Draf laporan berjaya disimpan.';
         session()->flash('message', $msg);

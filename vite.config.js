@@ -33,6 +33,9 @@ export default defineConfig({
 
         // ── Core JS ───────────────────────────────────────────
         'resources/js/app.js',
+        'resources/js/gis-overview-map.js',
+        'resources/js/gis-map-picker.js',
+        'resources/js/gis-survey-preview.js',
         'resources/assets/vendor/js/helpers.js',
         'resources/assets/vendor/js/template-customizer.js',
         'resources/assets/js/config.js',

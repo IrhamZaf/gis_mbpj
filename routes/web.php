@@ -36,6 +36,7 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::get('/users',      App\Livewire\Superadmin\UserManagement::class)->name('users');
         Route::get('/categories', App\Livewire\Superadmin\CategoryManagement::class)->name('categories');
         Route::get('/reports',    App\Livewire\Superadmin\ReportMonitoring::class)->name('reports');
+        Route::get('/map',        App\Livewire\Shared\InteractiveMap::class)->name('map');
     });
 
 // ═══════════════════════════════════════════════════════
@@ -49,6 +50,7 @@ Route::middleware(['auth', 'role:surveyor'])
         Route::get('/reports',           App\Livewire\Surveyor\ReportList::class)->name('reports');
         Route::get('/reports/create',    App\Livewire\Surveyor\ReportCreate::class)->name('reports.create');
         Route::get('/reports/{report}/edit', App\Livewire\Surveyor\ReportEdit::class)->name('reports.edit');
+        Route::get('/map',                   App\Livewire\Shared\InteractiveMap::class)->name('map');
     });
 
 // ═══════════════════════════════════════════════════════
@@ -61,4 +63,5 @@ Route::middleware(['auth', 'role:engineer'])
         Route::get('/',                  App\Livewire\Engineer\Dashboard::class)->name('dashboard');
         Route::get('/reports',           App\Livewire\Engineer\ReportList::class)->name('reports');
         Route::get('/reports/{report}',  App\Livewire\Engineer\ReportView::class)->name('reports.view');
+        Route::get('/map',               App\Livewire\Shared\InteractiveMap::class)->name('map');
     });

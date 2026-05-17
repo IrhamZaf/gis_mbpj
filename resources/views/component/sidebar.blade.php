@@ -40,6 +40,12 @@
           <div>Dashboard</div>
         </a>
       </li>
+      <li class="menu-item {{ $currentRouteName === 'superadmin.map' ? 'active' : '' }}">
+        <a href="{{ route('superadmin.map') }}" class="menu-link">
+          <i class="icon-base ti tabler-map"></i>
+          <div>Peta Interaktif</div>
+        </a>
+      </li>
 
       <li class="menu-header small"><span class="menu-header-text">Pengurusan</span></li>
       <li class="menu-item {{ $currentRouteName === 'superadmin.users' ? 'active' : '' }}">
@@ -74,6 +80,12 @@
           <div>Dashboard</div>
         </a>
       </li>
+      <li class="menu-item {{ $currentRouteName === 'surveyor.map' ? 'active' : '' }}">
+        <a href="{{ route('surveyor.map') }}" class="menu-link">
+          <i class="icon-base ti tabler-map"></i>
+          <div>Peta Interaktif</div>
+        </a>
+      </li>
 
       <li class="menu-header small"><span class="menu-header-text">Laporan</span></li>
       <li class="menu-item {{ str_starts_with($currentRouteName, 'surveyor.reports') ? 'active' : '' }}">
@@ -92,6 +104,12 @@
         <a href="{{ route('engineer.dashboard') }}" class="menu-link">
           <i class="icon-base ti tabler-smart-home"></i>
           <div>Dashboard</div>
+        </a>
+      </li>
+      <li class="menu-item {{ $currentRouteName === 'engineer.map' ? 'active' : '' }}">
+        <a href="{{ route('engineer.map') }}" class="menu-link">
+          <i class="icon-base ti tabler-map"></i>
+          <div>Peta Interaktif</div>
         </a>
       </li>
 

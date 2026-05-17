@@ -54,5 +54,7 @@ class DatabaseSeeder extends Seeder
             ['slug' => 'utiliti-bawah-tanah'],
             ['name' => 'Utiliti Bawah Tanah', 'description' => 'Laporan berkaitan utiliti bawah tanah']
         );
+
+        $this->call(ReportSeeder::class);
     }
 }

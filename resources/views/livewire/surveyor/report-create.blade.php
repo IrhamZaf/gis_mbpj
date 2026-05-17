@@ -1,11 +1,13 @@
-<div>
+﻿<div>
   <div class="card mb-6">
     <div class="card-header"><h5 class="mb-0">Cipta Laporan Baru</h5></div>
     <div class="card-body">
       <form wire:submit="submit">
         <div class="row">
-          <!-- Left column: form fields -->
-          <div class="col-md-6">
+          <div class="col-md-6" data-survey-form-fields>
+            @if ($surveyMetadataApplied)
+            <div class="alert alert-info py-2 small mb-3">Kategori (CNâ†’Cerun, SHâ†’Sinkhole), tajuk, keterangan dan lokasi diisi automatik daripada fail survei.</div>
+            @endif
             <div class="mb-4">
               <label class="form-label">Kategori Laporan <span class="text-danger">*</span></label>
               <select wire:model="category_id" class="form-select @error('category_id') is-invalid @enderror">
@@ -28,31 +30,57 @@
             </div>
             <div class="mb-4">
               <label class="form-label">Nama Lokasi</label>
-              <input wire:model="location_name" type="text" class="form-control" placeholder="cth: Persimpangan Jalan SS2/24" />
-            </div>
-            <div class="row mb-4">
-              <div class="col-6">
-                <label class="form-label">Latitud</label>
-                <input wire:model="latitude" type="number" step="0.0000001" class="form-control" readonly />
-              </div>
-              <div class="col-6">
-                <label class="form-label">Longitud</label>
-                <input wire:model="longitude" type="number" step="0.0000001" class="form-control" readonly />
-              </div>
+              <input wire:model="location_name" type="text" class="form-control" placeholder="cth: ATC5A, Persimpangan Jalan SS2/24" />
+              <small class="text-muted">Boleh diisi automatik daripada carian atau fail survei.</small>
             </div>
           </div>
 
-          <!-- Right column: GIS map -->
-          <div class="col-md-6">
-            <label class="form-label">Lokasi GIS <small class="text-muted">(Klik pada peta untuk tandakan lokasi)</small></label>
+          <div class="col-md-6" data-survey-map-card>
+            <label class="form-label">Lokasi GIS</label>
+            <div class="gis-location-search-wrap mb-2 position-relative">
+              <div class="input-group">
+                <span class="input-group-text"><i class="ti tabler-search"></i></span>
+                <input type="text" id="gis-location-search" class="form-control" placeholder="Cari alamat di Petaling Jaya..." autocomplete="off" />
+                <button type="button" id="gis-location-search-btn" class="btn btn-outline-primary">Cari</button>
+              </div>
+              <ul id="gis-location-results" class="list-group position-absolute w-100 shadow-sm d-none gis-location-results"></ul>
+            </div>
+            <small class="text-muted d-block mb-2">Cari lokasi di atas, atau klik peta untuk tandakan tapak.</small>
             <div id="gis-map" style="height:400px;border-radius:8px;border:1px solid var(--bs-border-color);" wire:ignore></div>
+            <div class="row g-2 mt-2 mb-2">
+              <div class="col-6">
+                <label class="form-label small mb-1">Latitud</label>
+                <input id="report-anchor-lat" wire:model="latitude" type="number" step="0.0000001" class="form-control form-control-sm @error('latitude') is-invalid @enderror" readonly placeholder="—" />
+                @error('latitude')<span class="invalid-feedback d-block small">{{ $message }}</span>@enderror
+              </div>
+              <div class="col-6">
+                <label class="form-label small mb-1">Longitud</label>
+                <input id="report-anchor-lng" wire:model="longitude" type="number" step="0.0000001" class="form-control form-control-sm @error('longitude') is-invalid @enderror" readonly placeholder="—" />
+                @error('longitude')<span class="invalid-feedback d-block small">{{ $message }}</span>@enderror
+              </div>
+            </div>
+            <div id="survey-anchor-warning" class="alert alert-warning py-2 small mt-2 mb-0 d-none">
+              Sila cari lokasi atau klik peta untuk tetapkan tapak sebelum muat naik fail survei CSV/TXT.
+            </div>
+            <div class="d-flex flex-wrap gap-2 mt-2 small text-muted">
+              <span><span class="gis-legend-risk-area d-inline-block align-middle"></span> Kawasan risiko</span>
+              <span><span style="width:10px;height:10px;border-radius:50%;background:#3498db;display:inline-block;"></span> Titik 3D</span>
+              <span><span style="width:10px;height:10px;border-radius:50%;background:#d73027;display:inline-block;"></span> Sesaran tinggi 2D</span>
+            </div>
           </div>
         </div>
 
-        <!-- File Upload -->
         <div class="mb-4 mt-4">
-          <label class="form-label">Lampiran Dokumen <small class="text-muted">(PDF, Gambar, TXT, Excel — Maks 10MB setiap fail)</small></label>
-          <input wire:model="files" type="file" class="form-control" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.txt,.csv,.xls,.xlsx" />
+          <label class="form-label">Dokumen Survei <small class="text-muted">(3 jenis â€” Maks 20MB setiap fail)</small></label>
+          <ul class="small text-muted mb-2 ps-3">
+            <li>Kategori: <strong>CN</strong> â†’ Cerun, <strong>SH</strong> â†’ Sinkhole (cth. CN1, SH1 dalam nama fail).</li>
+            <li>Nama lokasi: kod tempat <strong>ATC5A</strong>, <strong>ATC5B</strong>, dll. (bukan CN/SH).</li>
+            <li>Tajuk dan keterangan juga boleh diisi automatik daripada nama/kandungan fail.</li>
+            <li><strong>3D</strong> â€” CSV dengan lajur <code>Xb, Yb, Zb</code></li>
+            <li><strong>2D</strong> â€” CSV/TXT dengan lajur <code>DAY, POINT, Xb, Yb</code> (sesaran mengikut hari)</li>
+            <li><strong>1D</strong> â€” PDF laporan graf & analisis</li>
+          </ul>
+          <input wire:model="files" data-survey-files type="file" class="form-control" multiple accept=".csv,.txt,.pdf,.jpg,.jpeg,.png" />
           <div wire:loading wire:target="files" class="text-muted small mt-1">Memuat naik fail...</div>
           @error('files.*')<span class="text-danger small">{{ $message }}</span>@enderror
           @if (count($files))
@@ -76,50 +104,57 @@
   </div>
 
   @push('styles')
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <style>
+    .gis-legend-risk-area {
+      width: 14px; height: 14px;
+      border: 2px solid #e74c3c;
+      background: rgba(231, 76, 60, 0.15);
+    }
+    .gis-location-search-wrap {
+      z-index: 1050;
+    }
+    .gis-location-results {
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      z-index: 1060;
+      max-height: 240px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background-color: #fff;
+      border: 1px solid var(--bs-border-color, #d9dee3);
+      border-radius: 0.375rem;
+      box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.18);
+    }
+    .gis-location-results .list-group-item {
+      background-color: #fff;
+      color: var(--bs-body-color, #566a7f);
+      border-color: var(--bs-border-color, #d9dee3);
+    }
+    .gis-location-results .list-group-item-action:hover,
+    .gis-location-results .list-group-item-action:focus {
+      background-color: #f5f5f9;
+      color: var(--bs-body-color, #566a7f);
+    }
+  </style>
   @endpush
 
   @push('scripts')
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  @vite(['resources/js/gis-map-picker.js', 'resources/js/gis-survey-preview.js'])
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const map = L.map('gis-map').setView([3.1073, 101.6067], 14); // MBPJ default
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-      }).addTo(map);
-
-      let marker = null;
-      const drawnItems = new L.FeatureGroup();
-      map.addLayer(drawnItems);
-
-      const drawControl = new L.Control.Draw({
-        draw: { polygon: true, polyline: false, rectangle: true, circle: false, circlemarker: false, marker: false },
-        edit: { featureGroup: drawnItems }
+      const livewire = @this;
+      window.surveyReportLivewire = livewire;
+      window.gisMapPicker.initMapPicker({
+        mapElementId: 'gis-map',
+        initialLat: {{ $latitude ?? 'null' }},
+        initialLng: {{ $longitude ?? 'null' }},
+        initialZoom: {{ $latitude ? 16 : 14 }},
+        initialGisData: @json($gis_data),
+        initialLocationLabel: @json($location_name ?: ''),
+        onCoordinatesChange(lat, lng, label) { livewire.call('setCoordinates', lat, lng, label); },
+        onGisDataChange(data) { livewire.call('setGisData', data); },
       });
-      map.addControl(drawControl);
-
-      // Click to set marker
-      map.on('click', function(e) {
-        if (marker) map.removeLayer(marker);
-        marker = L.marker(e.latlng).addTo(map);
-        @this.call('setCoordinates', e.latlng.lat, e.latlng.lng);
-      });
-
-      // Draw polygon/rectangle for risk area
-      map.on(L.Draw.Event.CREATED, function(e) {
-        drawnItems.addLayer(e.layer);
-        const geoJson = drawnItems.toGeoJSON();
-        @this.call('setGisData', geoJson);
-      });
-
-      map.on(L.Draw.Event.DELETED, function() {
-        const geoJson = drawnItems.toGeoJSON();
-        @this.call('setGisData', geoJson.features.length ? geoJson : null);
-      });
-
-      setTimeout(() => map.invalidateSize(), 300);
     });
   </script>
   @endpush

@@ -2,10 +2,13 @@
 
 namespace App\Livewire\Surveyor;
 
+use App\Livewire\Concerns\AppliesSurveyMetadata;
+use App\Livewire\Concerns\StoresSurveyAttachments;
 use App\Models\Report;
 use App\Models\ReportAttachment;
 use App\Models\ReportCategory;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -15,6 +18,8 @@ use Livewire\WithFileUploads;
 #[Title('Edit Laporan')]
 class ReportEdit extends Component
 {
+    use AppliesSurveyMetadata;
+    use StoresSurveyAttachments;
     use WithFileUploads;
 
     public Report $report;
@@ -47,13 +52,17 @@ class ReportEdit extends Component
         'category_id'   => 'required|exists:report_categories,id',
         'title'         => 'required|min:5',
         'description'   => 'required|min:10',
-        'newFiles.*'    => 'nullable|file|max:10240',
+        'newFiles.*'    => 'nullable|file|max:20480',
     ];
 
-    public function setCoordinates($lat, $lng)
+    public function setCoordinates($lat, $lng, $label = null)
     {
         $this->latitude  = round($lat, 7);
         $this->longitude = round($lng, 7);
+
+        if ($label && trim($this->location_name) === '') {
+            $this->location_name = mb_substr(trim($label), 0, 255);
+        }
     }
 
     public function setGisData($data)
@@ -64,8 +73,13 @@ class ReportEdit extends Component
     public function deleteAttachment(int $id)
     {
         $attachment = ReportAttachment::where('report_id', $this->report->id)->findOrFail($id);
-        \Illuminate\Support\Facades\Storage::disk('public')->delete($attachment->file_path);
+        Storage::disk('public')->delete($attachment->file_path);
         $attachment->delete();
+    }
+
+    public function updatedNewFiles(): void
+    {
+        $this->applyMetadataFromUploadedFiles($this->newFiles);
     }
 
     public function saveDraft()
@@ -81,6 +95,8 @@ class ReportEdit extends Component
     private function saveReport(string $status)
     {
         $this->validate();
+        $this->applyMetadataFromUploadedFiles($this->newFiles);
+        $this->validateSurveyFiles($this->newFiles, $this->latitude, $this->longitude);
 
         $this->report->update([
             'category_id'   => $this->category_id,
@@ -94,18 +110,10 @@ class ReportEdit extends Component
             'submitted_at'  => $status === 'submitted' ? now() : null,
         ]);
 
-        foreach ($this->newFiles as $file) {
-            $path = $file->store('reports/' . $this->report->id, 'public');
-            ReportAttachment::create([
-                'report_id' => $this->report->id,
-                'file_name' => $file->getClientOriginalName(),
-                'file_path' => $path,
-                'file_type' => $file->getMimeType(),
-                'file_size' => $file->getSize(),
-            ]);
-        }
+        $this->storeAttachments($this->report, $this->newFiles, $this->latitude, $this->longitude);
 
         session()->flash('message', $status === 'submitted' ? 'Laporan berjaya dihantar.' : 'Draf dikemaskini.');
+
         return redirect()->route('surveyor.reports');
     }
 
@@ -114,6 +122,16 @@ class ReportEdit extends Component
         return view('livewire.surveyor.report-edit', [
             'categories'  => ReportCategory::orderBy('name')->get(),
             'attachments' => $this->report->attachments()->get(),
+            'surveyLayers' => $this->report->attachments()
+                ->whereIn('document_type', ['survey_3d', 'survey_2d'])
+                ->where('parse_status', 'ok')
+                ->get()
+                ->map(fn ($a) => [
+                    'file_name'    => $a->file_name,
+                    'parse_status' => $a->parse_status,
+                    'parsed_data'  => $a->parsed_data,
+                ])
+                ->values(),
         ]);
     }
 }

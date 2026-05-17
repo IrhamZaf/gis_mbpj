@@ -1,0 +1,67 @@
+{
+  "menu": [
+    {
+      "menuHeader": "Utama"
+    },
+    {
+      "name": "Dashboard",
+      "icon": "icon-base ti tabler-smart-home",
+      "slug": "dashboard",
+      "url": "/"
+    },
+    {
+      "menuHeader": "GIS"
+    },
+    {
+      "name": "Peta Interaktif",
+      "icon": "icon-base ti tabler-map",
+      "slug": "map",
+      "url": "/map"
+    },
+    {
+      "name": "Lapisan Peta",
+      "icon": "icon-base ti tabler-layers-linked",
+      "slug": "layers",
+      "url": "/layers"
+    },
+    {
+      "menuHeader": "Insiden"
+    },
+    {
+      "name": "Senarai Insiden",
+      "icon": "icon-base ti tabler-alert-triangle",
+      "slug": "incidents",
+      "url": "/incidents"
+    },
+    {
+      "name": "Tambah Insiden",
+      "icon": "icon-base ti tabler-plus",
+      "slug": "incidents.create",
+      "url": "/incidents/create"
+    },
+    {
+      "menuHeader": "Ukur Tanah"
+    },
+    {
+      "name": "Muat Naik Survey",
+      "icon": "icon-base ti tabler-upload",
+      "slug": "survey",
+      "url": "/survey"
+    },
+    {
+      "menuHeader": "Tetapan"
+    },
+    {
+      "name": "Pengguna",
+      "icon": "icon-base ti tabler-users",
+      "slug": "admin.users",
+      "url": "/admin/users"
+    },
+    {
+      "name": "Tetapan Sistem",
+      "icon": "icon-base ti tabler-settings",
+      "slug": "admin.settings",
+      "url": "/admin/settings"
+    }
+  ]
+}

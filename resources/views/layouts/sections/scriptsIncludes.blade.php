@@ -1,0 +1,49 @@
+@php
+  use Illuminate\Support\Facades\Vite;
+
+  $menuCollapsed = $configData['menuCollapsed'] === 'layout-menu-collapsed' ? json_encode(true) : false;
+
+  // Get skin value directly from the config, keeping it as numeric if applicable
+  $skin = $configData['skins'] ?? 0;
+
+  // If we have a skin name from cookie or other source, use that instead
+  $skinName = $configData['skinName'] ?? '';
+
+  // Use either the skin name or numeric ID, prioritizing the name if available
+  $defaultSkin = $skinName ?: $skin;
+
+  // Define layout type and cookie naming
+  $isAdminLayout = !str_contains($configData['layout'] ?? '', 'front');
+  $primaryColorCookieName = $isAdminLayout ? 'admin-primaryColor' : 'front-primaryColor';
+
+  // Get primary color - first from cookie, then from config
+  $primaryColor = isset($_COOKIE[$primaryColorCookieName])
+      ? $_COOKIE[$primaryColorCookieName]
+      : $configData['color'] ?? null;
+@endphp
+<!-- laravel style -->
+@vite(['resources/assets/vendor/js/helpers.js'])
+<!-- beautify ignore:start -->
+@if ($configData['hasCustomizer'])
+<!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+  <!--? Template customizer: To hide customizer set displayCustomizer value false in config.js.  -->
+  @vite(['resources/assets/vendor/js/template-customizer.js'])
+@endif
+
+  <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+  @vite(['resources/assets/js/config.js'])
+
+@if ($configData['hasCustomizer'])
+<script id="template-customizer-config" type="application/json">
+  {!! json_encode([
+    'textDir' => $configData['textDirection'],
+    'primaryColor' => $primaryColor ?: null,
+    'theme' => $configData['themeOpt'],
+    'semiDark' => $configData['semiDark'] ? true : false,
+    'showDropdownOnHover' => $configData['showDropdownOnHover'],
+    'displayCustomizer' => $configData['displayCustomizer'],
+    'controls' => $configData['customizerControls'],
+  ]) !!}
+</script>
+@vite(['resources/assets/js/customizer-init.js'])
+@endif

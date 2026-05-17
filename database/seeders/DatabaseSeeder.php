@@ -3,23 +3,56 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\ReportCategory;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // ── Default Users ───────────────────────────────────
+        User::updateOrCreate(
+            ['email' => 'admin@mbpj.gov.my'],
+            [
+                'name'     => 'Super Admin',
+                'password' => Hash::make('password'),
+                'role'     => 'superadmin',
+            ]
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        User::updateOrCreate(
+            ['email' => 'surveyor@mbpj.gov.my'],
+            [
+                'name'     => 'Admin Surveyor',
+                'password' => Hash::make('password'),
+                'role'     => 'surveyor',
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'engineer@mbpj.gov.my'],
+            [
+                'name'     => 'Engineer MBPJ',
+                'password' => Hash::make('password'),
+                'role'     => 'engineer',
+            ]
+        );
+
+        // ── Default Report Categories ───────────────────────
+        ReportCategory::updateOrCreate(
+            ['slug' => 'sinkhole'],
+            ['name' => 'Sinkhole', 'description' => 'Laporan berkaitan sinkhole']
+        );
+
+        ReportCategory::updateOrCreate(
+            ['slug' => 'cerun-tanah-runtuh'],
+            ['name' => 'Cerun / Tanah Runtuh', 'description' => 'Laporan berkaitan cerun dan tanah runtuh']
+        );
+
+        ReportCategory::updateOrCreate(
+            ['slug' => 'utiliti-bawah-tanah'],
+            ['name' => 'Utiliti Bawah Tanah', 'description' => 'Laporan berkaitan utiliti bawah tanah']
+        );
     }
 }

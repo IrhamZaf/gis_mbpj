@@ -2,12 +2,14 @@
 
 namespace App\Livewire\Surveyor;
 
-use App\Livewire\Concerns\AppliesSurveyMetadata;
 use App\Livewire\Concerns\StoresSurveyAttachments;
 use App\Models\Report;
 use App\Models\ReportCategory;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -16,98 +18,122 @@ use Livewire\WithFileUploads;
 #[Title('Cipta Laporan')]
 class ReportCreate extends Component
 {
-    use AppliesSurveyMetadata;
     use StoresSurveyAttachments;
     use WithFileUploads;
 
-    public int $category_id = 0;
+    // ── Form fields ─────────────────────────────────────
+    public $category_id = '';
     public string $title = '';
     public string $description = '';
     public string $location_name = '';
     public ?float $latitude = null;
     public ?float $longitude = null;
     public ?array $gis_data = null;
-    public array $files = [];
+    public array $attachments = [];
 
-    protected array $rules = [
-        'category_id'   => 'required|exists:report_categories,id',
-        'title'         => 'required|min:5',
-        'description'   => 'required|min:10',
-        'location_name' => 'nullable|string',
-        'latitude'      => 'nullable|numeric|between:-90,90',
-        'longitude'     => 'nullable|numeric|between:-180,180',
-        'files.*'       => 'nullable|file|max:20480',
-    ];
+    // ── Validation ──────────────────────────────────────
+    protected function rules(): array
+    {
+        return [
+            'category_id'   => ['required', Rule::exists('report_categories', 'id')],
+            'title'         => 'required|string|min:5|max:255',
+            'description'   => 'required|string|min:10',
+            'location_name' => 'nullable|string|max:255',
+            'latitude'      => 'nullable|numeric|between:-90,90',
+            'longitude'     => 'nullable|numeric|between:-180,180',
+            'attachments.*' => 'nullable|file|max:20480',
+        ];
+    }
 
     protected array $messages = [
         'category_id.required' => 'Sila pilih kategori laporan.',
+        'category_id.exists'   => 'Kategori laporan tidak sah.',
         'title.required'       => 'Sila masukkan tajuk laporan.',
+        'title.min'            => 'Tajuk mestilah sekurang-kurangnya 5 aksara.',
         'description.required' => 'Sila masukkan keterangan.',
-        'files.*.max'          => 'Saiz fail maksimum 20MB.',
+        'description.min'      => 'Keterangan mestilah sekurang-kurangnya 10 aksara.',
+        'attachments.*.max'    => 'Saiz fail maksimum ialah 20 MB.',
+        'attachments.*.file'   => 'Muat naik fail tidak sah.',
     ];
 
-    public function setCoordinates($lat, $lng, $label = null)
+    // ── Map coordinate events (from child ReportMapPicker) ──
+    #[On('report-coordinates-updated')]
+    public function setCoordinates(float $latitude, float $longitude, ?string $label = null): void
     {
-        $this->latitude  = round($lat, 7);
-        $this->longitude = round($lng, 7);
+        $this->latitude  = round($latitude, 7);
+        $this->longitude = round($longitude, 7);
 
         if ($label && trim($this->location_name) === '') {
             $this->location_name = mb_substr(trim($label), 0, 255);
         }
     }
 
-    public function setGisData($data)
+    #[On('report-gis-data-updated')]
+    public function setGisData(?array $data = null): void
     {
         $this->gis_data = $data;
     }
 
-    public function removeFile($index)
+    // ── File management ─────────────────────────────────
+    public function removeAttachment(int $index): void
     {
-        array_splice($this->files, $index, 1);
+        array_splice($this->attachments, $index, 1);
     }
 
-    public function updatedFiles(): void
+    // ── Actions ─────────────────────────────────────────
+    public function saveDraft(): void
     {
-        $this->applyMetadataFromUploadedFiles($this->files);
+        $this->store('draft');
     }
 
-    public function saveDraft()
+    public function submit(): void
     {
-        $this->saveReport('draft');
+        $this->store('submitted');
     }
 
-    public function submit()
-    {
-        $this->saveReport('submitted');
-    }
-
-    private function saveReport(string $status)
+    private function store(string $status): void
     {
         $this->validate();
-        $this->applyMetadataFromUploadedFiles($this->files);
-        $this->validateSurveyFiles($this->files, $this->latitude, $this->longitude);
 
-        $report = Report::create([
-            'category_id'   => $this->category_id,
-            'user_id'       => Auth::id(),
-            'title'         => $this->title,
-            'description'   => $this->description,
-            'status'        => $status,
-            'latitude'      => $this->latitude,
-            'longitude'     => $this->longitude,
-            'location_name' => $this->location_name ?: null,
-            'gis_data'      => $this->gis_data,
-            'submitted_at'  => $status === 'submitted' ? now() : null,
-        ]);
+        try {
+            // Default to MBPJ centre if no map coordinates set
+            [$lat, $lng] = $this->resolvedReportAnchor($this->latitude, $this->longitude);
 
-        $this->storeAttachments($report, $this->files, $this->latitude, $this->longitude);
+            $report = Report::create([
+                'category_id'   => (int) $this->category_id,
+                'user_id'       => Auth::id(),
+                'title'         => $this->title,
+                'description'   => $this->description,
+                'status'        => $status,
+                'latitude'      => $lat,
+                'longitude'     => $lng,
+                'location_name' => $this->location_name ?: null,
+                'gis_data'      => $this->gis_data,
+                'submitted_at'  => $status === 'submitted' ? now() : null,
+            ]);
 
-        $msg = $status === 'submitted' ? 'Laporan berjaya dihantar.' : 'Draf laporan berjaya disimpan.';
-        session()->flash('message', $msg);
+            if (!empty($this->attachments)) {
+                $this->storeAttachments($report, $this->attachments, $lat, $lng);
+            }
 
-        return redirect()->route('surveyor.reports');
+            session()->flash('message', $status === 'submitted'
+                ? 'Laporan berjaya dihantar.'
+                : 'Draf laporan berjaya disimpan.');
+
+            $this->redirect(route('surveyor.reports'), navigate: false);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('Report save failed', [
+                'status'  => $status,
+                'user_id' => Auth::id(),
+                'error'   => $e->getMessage(),
+            ]);
+            $this->addError('submit', 'Gagal menyimpan laporan. Sila cuba lagi.');
+        }
     }
 
+    // ── Render ───────────────────────────────────────────
     public function render()
     {
         return view('livewire.surveyor.report-create', [

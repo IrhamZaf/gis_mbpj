@@ -36,6 +36,8 @@ export default defineConfig({
         'resources/js/gis-overview-map.js',
         'resources/js/gis-map-picker.js',
         'resources/js/gis-survey-preview.js',
+        'resources/js/survey-report-form.js',
+        'resources/js/report-map-picker.js',
         'resources/assets/vendor/js/helpers.js',
         'resources/assets/vendor/js/template-customizer.js',
         'resources/assets/js/config.js',

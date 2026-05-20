@@ -7,10 +7,10 @@ import {
 } from './survey-parse-utils';
 
 const pdfPreviews = new Map();
+const processedKeys = new Set();
 
-function showAnchorWarning(show) {
-  const el = document.getElementById('survey-anchor-warning');
-  if (el) el.classList.toggle('d-none', !show);
+function fileKey(file) {
+  return `${file.name}:${file.size}:${file.lastModified}`;
 }
 
 function showPdfPanel(file, blobUrl) {
@@ -23,7 +23,7 @@ function showPdfPanel(file, blobUrl) {
       <label class="form-label small text-muted">Pratonton PDF (1D Laporan)</label>
       <div id="survey-pdf-list"></div>
     `;
-    const mapCard = document.querySelector('[data-survey-map-card]') || document.getElementById('gis-map')?.closest('.col-md-6');
+    const mapCard = document.querySelector('[data-survey-map-card]');
     if (mapCard) mapCard.appendChild(panel);
   }
   const list = document.getElementById('survey-pdf-list');
@@ -44,6 +44,7 @@ function showPdfPanel(file, blobUrl) {
     pdfPreviews.delete(file.name);
     item.remove();
     if (!list.children.length) panel.classList.add('d-none');
+    window.gisMapPicker?.refreshMapLayout?.();
   });
   list.appendChild(item);
   panel.classList.remove('d-none');
@@ -59,7 +60,7 @@ function updateDayControl(parsed) {
       <label class="form-label small text-muted mb-1">Hari (2D)</label>
       <select id="survey-day-select" class="form-select form-select-sm"></select>
     `;
-    const mapCol = document.getElementById('gis-map')?.parentElement || document.getElementById('gis-map-edit')?.parentElement;
+    const mapCol = document.querySelector('[data-survey-map-card]');
     if (mapCol) mapCol.appendChild(wrap);
   }
 
@@ -79,13 +80,24 @@ function updateDayControl(parsed) {
 
 function pushMetadataToForm(meta) {
   if (!meta || (!meta.title && !meta.description && !meta.location_name)) return;
-  window.surveyReportLivewire?.call(
-    'applySurveyMetadata',
-    meta.title || null,
-    meta.description || null,
-    meta.location_name || null,
-    meta.category_slug || null,
-  );
+  const wire = window.surveyReportLivewire;
+  if (!wire) return;
+  if (typeof wire.applySurveyMetadata === 'function') {
+    wire.applySurveyMetadata(
+      meta.title || null,
+      meta.description || null,
+      meta.location_name || null,
+      meta.category_slug || null,
+    );
+  } else {
+    wire.call(
+      'applySurveyMetadata',
+      meta.title || null,
+      meta.description || null,
+      meta.location_name || null,
+      meta.category_slug || null,
+    );
+  }
 }
 
 function showMetadataHint() {
@@ -96,17 +108,19 @@ function showMetadataHint() {
     el = document.createElement('div');
     el.id = 'survey-metadata-hint';
     el.className = 'alert alert-info py-2 small mb-3';
-    el.textContent = 'Kategori (CN/SH), tajuk, keterangan dan nama lokasi diisi automatik daripada fail survei. Anda boleh sunting sebelum hantar.';
+    el.textContent =
+      'Kategori (CN/SH), tajuk, keterangan dan nama lokasi diisi automatik daripada fail survei. Anda boleh sunting sebelum hantar.';
     formCol.prepend(el);
   }
   el.classList.remove('d-none');
 }
 
-function updateFileBadge(input, fileName, type, error = null) {
-  const listItem = [...(input.closest('form')?.querySelectorAll('.list-group-item') || [])].find((li) =>
-    li.textContent.includes(fileName)
+function updateFileBadge(fileName, type, error = null) {
+  const listItem = [...document.querySelectorAll('.list-group-item')].find((li) =>
+    li.textContent.includes(fileName),
   );
   if (!listItem) return;
+
   let badge = listItem.querySelector('.survey-type-badge');
   if (!badge) {
     badge = document.createElement('span');
@@ -114,21 +128,39 @@ function updateFileBadge(input, fileName, type, error = null) {
     listItem.querySelector('span')?.appendChild(badge);
   }
   const labels = { survey_3d: '3D', survey_2d: '2D', survey_1d: '1D', other: 'Fail' };
-  const classes = { survey_3d: 'bg-label-info', survey_2d: 'bg-label-warning', survey_1d: 'bg-label-danger', other: 'bg-label-secondary' };
+  const classes = {
+    survey_3d: 'bg-label-info',
+    survey_2d: 'bg-label-warning',
+    survey_1d: 'bg-label-danger',
+    other: 'bg-label-secondary',
+  };
   badge.textContent = error ? 'Ralat' : labels[type] || 'Fail';
   badge.className = `survey-type-badge badge ms-2 ${error ? 'bg-label-danger' : classes[type] || 'bg-label-secondary'}`;
+
+  let errEl = listItem.querySelector('.survey-parse-error');
   if (error) {
-    let errEl = listItem.querySelector('.survey-parse-error');
     if (!errEl) {
       errEl = document.createElement('small');
       errEl.className = 'survey-parse-error text-danger d-block';
       listItem.appendChild(errEl);
     }
     errEl.textContent = error;
+  } else if (errEl) {
+    errEl.remove();
   }
 }
 
-async function handleSurveyFile(file, input) {
+async function handleSurveyFile(file, retries = 0) {
+  const key = fileKey(file);
+  if (processedKeys.has(key)) return;
+
+  if (!window.gisMapPicker?.getMap?.()) {
+    if (retries < 25) {
+      setTimeout(() => handleSurveyFile(file, retries + 1), 120);
+    }
+    return;
+  }
+
   const ext = file.name.split('.').pop()?.toLowerCase();
   const isPdf = ext === 'pdf' || file.type === 'application/pdf';
 
@@ -144,64 +176,50 @@ async function handleSurveyFile(file, input) {
 
   if (type === 'other') return;
 
+  processedKeys.add(key);
+
   if (type === 'survey_1d') {
     const pdfSample = await file.slice(0, 65536).text();
-    pushMetadataToForm(extractReportMetadata(file.name, pdfSample));
-    showMetadataHint();
     const url = URL.createObjectURL(file);
     pdfPreviews.set(file.name, url);
     showPdfPanel(file, url);
-    updateFileBadge(input, file.name, type);
+    updateFileBadge(file.name, type);
+    window.gisMapPicker?.refreshMapLayout?.();
+    setTimeout(() => {
+      pushMetadataToForm(extractReportMetadata(file.name, pdfSample));
+      showMetadataHint();
+    }, 0);
     return;
   }
-
-  pushMetadataToForm(extractReportMetadata(file.name, text));
-  showMetadataHint();
-
-  const anchor = window.gisMapPicker?.getAnchor?.();
-  if (!anchor) {
-    showAnchorWarning(true);
-    updateFileBadge(input, file.name, type, 'Sila cari lokasi atau klik peta untuk tetapkan tapak.');
-    return;
-  }
-  showAnchorWarning(false);
 
   try {
     if (!text) text = await file.text();
+    const anchor = window.gisMapPicker?.ensureAnchor?.();
+    if (!anchor) throw new Error('Peta belum sedia. Muat semula halaman.');
+
     let parsed = type === 'survey_3d' ? parse3dCsv(text) : parse2dTxt(text);
     parsed = transformToWgs84(parsed, anchor.lat, anchor.lng);
     window.gisMapPicker?.addSurveyLayer(parsed, file.name);
     if (type === 'survey_2d') updateDayControl(parsed);
-    updateFileBadge(input, file.name, type);
+    updateFileBadge(file.name, type);
+    window.gisMapPicker?.refreshMapLayout?.();
+    setTimeout(() => {
+      pushMetadataToForm(extractReportMetadata(file.name, text));
+      showMetadataHint();
+    }, 0);
   } catch (e) {
-    updateFileBadge(input, file.name, type, e.message);
+    processedKeys.delete(key);
+    updateFileBadge(file.name, type, e.message);
   }
 }
 
-function bindFileInputs() {
+export function bindSurveyFilePreview() {
   document.querySelectorAll('[data-survey-files]').forEach((input) => {
     if (input.dataset.surveyBound) return;
     input.dataset.surveyBound = '1';
     input.addEventListener('change', () => {
-      [...input.files].forEach((f) => handleSurveyFile(f, input));
+      const picked = Array.from(input.files || []);
+      picked.forEach((f) => handleSurveyFile(f));
     });
   });
 }
-
-function bindLivewire() {
-  document.addEventListener('livewire:init', () => {
-    Livewire.hook('morph.updated', () => {
-      bindFileInputs();
-      const anchor = window.gisMapPicker?.getAnchor?.();
-      showAnchorWarning(!anchor);
-    });
-  });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  bindFileInputs();
-  bindLivewire();
-  showAnchorWarning(!window.gisMapPicker?.getAnchor?.());
-});
-
-export { handleSurveyFile, bindFileInputs };

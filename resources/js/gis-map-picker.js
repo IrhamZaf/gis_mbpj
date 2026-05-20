@@ -16,7 +16,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const MBPJ = [3.1073, 101.6067];
+export const MBPJ_DEFAULT = { lat: 3.1073, lng: 101.6067 };
+const MBPJ = [MBPJ_DEFAULT.lat, MBPJ_DEFAULT.lng];
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 const PJ_VIEWBOX = '101.45,3.02,101.75,3.18'; // west,south,east,north
 
@@ -45,7 +46,28 @@ function getAnchor() {
   const lat = latEl ? parseFloat(latEl.value) : NaN;
   const lng = lngEl ? parseFloat(lngEl.value) : NaN;
   if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng };
+
+  if (siteMarker) {
+    const { lat: markerLat, lng: markerLng } = siteMarker.getLatLng();
+    return { lat: markerLat, lng: markerLng };
+  }
+
   return null;
+}
+
+function refreshMapLayout() {
+  if (!map) return;
+  map.invalidateSize();
+  const anchor = getAnchor();
+  if (anchor) updateAnchorInputs(anchor.lat, anchor.lng);
+}
+
+/** Return the current anchor or the MBPJ default — but never auto-place a marker. */
+function ensureAnchor() {
+  const existing = getAnchor();
+  if (existing) return existing;
+
+  return { lat: MBPJ_DEFAULT.lat, lng: MBPJ_DEFAULT.lng };
 }
 
 function updateAnchorInputs(lat, lng) {
@@ -54,10 +76,12 @@ function updateAnchorInputs(lat, lng) {
   if (latEl) {
     latEl.value = lat;
     latEl.dispatchEvent(new Event('input', { bubbles: true }));
+    latEl.dispatchEvent(new Event('change', { bubbles: true }));
   }
   if (lngEl) {
     lngEl.value = lng;
     lngEl.dispatchEvent(new Event('input', { bubbles: true }));
+    lngEl.dispatchEvent(new Event('change', { bubbles: true }));
   }
 }
 
@@ -290,10 +314,44 @@ function initLocationSearch() {
   });
 }
 
+function destroyMapInstance() {
+  if (map) {
+    try {
+      map.remove();
+    } catch {
+      /* already removed */
+    }
+  }
+  map = null;
+  siteMarker = null;
+  surveyLayerGroup = null;
+  drawnItems = null;
+}
+
+function mapContainerIsAlive(mapElId) {
+  const el = document.getElementById(mapElId);
+  if (!el) return false;
+  if (!map) return false;
+  const container = map.getContainer?.();
+  if (!container) return false;
+  if (!document.body.contains(container)) return false;
+  if (container !== el) return false;
+  if (!el.classList.contains('leaflet-container')) return false;
+  return true;
+}
+
 function initMapPicker(options = {}) {
   const mapElId = options.mapElementId || 'gis-map';
   const el = document.getElementById(mapElId);
-  if (!el || map) return map;
+  if (!el) return null;
+
+  if (map) {
+    if (mapContainerIsAlive(mapElId)) {
+      setTimeout(() => map.invalidateSize(), 100);
+      return map;
+    }
+    destroyMapInstance();
+  }
 
   onCoordinatesChange = options.onCoordinatesChange || null;
   onGisDataChange = options.onGisDataChange || null;
@@ -348,7 +406,9 @@ function initMapPicker(options = {}) {
     if (searchInput) searchInput.value = options.initialLocationLabel;
   }
 
-  setTimeout(() => map.invalidateSize(), 300);
+  setTimeout(() => {
+    map.invalidateSize();
+  }, 300);
   return map;
 }
 
@@ -389,9 +449,23 @@ window.gisMapPicker = {
   setSurvey2dDay,
   loadStoredSurveys,
   getAnchor,
+  ensureAnchor,
   setAnchor,
   searchLocation,
+  refreshMapLayout,
+  destroyMapInstance,
+  mapContainerIsAlive,
   getMap: () => map,
 };
 
-export { initMapPicker, addSurveyLayer, clearSurveyLayers, setSurvey2dDay, loadStoredSurveys, getAnchor, setAnchor };
+export {
+  initMapPicker,
+  addSurveyLayer,
+  clearSurveyLayers,
+  setSurvey2dDay,
+  loadStoredSurveys,
+  getAnchor,
+  ensureAnchor,
+  setAnchor,
+  refreshMapLayout,
+};

@@ -7,10 +7,18 @@ use App\Models\ReportAttachment;
 use App\Services\Survey\SurveyAttachmentProcessor;
 use App\Services\Survey\SurveyDocumentClassifier;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Validation\ValidationException;
 
 trait StoresSurveyAttachments
 {
+    /** @return array{0: float, 1: float} */
+    protected function resolvedReportAnchor(?float $latitude = null, ?float $longitude = null): array
+    {
+        return [
+            $latitude ?? (float) config('gis.default_latitude'),
+            $longitude ?? (float) config('gis.default_longitude'),
+        ];
+    }
+
     protected function validateSurveyFiles(array $files, ?float $latitude, ?float $longitude): void
     {
         $classifier = app(SurveyDocumentClassifier::class);
@@ -27,12 +35,6 @@ trait StoresSurveyAttachments
                 $file->getMimeType(),
                 $sample
             );
-
-            if ($classifier->requiresAnchor($type) && ($latitude === null || $longitude === null)) {
-                throw ValidationException::withMessages([
-                    'files' => 'Sila cari lokasi atau klik peta untuk tetapkan tapak sebelum muat naik fail survei CSV/TXT.',
-                ]);
-            }
 
             if ($classifier->isSurveyType($type)) {
                 if (isset($typesSeen[$type])) {

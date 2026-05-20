@@ -5,11 +5,13 @@ namespace App\Livewire\Concerns;
 use App\Models\ReportCategory;
 use App\Services\Survey\SurveyReportMetadataExtractor;
 use Illuminate\Http\UploadedFile;
+use Livewire\Attributes\Renderless;
 
 trait AppliesSurveyMetadata
 {
     public bool $surveyMetadataApplied = false;
 
+    #[Renderless]
     public function applySurveyMetadata(
         ?string $title = null,
         ?string $description = null,

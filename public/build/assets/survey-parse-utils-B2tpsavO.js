@@ -1,0 +1,1 @@
+function e(e){let t=Math.min(Math.max(e,0),60)/60;return`rgb(${Math.round(49+t*166)},${Math.round(163-t*163)},${Math.round(84-t*84)})`}export{e as t};

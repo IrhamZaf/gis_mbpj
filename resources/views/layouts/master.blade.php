@@ -174,6 +174,9 @@
 
   <!-- Livewire Scripts -->
   @livewireScripts
+
+  <!-- Scripts that depend on Livewire (maps, wire hooks, etc.) -->
+  @stack('scripts-after-livewire')
 </body>
 
 </html>

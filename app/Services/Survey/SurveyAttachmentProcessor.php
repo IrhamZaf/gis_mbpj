@@ -34,6 +34,58 @@ class SurveyAttachmentProcessor
         return (string) file_get_contents($path, false, null, 0, 65536);
     }
 
+    private function readFileContents(UploadedFile $file): string
+    {
+        $path = $file->getRealPath();
+        if (! $path || ! is_readable($path)) {
+            return '';
+        }
+
+        return (string) file_get_contents($path);
+    }
+
+    /**
+     * Parse an uploaded file for map preview (before the report is saved).
+     *
+     * @return array{file_name: string, document_type: string, parse_status: string, parse_message: ?string, parsed_data: ?array}
+     */
+    public function preview(UploadedFile $file, ?float $anchorLat, ?float $anchorLng): array
+    {
+        $fileName = $file->getClientOriginalName();
+        $sample   = $this->readFileSample($file);
+        $type     = $this->classifier->classify($fileName, $file->getMimeType(), $sample);
+
+        $result = [
+            'file_name'     => $fileName,
+            'document_type' => $type,
+            'parse_status'  => 'ok',
+            'parse_message' => null,
+            'parsed_data'   => null,
+        ];
+
+        if (! $this->classifier->isSurveyType($type)) {
+            return $result;
+        }
+
+        if ($type === SurveyDocumentClassifier::TYPE_1D) {
+            $result['parsed_data'] = ['type' => '1d', 'previewable' => true];
+
+            return $result;
+        }
+
+        [$anchorLat, $anchorLng] = $this->resolveAnchor($anchorLat, $anchorLng);
+
+        try {
+            $parsed = $this->parseContent($type, $this->readFileContents($file));
+            $result['parsed_data'] = $this->applyGeoref($parsed, $anchorLat, $anchorLng);
+        } catch (\Throwable $e) {
+            $result['parse_status']  = 'failed';
+            $result['parse_message'] = $e->getMessage();
+        }
+
+        return $result;
+    }
+
     /**
      * @return array{document_type: string, parsed_data: ?array, parse_status: string, parse_message: ?string}
      */
@@ -68,14 +120,7 @@ class SurveyAttachmentProcessor
             ];
         }
 
-        if ($this->classifier->requiresAnchor($documentType) && ($anchorLat === null || $anchorLng === null)) {
-            return [
-                'document_type' => $documentType,
-                'parsed_data'   => null,
-                'parse_status'  => 'failed',
-                'parse_message' => 'Sila tetapkan lokasi tapak pada peta sebelum muat naik fail survei.',
-            ];
-        }
+        [$anchorLat, $anchorLng] = $this->resolveAnchor($anchorLat, $anchorLng);
 
         try {
             $parsed = $this->parseContent($documentType, $content);
@@ -113,6 +158,8 @@ class SurveyAttachmentProcessor
             return;
         }
 
+        [$anchorLat, $anchorLng] = $this->resolveAnchor($anchorLat, $anchorLng);
+
         try {
             $content = Storage::disk('public')->get($attachment->file_path);
             $parsed = $this->parseContent($attachment->document_type, $content);
@@ -129,6 +176,15 @@ class SurveyAttachmentProcessor
                 'parse_message' => $e->getMessage(),
             ]);
         }
+    }
+
+    /** @return array{0: float, 1: float} */
+    private function resolveAnchor(?float $anchorLat, ?float $anchorLng): array
+    {
+        return [
+            $anchorLat ?? (float) config('gis.default_latitude'),
+            $anchorLng ?? (float) config('gis.default_longitude'),
+        ];
     }
 
     private function parseContent(string $documentType, string $content): array

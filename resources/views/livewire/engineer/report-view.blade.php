@@ -29,18 +29,6 @@
           <input type="hidden" id="report-anchor-lat" value="{{ $report->latitude }}" />
           <input type="hidden" id="report-anchor-lng" value="{{ $report->longitude }}" />
           <div id="report-map" style="height:450px;border-radius:0 0 8px 8px;" wire:ignore></div>
-          @php $pdfAttachments = $report->attachments->where('document_type', 'survey_1d'); @endphp
-          @if ($pdfAttachments->count())
-          <div class="p-3 border-top">
-            <label class="form-label small text-muted">Laporan 1D (PDF)</label>
-            @foreach ($pdfAttachments as $pdf)
-            <div class="mb-3">
-              <div class="small mb-1">{!! $pdf->document_type_badge !!} {{ $pdf->file_name }}</div>
-              <iframe src="{{ asset('storage/' . $pdf->file_path) }}" style="width:100%;height:280px;border:1px solid var(--bs-border-color);border-radius:8px;"></iframe>
-            </div>
-            @endforeach
-          </div>
-          @endif
         </div>
       </div>
     </div>
@@ -64,7 +52,14 @@
                 @else<span class="badge bg-label-secondary">-</span>@endif
               </td>
               <td>{{ $att->file_size_formatted }}</td>
-              <td><a href="{{ asset('storage/' . $att->file_path) }}" class="btn btn-sm btn-outline-primary" download><i class="ti tabler-download"></i></a></td>
+              <td class="text-nowrap">
+                @if (preg_match('/\.(pdf|jpg|jpeg|png)$/i', $att->file_name))
+                  <button type="button" class="btn btn-sm btn-outline-info me-1" onclick="viewAttachment('{{ asset('storage/' . $att->file_path) }}', '{{ $att->file_name }}')" title="Lihat Lampiran">
+                    <i class="ti tabler-eye"></i>
+                  </button>
+                @endif
+                <a href="{{ asset('storage/' . $att->file_path) }}" class="btn btn-sm btn-outline-primary" download title="Muat Turun"><i class="ti tabler-download"></i></a>
+              </td>
             </tr>
             @endforeach
           </tbody>
@@ -80,13 +75,73 @@
     <a href="{{ route('engineer.reports') }}" class="btn btn-outline-secondary"><i class="ti tabler-arrow-left me-1"></i>Kembali</a>
   </div>
 
+  <!-- Attachment Viewer Modal -->
+  <div class="modal fade" id="attachmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="attachmentModalTitle">Lihat Lampiran</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-0">
+          <div class="text-center p-4 d-none" id="attachmentLoading">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Memuatkan lampiran...</p>
+          </div>
+          <iframe id="attachmentViewer" src="" style="width:100%; height:80vh; border:none; display:none;"></iframe>
+          <div id="imageViewerContainer" class="text-center p-3" style="display:none; max-height: 80vh; overflow: auto;">
+             <img id="imageViewer" src="" style="max-width: 100%; height: auto;" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   @push('scripts')
   @vite(['resources/js/gis-map-picker.js'])
   <script>
+    function viewAttachment(url, filename) {
+      document.getElementById('attachmentModalTitle').innerText = filename;
+      const iframe = document.getElementById('attachmentViewer');
+      const imgContainer = document.getElementById('imageViewerContainer');
+      const img = document.getElementById('imageViewer');
+      const loading = document.getElementById('attachmentLoading');
+      
+      iframe.style.display = 'none';
+      imgContainer.style.display = 'none';
+      loading.classList.remove('d-none');
+      
+      const modal = new bootstrap.Modal(document.getElementById('attachmentModal'));
+      modal.show();
+      
+      if (filename.toLowerCase().match(/\.(jpg|jpeg|png|gif)$/)) {
+         img.onload = () => { loading.classList.add('d-none'); imgContainer.style.display = 'block'; };
+         img.src = url;
+      } else {
+         iframe.onload = () => { loading.classList.add('d-none'); iframe.style.display = 'block'; };
+         iframe.src = url;
+      }
+    }
+    
+    document.getElementById('attachmentModal').addEventListener('hidden.bs.modal', function () {
+      document.getElementById('attachmentViewer').src = '';
+      document.getElementById('imageViewer').src = '';
+    });
+  </script>
+  @php
+    $surveyLayersData = $report->attachments
+      ->whereIn('document_type', ['survey_3d', 'survey_2d'])
+      ->where('parse_status', 'ok')
+      ->map(fn($a) => [
+        'file_name'    => $a->file_name,
+        'parse_status' => $a->parse_status,
+        'parsed_data'  => $a->parsed_data,
+      ])
+      ->values();
+  @endphp
+  <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const surveyLayers = @json($report->attachments->whereIn('document_type', ['survey_3d', 'survey_2d'])->where('parse_status', 'ok')->map(fn($a) => [
-        'file_name' => $a->file_name, 'parse_status' => $a->parse_status, 'parsed_data' => $a->parsed_data,
-      ])->values());
+      const surveyLayers = @json($surveyLayersData);
       window.gisMapPicker.initMapPicker({
         mapElementId: 'report-map',
         initialLat: {{ $report->latitude ?? 3.1073 }},

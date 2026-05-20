@@ -25,9 +25,10 @@
               <td>{!! $r->status_badge !!}</td>
               <td>{{ $r->created_at->format('d/m/Y') }}</td>
               <td>
-                @if ($r->status === 'draft')
-                  <a href="{{ route('surveyor.reports.edit', $r) }}" class="btn btn-sm btn-icon btn-text-secondary"><i class="ti tabler-pencil"></i></a>
-                @endif
+                <div class="d-flex gap-1">
+                  <a href="{{ route('surveyor.reports.view', $r) }}" class="btn btn-sm btn-icon btn-text-info" title="Lihat"><i class="ti tabler-eye"></i></a>
+                  <a href="{{ route('surveyor.reports.edit', $r) }}" class="btn btn-sm btn-icon btn-text-secondary" title="Kemaskini"><i class="ti tabler-pencil"></i></a>
+                </div>
               </td>
             </tr>
             @empty

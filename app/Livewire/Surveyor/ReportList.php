@@ -17,6 +17,7 @@ class ReportList extends Component
 
     public string $search = '';
     public string $filterStatus = '';
+    protected $paginationTheme = 'bootstrap';
 
     public function updatingSearch() { $this->resetPage(); }
     public function updatingFilterStatus() { $this->resetPage(); }

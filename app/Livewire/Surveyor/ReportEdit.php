@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Surveyor;
 
-use App\Livewire\Concerns\PreviewsSurveyUploadsOnMap;
 use App\Livewire\Concerns\StoresSurveyAttachments;
 use App\Models\Report;
 use App\Models\ReportAttachment;
@@ -21,23 +20,22 @@ use Livewire\WithFileUploads;
 #[Title('Edit Laporan')]
 class ReportEdit extends Component
 {
-    use PreviewsSurveyUploadsOnMap;
     use StoresSurveyAttachments;
     use WithFileUploads;
 
     public Report $report;
-    public int $category_id = 0;
+    public $category_id = '';
     public string $title = '';
     public string $description = '';
     public string $location_name = '';
     public ?float $latitude = null;
     public ?float $longitude = null;
     public ?array $gis_data = null;
-    public array $newFiles = [];
+    public array $attachments = []; // For NEW uploads
 
     public function mount(Report $report)
     {
-        if ($report->user_id !== Auth::id() || $report->status !== 'draft') {
+        if ($report->user_id !== Auth::id()) {
             abort(403);
         }
 
@@ -56,21 +54,29 @@ class ReportEdit extends Component
     protected function rules(): array
     {
         return [
-            'category_id'   => ['required', 'integer', Rule::exists('report_categories', 'id')],
+            'category_id'   => ['required', Rule::exists('report_categories', 'id')],
             'title'         => 'required|string|min:5|max:255',
             'description'   => 'required|string|min:10',
+            'location_name' => 'nullable|string|max:255',
+            'latitude'      => 'nullable|numeric|between:-90,90',
+            'longitude'     => 'nullable|numeric|between:-180,180',
+            'attachments.*' => 'nullable|file|max:20480',
         ];
     }
 
     protected array $messages = [
         'category_id.required' => 'Sila pilih kategori laporan.',
+        'category_id.exists'   => 'Kategori laporan tidak sah.',
         'title.required'       => 'Sila masukkan tajuk laporan.',
+        'title.min'            => 'Tajuk mestilah sekurang-kurangnya 5 aksara.',
         'description.required' => 'Sila masukkan keterangan.',
-        'newFiles.*.max'       => 'Saiz fail maksimum 20MB.',
+        'description.min'      => 'Keterangan mestilah sekurang-kurangnya 10 aksara.',
+        'attachments.*.max'    => 'Saiz fail maksimum ialah 20 MB.',
+        'attachments.*.file'   => 'Muat naik fail tidak sah.',
     ];
 
     #[On('report-coordinates-updated')]
-    public function onReportCoordinatesUpdated(float $latitude, float $longitude, ?string $label = null): void
+    public function setCoordinates(float $latitude, float $longitude, ?string $label = null): void
     {
         $this->latitude  = round($latitude, 7);
         $this->longitude = round($longitude, 7);
@@ -81,7 +87,7 @@ class ReportEdit extends Component
     }
 
     #[On('report-gis-data-updated')]
-    public function onReportGisDataUpdated(?array $data = null): void
+    public function setGisData(?array $data = null): void
     {
         $this->gis_data = $data;
     }
@@ -91,29 +97,21 @@ class ReportEdit extends Component
         $attachment = ReportAttachment::where('report_id', $this->report->id)->findOrFail($id);
         Storage::disk('public')->delete($attachment->file_path);
         $attachment->delete();
-
-        $this->refreshMapPreviewLayers($this->newFiles, $this->existingSurveyLayers());
     }
 
-    public function updatedNewFiles(): void
+    public function removeAttachment(int $index): void
     {
-        $this->refreshMapPreviewLayers($this->newFiles, $this->existingSurveyLayers());
-    }
-
-    public function removeNewFile(int $index): void
-    {
-        array_splice($this->newFiles, $index, 1);
-        $this->refreshMapPreviewLayers($this->newFiles, $this->existingSurveyLayers());
+        array_splice($this->attachments, $index, 1);
     }
 
     public function saveDraft()
     {
-        $this->saveReport('draft');
+        $this->store('draft');
     }
 
     public function submit()
     {
-        $this->saveReport('submitted');
+        $this->store('submitted');
     }
 
     private function existingSurveyLayers(): array
@@ -133,41 +131,30 @@ class ReportEdit extends Component
             ->all();
     }
 
-    private function ensureMapCoordinates(): void
+    private function store(string $status): void
     {
-        if ($this->latitude !== null && $this->longitude !== null) {
-            return;
-        }
-
-        [$lat, $lng] = $this->resolvedReportAnchor(null, null);
-        $this->latitude  = $lat;
-        $this->longitude = $lng;
-    }
-
-    private function saveReport(string $status): void
-    {
-        $this->ensureMapCoordinates();
+        $this->validate();
 
         try {
-            $this->validate();
-            [$latitude, $longitude] = $this->resolvedReportAnchor($this->latitude, $this->longitude);
-            $this->validateSurveyFiles($this->newFiles, $latitude, $longitude);
+            [$lat, $lng] = $this->resolvedReportAnchor($this->latitude, $this->longitude);
 
             $this->report->update([
-                'category_id'   => $this->category_id,
+                'category_id'   => (int) $this->category_id,
                 'title'         => $this->title,
                 'description'   => $this->description,
                 'status'        => $status,
-                'latitude'      => $latitude,
-                'longitude'     => $longitude,
+                'latitude'      => $lat,
+                'longitude'     => $lng,
                 'location_name' => $this->location_name ?: null,
                 'gis_data'      => $this->gis_data,
                 'submitted_at'  => $status === 'submitted' ? now() : null,
             ]);
 
-            $this->storeAttachments($this->report, $this->newFiles, $latitude, $longitude);
+            if (!empty($this->attachments)) {
+                $this->storeAttachments($this->report, $this->attachments, $lat, $lng);
+            }
 
-            session()->flash('message', $status === 'submitted' ? 'Laporan berjaya dihantar.' : 'Draf dikemaskini.');
+            session()->flash('message', $status === 'submitted' ? 'Laporan berjaya dikemaskini.' : 'Draf berjaya dikemaskini.');
 
             $this->redirect(route('surveyor.reports'), navigate: false);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -177,15 +164,15 @@ class ReportEdit extends Component
                 'report_id' => $this->report->id,
                 'message'   => $e->getMessage(),
             ]);
-            $this->addError('submit', 'Gagal menyimpan laporan: ' . $e->getMessage());
+            $this->addError('submit', 'Gagal menyimpan laporan. Sila cuba lagi.');
         }
     }
 
     public function render()
     {
         return view('livewire.surveyor.report-edit', [
-            'categories'  => ReportCategory::orderBy('name')->get(),
-            'attachments' => $this->report->attachments()->get(),
+            'categories'       => ReportCategory::orderBy('name')->get(),
+            'savedAttachments' => $this->report->attachments()->get(),
         ]);
     }
 }

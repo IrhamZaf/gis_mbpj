@@ -25,6 +25,12 @@ Route::get('/', function () {
     };
 })->middleware('auth');
 
+// ── Shared Authenticated Routes ──────────────────────
+Route::middleware('auth')->group(function () {
+    Route::get('/attachments/{attachment}/download', [App\Http\Controllers\AttachmentController::class, 'download'])->name('attachment.download');
+    Route::get('/attachments/{attachment}/view', [App\Http\Controllers\AttachmentController::class, 'view'])->name('attachment.view');
+});
+
 // ═══════════════════════════════════════════════════════
 // SUPERADMIN
 // ═══════════════════════════════════════════════════════
@@ -49,6 +55,7 @@ Route::middleware(['auth', 'role:surveyor'])
         Route::get('/',                  App\Livewire\Surveyor\Dashboard::class)->name('dashboard');
         Route::get('/reports',           App\Livewire\Surveyor\ReportList::class)->name('reports');
         Route::get('/reports/create',    App\Livewire\Surveyor\ReportCreate::class)->name('reports.create');
+        Route::get('/reports/{report}',      App\Livewire\Surveyor\ReportView::class)->name('reports.view');
         Route::get('/reports/{report}/edit', App\Livewire\Surveyor\ReportEdit::class)->name('reports.edit');
         Route::get('/map',                   App\Livewire\Shared\InteractiveMap::class)->name('map');
     });

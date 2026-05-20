@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Livewire\Surveyor;
+
+use App\Models\Report;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
+
+#[Layout('layouts.master')]
+#[Title('Lihat Laporan')]
+class ReportView extends Component
+{
+    public Report $report;
+
+    public function mount(Report $report)
+    {
+        // Allow surveyor to view their own reports
+        if ($report->user_id !== auth()->id()) {
+            abort(403);
+        }
+        $this->report = $report->load(['category', 'user', 'attachments']);
+    }
+
+    public function render()
+    {
+        return view('livewire.surveyor.report-view');
+    }
+}

@@ -15,12 +15,20 @@ class Dashboard extends Component
     public function render()
     {
         $userId = Auth::id();
+        $base = Report::where('user_id', $userId);
 
         return view('livewire.surveyor.dashboard', [
-            'totalReports'    => Report::where('user_id', $userId)->count(),
-            'draftReports'    => Report::where('user_id', $userId)->draft()->count(),
-            'submittedReports'=> Report::where('user_id', $userId)->submitted()->count(),
-            'recentReports'   => Report::with('category')->where('user_id', $userId)->latest()->take(5)->get(),
+            'user'             => Auth::user(),
+            'totalReports'     => (clone $base)->count(),
+            'draftReports'     => (clone $base)->draft()->count(),
+            'submittedReports' => (clone $base)->submitted()->count(),
+            'mappedReports'    => (clone $base)->whereNotNull('latitude')->whereNotNull('longitude')->count(),
+            'reportsThisWeek'  => (clone $base)->where('created_at', '>=', now()->startOfWeek())->count(),
+            'recentReports'    => Report::with('category')
+                ->where('user_id', $userId)
+                ->latest()
+                ->take(8)
+                ->get(),
         ]);
     }
 }

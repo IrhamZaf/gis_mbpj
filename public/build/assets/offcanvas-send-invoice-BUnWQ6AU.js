@@ -1,0 +1,1 @@
+document.addEventListener(`DOMContentLoaded`,function(e){let t=document.querySelector(`#invoice-message`);t.value=t.textContent.replace(/^\s+|\s+$/gm,``)});

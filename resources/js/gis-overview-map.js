@@ -15,7 +15,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const MBPJ_CENTER = [3.1073, 101.6067];
+const MBSJ_CENTER = [3.0565, 101.5851];
 const DEFAULT_ZOOM = 13;
 
 const HEAT_OPTIONS = {
@@ -168,7 +168,7 @@ function updateMarkers(markers) {
   const emptyEl = document.getElementById('map-empty-state');
   if (!markers || markers.length === 0) {
     if (emptyEl) emptyEl.classList.remove('d-none');
-    map.setView(MBPJ_CENTER, DEFAULT_ZOOM);
+    map.setView(MBSJ_CENTER, DEFAULT_ZOOM);
     applyViewMode();
     return;
   }
@@ -213,7 +213,7 @@ function initMap() {
   const el = document.getElementById('gis-overview-map');
   if (!el || map) return;
 
-  map = L.map(el, { center: MBPJ_CENTER, zoom: DEFAULT_ZOOM, layers: [satelliteLayer] });
+  map = L.map(el, { center: MBSJ_CENTER, zoom: DEFAULT_ZOOM, layers: [satelliteLayer] });
 
   L.control.layers(
     {

@@ -11,7 +11,7 @@ class ReportSeeder extends Seeder
 {
     public function run(): void
     {
-        $surveyor = User::where('email', 'surveyor@mbpj.gov.my')->first();
+        $surveyor = User::where('email', 'surveyor@mbsj.gov.my')->first();
         if (!$surveyor) {
             $this->command?->warn('Surveyor user not found. Run DatabaseSeeder first.');
 
@@ -34,7 +34,7 @@ class ReportSeeder extends Seeder
                 'status'        => 'submitted',
                 'latitude'      => 3.1182,
                 'longitude'     => 101.6234,
-                'location_name' => 'Persimpangan Jalan SS2/24, Petaling Jaya',
+                'location_name' => 'Persimpangan Jalan SS2/24, Subang Jaya',
                 'submitted_at'  => now()->subDays(5),
                 'gis_data'      => [
                     'type'     => 'FeatureCollection',
@@ -62,7 +62,7 @@ class ReportSeeder extends Seeder
                 'status'        => 'submitted',
                 'latitude'      => 3.1045,
                 'longitude'     => 101.6521,
-                'location_name' => 'Taman Jaya, Petaling Jaya',
+                'location_name' => 'Taman Jaya, Subang Jaya',
                 'submitted_at'  => now()->subDays(3),
             ],
             [
@@ -73,7 +73,7 @@ class ReportSeeder extends Seeder
                 'status'        => 'submitted',
                 'latitude'      => 3.0821,
                 'longitude'     => 101.6108,
-                'location_name' => 'Jalan SS3/45, Petaling Jaya',
+                'location_name' => 'Jalan SS3/45, Subang Jaya',
                 'submitted_at'  => now()->subDays(2),
             ],
             [
@@ -95,7 +95,7 @@ class ReportSeeder extends Seeder
                 'status'        => 'submitted',
                 'latitude'      => 3.0956,
                 'longitude'     => 101.6589,
-                'location_name' => 'Bukit Gasing, Petaling Jaya',
+                'location_name' => 'Bukit Gasing, Subang Jaya',
                 'submitted_at'  => now()->subHours(12),
             ],
             [
@@ -106,7 +106,7 @@ class ReportSeeder extends Seeder
                 'status'        => 'submitted',
                 'latitude'      => 3.1068,
                 'longitude'     => 101.5932,
-                'location_name' => 'Lorong Kelana Jaya 1, Petaling Jaya',
+                'location_name' => 'Lorong Kelana Jaya 1, Subang Jaya',
                 'submitted_at'  => now()->subHours(6),
             ],
             [
@@ -117,7 +117,7 @@ class ReportSeeder extends Seeder
                 'status'        => 'draft',
                 'latitude'      => 3.1354,
                 'longitude'     => 101.6215,
-                'location_name' => 'Damansara Utama, Petaling Jaya',
+                'location_name' => 'Damansara Utama, Subang Jaya',
                 'submitted_at'  => null,
             ],
             [
@@ -128,7 +128,7 @@ class ReportSeeder extends Seeder
                 'status'        => 'draft',
                 'latitude'      => 3.1289,
                 'longitude'     => 101.5784,
-                'location_name' => 'Ara Damansara, Petaling Jaya',
+                'location_name' => 'Ara Damansara, Subang Jaya',
                 'submitted_at'  => null,
             ],
             [

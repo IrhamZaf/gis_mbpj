@@ -16,10 +16,10 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-export const MBPJ_DEFAULT = { lat: 3.1073, lng: 101.6067 };
-const MBPJ = [MBPJ_DEFAULT.lat, MBPJ_DEFAULT.lng];
+export const MBSJ_DEFAULT = { lat: 3.0565, lng: 101.5851 };
+const MBSJ = [MBSJ_DEFAULT.lat, MBSJ_DEFAULT.lng];
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
-const PJ_VIEWBOX = '101.45,3.02,101.75,3.18'; // west,south,east,north
+const SJ_VIEWBOX = '101.50,3.00,101.68,3.12'; // west,south,east,north
 
 let map = null;
 let siteMarker = null;
@@ -62,12 +62,12 @@ function refreshMapLayout() {
   if (anchor) updateAnchorInputs(anchor.lat, anchor.lng);
 }
 
-/** Return the current anchor or the MBPJ default — but never auto-place a marker. */
+/** Return the current anchor or the MBSJ default — but never auto-place a marker. */
 function ensureAnchor() {
   const existing = getAnchor();
   if (existing) return existing;
 
-  return { lat: MBPJ_DEFAULT.lat, lng: MBPJ_DEFAULT.lng };
+  return { lat: MBSJ_DEFAULT.lat, lng: MBSJ_DEFAULT.lng };
 }
 
 function updateAnchorInputs(lat, lng) {
@@ -254,12 +254,12 @@ async function searchLocation(query) {
   searchAbort = new AbortController();
 
   const params = new URLSearchParams({
-    q: `${q}, Petaling Jaya, Selangor, Malaysia`,
+    q: `${q}, Subang Jaya, Selangor, Malaysia`,
     format: 'json',
     addressdetails: '0',
     limit: '6',
     countrycodes: 'my',
-    viewbox: PJ_VIEWBOX,
+    viewbox: SJ_VIEWBOX,
     bounded: '0',
   });
 
@@ -356,8 +356,8 @@ function initMapPicker(options = {}) {
   onCoordinatesChange = options.onCoordinatesChange || null;
   onGisDataChange = options.onGisDataChange || null;
 
-  const lat = options.initialLat ?? MBPJ[0];
-  const lng = options.initialLng ?? MBPJ[1];
+  const lat = options.initialLat ?? MBSJ[0];
+  const lng = options.initialLng ?? MBSJ[1];
   const zoom = options.initialZoom ?? 14;
 
   map = L.map(el, { center: [lat, lng], zoom, layers: [satelliteLayer] });

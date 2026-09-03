@@ -12,7 +12,7 @@
                     <div class="card-body">
                         <h5 class="card-title text-primary mb-3">Selamat Datang! 🎉</h5>
                         <p class="mb-6">
-                            Sistem Maklumat Geografi MBPJ. Anda telah berjaya log masuk ke dalam sistem.
+                            Sistem Maklumat Geografi MBSJ. Anda telah berjaya log masuk ke dalam sistem.
                         </p>
                         <a href="javascript:;" class="btn btn-sm btn-outline-primary">Lihat Peta</a>
                     </div>

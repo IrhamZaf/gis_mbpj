@@ -1,12 +1,12 @@
 <?php
 
 return [
-    'templateName'        => 'GIS MBPJ',
+    'templateName'        => 'GIS MBSJ',
     'templateSuffix'      => 'Sistem GIS',
     'templateVersion'     => '1.0.0',
     'templateFree'        => false,
-    'templateDescription' => 'Sistem Maklumat Geografi MBPJ',
-    'templateKeyword'     => 'gis, mbpj, peta, map, geospatial',
+    'templateDescription' => 'Sistem Maklumat Geografi MBSJ',
+    'templateKeyword'     => 'gis, mbsj, peta, map, geospatial',
     'creatorName'         => 'VinculoTech',
     'creatorUrl'          => 'https://vinculotech.com',
     'licenseUrl'          => '#',
@@ -14,7 +14,7 @@ return [
     'documentation'       => '#',
     'support'             => '#',
     'productPage'         => '',
-    'ogTitle'             => 'GIS MBPJ - Sistem Maklumat Geografi',
+    'ogTitle'             => 'GIS MBSJ - Sistem Maklumat Geografi',
     'ogType'              => 'website',
     'ogImage'             => '',
 ];

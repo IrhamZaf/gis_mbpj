@@ -7,9 +7,12 @@
   height: 64px;
 }
 
-.app-brand-logo.demo svg {
-  width: 34px;
-  height: 24px;
+.app-brand-logo.demo svg,
+.app-brand-logo.demo img,
+.app-brand-logo.demo .app-brand-logo-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
 }
 
 .app-brand-text.demo {

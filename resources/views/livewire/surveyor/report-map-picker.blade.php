@@ -3,7 +3,7 @@
   <div class="gis-location-search-wrap mb-2 position-relative">
     <div class="input-group">
       <span class="input-group-text"><i class="ti tabler-search"></i></span>
-      <input type="text" id="gis-location-search" class="form-control" placeholder="Cari alamat di Petaling Jaya..." autocomplete="off" />
+      <input type="text" id="gis-location-search" class="form-control" placeholder="Cari alamat di Subang Jaya..." autocomplete="off" />
       <button type="button" id="gis-location-search-btn" class="btn btn-outline-primary">Cari</button>
     </div>
     <ul id="gis-location-results" class="list-group position-absolute w-100 shadow-sm d-none gis-location-results"></ul>

@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
     {
         // ── Default Users ───────────────────────────────────
         User::updateOrCreate(
-            ['email' => 'admin@mbpj.gov.my'],
+            ['email' => 'admin@mbsj.gov.my'],
             [
                 'name'     => 'Super Admin',
                 'password' => Hash::make('password'),
@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'surveyor@mbpj.gov.my'],
+            ['email' => 'surveyor@mbsj.gov.my'],
             [
                 'name'     => 'Admin Surveyor',
                 'password' => Hash::make('password'),
@@ -31,9 +31,9 @@ class DatabaseSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'engineer@mbpj.gov.my'],
+            ['email' => 'engineer@mbsj.gov.my'],
             [
-                'name'     => 'Engineer MBPJ',
+                'name'     => 'Engineer MBSJ',
                 'password' => Hash::make('password'),
                 'role'     => 'engineer',
             ]

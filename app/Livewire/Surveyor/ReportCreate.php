@@ -96,7 +96,7 @@ class ReportCreate extends Component
         $this->validate();
 
         try {
-            // Default to MBPJ centre if no map coordinates set
+            // Default to MBSJ centre if no map coordinates set
             [$lat, $lng] = $this->resolvedReportAnchor($this->latitude, $this->longitude);
 
             $report = Report::create([

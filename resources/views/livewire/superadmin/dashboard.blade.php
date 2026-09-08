@@ -2,14 +2,58 @@
   @include('livewire.partials.dashboard-welcome', [
     'user' => $user,
     'roleLabel' => 'Superadmin',
-    'subtitle' => 'Pantau pengguna, kategori dan laporan GIS MBSJ dari satu skrin.',
+    'subtitle' => 'Pantau pengguna, unit, kategori dan laporan GIS MBSJ dari satu skrin.',
     'heroIcon' => 'tabler-shield-check',
     'actions' => [
       ['label' => 'Peta Interaktif', 'url' => route('superadmin.map'), 'icon' => 'tabler-map', 'class' => 'btn-primary'],
       ['label' => 'Pemantauan Laporan', 'url' => route('superadmin.reports'), 'icon' => 'tabler-report-analytics', 'class' => 'btn-outline-primary'],
-      ['label' => 'Pengguna', 'url' => route('superadmin.users'), 'icon' => 'tabler-users', 'class' => 'btn-outline-secondary'],
+      ['label' => 'Unit', 'url' => route('superadmin.units'), 'icon' => 'tabler-building-community', 'class' => 'btn-outline-secondary'],
     ],
   ])
+
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label small text-muted mb-1">Unit</label>
+          <select wire:model.live="filterUnit" class="form-select">
+            <option value="">Semua Unit</option>
+            @foreach ($units as $unit)
+              <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted mb-1">Status</label>
+          <select wire:model.live="filterStatus" class="form-select">
+            <option value="">Semua Status</option>
+            <option value="draft">Draf</option>
+            <option value="submitted">Dihantar</option>
+            <option value="pending_site_visit">Menunggu Lawatan</option>
+            <option value="site_visit_in_progress">Lawatan Berjalan</option>
+            <option value="pending_engineer_verification">Menunggu Engineer</option>
+            <option value="engineer_returned">Dikembalikan Engineer</option>
+            <option value="pending_director_approval">Menunggu Pengarah</option>
+            <option value="approved">Diluluskan</option>
+            <option value="director_rejected">Ditolak Pengarah</option>
+            <option value="completed">Selesai</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small text-muted mb-1">Kategori</label>
+          <select wire:model.live="filterCategory" class="form-select">
+            <option value="">Semua Kategori</option>
+            @foreach ($categories as $cat)
+              <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div class="col-md-3 text-muted small">
+          <i class="ti tabler-filter me-1"></i>{{ $totalUnits }} unit · {{ $totalReports }} laporan (ditapis)
+        </div>
+      </div>
+    </div>
+  </div>
 
   {{-- Stat Cards --}}
   <div class="row g-4 mb-4">
@@ -33,6 +77,10 @@
             <span><i class="ti tabler-user-search me-1 text-primary"></i>{{ $totalSurveyors }} surveyor</span>
             <span><i class="ti tabler-tools me-1 text-success"></i>{{ $totalEngineers }} engineer</span>
           </div>
+          <div class="small text-muted mt-1">
+            <i class="ti tabler-building-community me-1"></i>{{ $totalUnits }} unit
+            · {{ $totalTa ?? 0 }} TA
+          </div>
         </div>
       </div>
     </div>
@@ -54,8 +102,12 @@
           <p class="mb-2 text-muted fw-medium">Jumlah laporan</p>
           <hr class="my-2">
           <div class="d-flex justify-content-between small text-muted">
-            <span><i class="ti tabler-send me-1 text-info"></i>{{ $submittedReports }} dihantar</span>
+            <span><i class="ti tabler-send me-1 text-info"></i>{{ $submittedReports }} dihantar+</span>
             <span><i class="ti tabler-file me-1 text-warning"></i>{{ $draftReports }} draf</span>
+          </div>
+          <div class="small text-muted mt-1"><i class="ti tabler-circle-check me-1 text-success"></i>{{ $completedReports }} selesai</div>
+          <div class="small text-muted mt-1">
+            Lawatan {{ $pendingSiteVisit ?? 0 }} · Engineer {{ $pendingEngineer ?? 0 }} · Pengarah {{ $pendingDirector ?? 0 }}
           </div>
         </div>
       </div>
@@ -114,6 +166,26 @@
       <div class="card h-100 border-0 shadow-sm">
         <div class="card-header border-bottom d-flex justify-content-between align-items-center">
           <h6 class="mb-0 fw-semibold">
+            <i class="ti tabler-building-community me-2 text-primary"></i>Laporan Mengikut Unit
+          </h6>
+        </div>
+        <div class="card-body">
+          @forelse ($reportsByUnit as $unit)
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="fw-medium">{{ $unit->name }}</span>
+              <span class="badge bg-label-primary">{{ $unit->reports_count }}</span>
+            </div>
+          @empty
+            <div class="text-muted text-center py-4">Tiada unit.</div>
+          @endforelse
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+          <h6 class="mb-0 fw-semibold">
             <i class="ti tabler-chart-bar me-2 text-primary"></i>Aktiviti 7 Hari
           </h6>
           @php $weekTotal = $trendDays->sum('total'); @endphp
@@ -142,14 +214,14 @@
       </div>
     </div>
 
-    <div class="col-lg-8">
+    <div class="col-lg-4">
       <div class="card h-100 border-0 shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center border-bottom">
           <h6 class="mb-0 fw-semibold">
-            <i class="ti tabler-category me-2 text-success"></i>Laporan Mengikut Kategori
+            <i class="ti tabler-category me-2 text-success"></i>Mengikut Kategori
           </h6>
           <a href="{{ route('superadmin.categories') }}" class="btn btn-sm btn-outline-primary">
-            <i class="ti tabler-settings me-1"></i>Urus kategori
+            <i class="ti tabler-settings me-1"></i>Urus
           </a>
         </div>
         <div class="card-body">
@@ -205,6 +277,7 @@
           <tr>
             <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">No. Laporan</th>
             <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">Tajuk / Lokasi</th>
+            <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">Unit</th>
             <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">Kategori</th>
             <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">Surveyor</th>
             <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">Status</th>
@@ -225,6 +298,7 @@
                   </div>
                 @endif
               </td>
+              <td>{{ $r->unit->name ?? '-' }}</td>
               <td>
                 @if ($r->category)
                   <span class="badge bg-label-secondary">{{ $r->category->name }}</span>
@@ -247,7 +321,7 @@
             </tr>
           @empty
             <tr>
-              <td colspan="6" class="text-center text-muted py-5">
+              <td colspan="7" class="text-center text-muted py-5">
                 <i class="ti tabler-inbox icon-32px d-block mb-2 text-muted"></i>
                 Belum ada laporan dalam sistem.
               </td>

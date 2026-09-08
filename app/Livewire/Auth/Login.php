@@ -25,14 +25,25 @@ class Login extends Component
         $this->validate();
 
         if (Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
-            session()->regenerate();
-
             $user = Auth::user();
+
+            if (! $user->isActive()) {
+                Auth::logout();
+                session()->invalidate();
+                session()->regenerateToken();
+                $this->addError('email', 'Akaun anda telah dinyahaktifkan. Sila hubungi Superadmin.');
+
+                return;
+            }
+
+            session()->regenerate();
 
             return match ($user->role) {
                 'superadmin' => redirect()->route('superadmin.dashboard'),
                 'surveyor'   => redirect()->route('surveyor.dashboard'),
                 'engineer'   => redirect()->route('engineer.dashboard'),
+                'ta'         => redirect()->route('ta.dashboard'),
+                'director'   => redirect()->route('director.dashboard'),
                 default      => redirect('/'),
             };
         }

@@ -11,7 +11,7 @@
     <div class="card-body">
       <div class="row mb-4">
         <div class="col-md-6"><input wire:model.live.debounce.300ms="search" type="text" class="form-control" placeholder="Cari tajuk / no. laporan..." /></div>
-        <div class="col-md-3"><select wire:model.live="filterStatus" class="form-select"><option value="">Semua Status</option><option value="draft">Draf</option><option value="submitted">Dihantar</option></select></div>
+        <div class="col-md-3"><select wire:model.live="filterStatus" class="form-select"><option value="">Semua Status</option><option value="draft">Draf</option><option value="submitted">Dihantar</option><option value="pending_site_visit">Menunggu Lawatan</option><option value="pending_engineer_verification">Menunggu Engineer</option><option value="engineer_returned">Dikembalikan</option><option value="pending_director_approval">Menunggu Pengarah</option><option value="approved">Diluluskan</option><option value="completed">Selesai</option></select></div>
       </div>
       <div class="table-responsive">
         <table class="table table-hover">
@@ -27,7 +27,9 @@
               <td>
                 <div class="d-flex gap-1">
                   <a href="{{ route('surveyor.reports.view', $r) }}" class="btn btn-sm btn-icon btn-text-info" title="Lihat"><i class="ti tabler-eye"></i></a>
-                  <a href="{{ route('surveyor.reports.edit', $r) }}" class="btn btn-sm btn-icon btn-text-secondary" title="Kemaskini"><i class="ti tabler-pencil"></i></a>
+                  @if ($r->status === 'draft')
+                    <a href="{{ route('surveyor.reports.edit', $r) }}" class="btn btn-sm btn-icon btn-text-secondary" title="Kemaskini"><i class="ti tabler-pencil"></i></a>
+                  @endif
                 </div>
               </td>
             </tr>

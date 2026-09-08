@@ -158,7 +158,10 @@ class ReportSeeder extends Seeder
         foreach ($reports as $data) {
             Report::updateOrCreate(
                 ['report_number' => $data['report_number']],
-                array_merge($data, ['user_id' => $surveyor->id])
+                array_merge($data, [
+                    'user_id' => $surveyor->id,
+                    'unit_id' => $surveyor->unit_id,
+                ])
             );
         }
 

@@ -11,12 +11,36 @@
           <input wire:model.live.debounce.300ms="search" type="text" class="form-control"
             placeholder="Tajuk / no. laporan / lokasi..." />
         </div>
+        @if ($isSuperadmin)
+          <div class="col-md-2">
+            <label class="form-label small text-muted mb-1">Unit</label>
+            <select wire:model.live="filterUnit" class="form-select">
+              <option value="">Semua Unit</option>
+              @foreach ($units as $unit)
+                <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+              @endforeach
+            </select>
+          </div>
+        @elseif ($lockedUnit)
+          <div class="col-md-2">
+            <label class="form-label small text-muted mb-1">Unit</label>
+            <input type="text" class="form-control" value="{{ $lockedUnit }}" readonly disabled>
+          </div>
+        @endif
         <div class="col-md-2">
           <label class="form-label small text-muted mb-1">Status</label>
           <select wire:model.live="filterStatus" class="form-select">
             <option value="">Semua</option>
             <option value="draft">Draf</option>
             <option value="submitted">Dihantar</option>
+            <option value="pending_site_visit">Menunggu Lawatan</option>
+            <option value="site_visit_in_progress">Lawatan</option>
+            <option value="pending_engineer_verification">Menunggu Engineer</option>
+            <option value="engineer_returned">Dikembalikan</option>
+            <option value="pending_director_approval">Menunggu Pengarah</option>
+            <option value="approved">Diluluskan</option>
+            <option value="director_rejected">Ditolak</option>
+            <option value="completed">Selesai</option>
           </select>
         </div>
         <div class="col-md-2">
@@ -28,7 +52,7 @@
             @endforeach
           </select>
         </div>
-        <div class="col-md-5">
+        <div class="col-md-{{ $isSuperadmin || $lockedUnit ? '3' : '5' }}">
           <label class="form-label small text-muted mb-1">Paparan peta</label>
           <div class="btn-group w-100" role="group">
             <button type="button" class="btn btn-outline-primary" data-map-view="markers"

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -17,7 +19,9 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'unit_id',
         'phone',
+        'status',
     ];
 
     protected $hidden = [
@@ -33,7 +37,6 @@ class User extends Authenticatable
         ];
     }
 
-    // ── Role helpers ────────────────────────────────────
     public function isSuperadmin(): bool
     {
         return $this->role === 'superadmin';
@@ -49,20 +52,63 @@ class User extends Authenticatable
         return $this->role === 'engineer';
     }
 
+    public function isTa(): bool
+    {
+        return $this->role === 'ta';
+    }
+
+    public function isDirector(): bool
+    {
+        return $this->role === 'director';
+    }
+
+    public function isActive(): bool
+    {
+        return ($this->status ?? 'active') === 'active';
+    }
+
     public function getRoleLabelAttribute(): string
     {
         return match ($this->role) {
             'superadmin' => 'Superadmin',
-            'surveyor'   => 'Admin Surveyor',
+            'surveyor'   => 'Surveyor / Vendor',
             'engineer'   => 'Engineer MBSJ',
+            'ta'         => 'TA (Pembantu Teknik)',
+            'director'   => 'Pengarah',
             default      => ucfirst($this->role),
         };
     }
 
-    // ── Relationships ───────────────────────────────────
-    public function reports()
+    public function getDefaultDesignationAttribute(): string
+    {
+        return match ($this->role) {
+            'ta'       => 'Pembantu Teknik',
+            'engineer' => 'Jurutera',
+            'director' => 'Pengarah Kejuruteraan',
+            'surveyor' => 'Surveyor',
+            default    => $this->role_label,
+        };
+    }
+
+    public function getStatusBadgeAttribute(): string
+    {
+        return $this->isActive()
+            ? '<span class="badge bg-label-success">Aktif</span>'
+            : '<span class="badge bg-label-secondary">Nyahaktif</span>';
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
+    public function reports(): HasMany
     {
         return $this->hasMany(Report::class);
     }
-}
 
+    public function requiresUnit(): bool
+    {
+        return in_array($this->role, ['surveyor', 'engineer', 'ta'], true);
+    }
+}

@@ -26,6 +26,12 @@
           {{-- ═══ LEFT: Form fields ═══ --}}
           <div class="col-lg-7">
 
+            {{-- Unit (read-only) --}}
+            <div class="mb-4">
+              <label class="form-label">Unit</label>
+              <input type="text" class="form-control" value="{{ $userUnit->name ?? '—' }}" readonly disabled>
+            </div>
+
             {{-- Kategori --}}
             <div class="mb-4">
               <label for="rpt-category" class="form-label">

@@ -1,8 +1,8 @@
 <div>
   @include('livewire.partials.dashboard-welcome', [
     'user' => $user,
-    'roleLabel' => 'Admin Surveyor',
-    'subtitle' => 'Urus laporan lapangan, lampiran survei dan lokasi GIS dengan pantas.',
+    'roleLabel' => 'Admin Surveyor · Unit ' . $unitName,
+    'subtitle' => 'Urus laporan lapangan Unit ' . $unitName . ' — lampiran survei dan lokasi GIS.',
     'heroIcon' => 'tabler-clipboard-list',
     'actions' => [
       ['label' => 'Cipta Laporan', 'url' => route('surveyor.reports.create'), 'icon' => 'tabler-plus', 'class' => 'btn-primary'],
@@ -11,8 +11,18 @@
     ],
   ])
 
-  {{-- Alert draf --}}
-  @if ($draftReports > 0)
+  @if ($returnedReports > 0)
+    <div class="alert alert-danger border-0 shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4" role="alert">
+      <div class="d-flex align-items-center gap-2">
+        <i class="ti tabler-arrow-back-up fs-5"></i>
+        <div>
+          <strong>{{ $returnedReports }} laporan dikembalikan.</strong>
+          Sila kemaskini dan hantar semula.
+        </div>
+      </div>
+      <a href="{{ route('surveyor.reports') }}" class="btn btn-sm btn-danger">Semak laporan</a>
+    </div>
+  @elseif ($draftReports > 0)
     <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4" role="alert">
       <div class="d-flex align-items-center gap-2">
         <i class="ti tabler-alert-triangle fs-5 text-warning"></i>
@@ -106,17 +116,19 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start mb-3">
             <div class="avatar">
-              <span class="avatar-initial rounded bg-label-info">
-                <i class="ti tabler-map-pin icon-26px"></i>
+              <span class="avatar-initial rounded bg-label-danger">
+                <i class="ti tabler-arrow-back-up icon-26px"></i>
               </span>
             </div>
-            <span class="badge bg-label-info">GIS</span>
+            @if ($returnedReports > 0)
+              <span class="badge bg-label-danger">Perlu tindakan</span>
+            @endif
           </div>
-          <h3 class="mb-1 fw-bold">{{ $mappedReports }}</h3>
-          <p class="mb-2 text-muted fw-medium">Ada koordinat GIS</p>
+          <h3 class="mb-1 fw-bold">{{ $returnedReports }}</h3>
+          <p class="mb-2 text-muted fw-medium">Dikembalikan</p>
           <hr class="my-2">
           <div class="small text-muted">
-            <i class="ti tabler-map-2 me-1 text-info"></i>Direkod pada peta
+            <i class="ti tabler-circle-check me-1 text-success"></i>{{ $completedReports }} diluluskan/selesai
           </div>
         </div>
       </div>

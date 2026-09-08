@@ -4,27 +4,25 @@ namespace App\Livewire\Engineer;
 
 use App\Models\Report;
 use App\Models\ReportCategory;
+use App\Support\UnitTheme;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.master')]
-#[Title('Dashboard Engineer')]
 class Dashboard extends Component
 {
     public function render()
     {
-        $submitted = Report::submitted();
-
-        $reportsByCategory = ReportCategory::query()
-            ->withCount(['reports' => fn ($q) => $q->submitted()])
-            ->orderByDesc('reports_count')
-            ->get();
+        $user = Auth::user();
+        $unitId = $user->unit_id;
+        $theme = UnitTheme::for($user->unit);
+        $base = Report::query()->where('unit_id', $unitId);
 
         $weeklyTrend = Report::query()
-            ->submitted()
+            ->where('unit_id', $unitId)
+            ->whereNotNull('submitted_at')
             ->select(DB::raw('DATE(submitted_at) as day'), DB::raw('COUNT(*) as total'))
             ->where('submitted_at', '>=', now()->subDays(6)->startOfDay())
             ->groupBy('day')
@@ -40,21 +38,35 @@ class Dashboard extends Component
             ];
         });
 
+        $reportsByCategory = ReportCategory::query()
+            ->withCount(['reports' => fn ($q) => $q->where('unit_id', $unitId)->where('status', '!=', 'draft')])
+            ->orderByDesc('reports_count')
+            ->get();
+
         return view('livewire.engineer.dashboard', [
-            'user'              => Auth::user(),
-            'totalSubmitted'    => (clone $submitted)->count(),
-            'submittedThisWeek' => (clone $submitted)->where('submitted_at', '>=', now()->startOfWeek())->count(),
-            'submittedToday'    => (clone $submitted)->whereDate('submitted_at', today())->count(),
-            'mappedReports'     => (clone $submitted)->whereNotNull('latitude')->whereNotNull('longitude')->count(),
+            'user'              => $user,
+            'unitName'          => $theme['name'],
+            'unitTheme'         => $theme,
+            'totalSubmitted'    => (clone $base)->where('status', '!=', 'draft')->count(),
+            'pendingVerify'     => (clone $base)->where('workflow_status', 'pending_engineer_verification')->count(),
+            'verified'          => (clone $base)->whereIn('workflow_status', ['pending_director_approval', 'approved', 'engineer_verified'])->count(),
+            'returnedReports'   => (clone $base)->where('workflow_status', 'engineer_returned')->count(),
+            'approvedReports'   => (clone $base)->where('workflow_status', 'approved')->count(),
+            'submittedThisWeek' => (clone $base)->where('submitted_at', '>=', now()->startOfWeek())->count(),
+            'submittedToday'    => (clone $base)->whereDate('submitted_at', today())->count(),
+            'underReview'       => (clone $base)->where('workflow_status', 'pending_engineer_verification')->count(),
+            'completedReports'  => (clone $base)->where('workflow_status', 'approved')->count(),
+            'mappedReports'     => (clone $base)->whereNotNull('latitude')->whereNotNull('longitude')->where('status', '!=', 'draft')->count(),
             'reportsByCategory' => $reportsByCategory,
             'totalCategories'   => ReportCategory::count(),
             'recentReports'     => Report::with(['category', 'user'])
-                ->submitted()
-                ->latest('submitted_at')
+                ->where('unit_id', $unitId)
+                ->whereIn('workflow_status', ['pending_engineer_verification', 'director_rejected', 'pending_director_approval', 'approved', 'engineer_returned'])
+                ->latest('updated_at')
                 ->take(8)
                 ->get(),
             'trendDays'         => $trendDays,
             'trendMax'          => max(1, $trendDays->max('total')),
-        ]);
+        ])->title('Dashboard Engineer — Unit '.$theme['name']);
     }
 }

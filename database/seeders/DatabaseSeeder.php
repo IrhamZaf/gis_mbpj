@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\Report;
 use App\Models\ReportCategory;
+use App\Models\Unit;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -11,13 +13,18 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // ── Default Users ───────────────────────────────────
+        $this->call(UnitSeeder::class);
+
+        $jalan = Unit::where('code', 'JLN')->first();
+
         User::updateOrCreate(
             ['email' => 'admin@mbsj.gov.my'],
             [
                 'name'     => 'Super Admin',
                 'password' => Hash::make('password'),
                 'role'     => 'superadmin',
+                'unit_id'  => null,
+                'status'   => 'active',
             ]
         );
 
@@ -27,6 +34,8 @@ class DatabaseSeeder extends Seeder
                 'name'     => 'Admin Surveyor',
                 'password' => Hash::make('password'),
                 'role'     => 'surveyor',
+                'unit_id'  => $jalan?->id,
+                'status'   => 'active',
             ]
         );
 
@@ -36,10 +45,33 @@ class DatabaseSeeder extends Seeder
                 'name'     => 'Engineer MBSJ',
                 'password' => Hash::make('password'),
                 'role'     => 'engineer',
+                'unit_id'  => $jalan?->id,
+                'status'   => 'active',
             ]
         );
 
-        // ── Default Report Categories ───────────────────────
+        User::updateOrCreate(
+            ['email' => 'ta@mbsj.gov.my'],
+            [
+                'name'     => 'TA Unit Jalan',
+                'password' => Hash::make('password'),
+                'role'     => 'ta',
+                'unit_id'  => $jalan?->id,
+                'status'   => 'active',
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'director@mbsj.gov.my'],
+            [
+                'name'     => 'Pengarah Kejuruteraan',
+                'password' => Hash::make('password'),
+                'role'     => 'director',
+                'unit_id'  => null,
+                'status'   => 'active',
+            ]
+        );
+
         ReportCategory::updateOrCreate(
             ['slug' => 'sinkhole'],
             ['name' => 'Sinkhole', 'description' => 'Laporan berkaitan sinkhole']
@@ -56,5 +88,14 @@ class DatabaseSeeder extends Seeder
         );
 
         $this->call(ReportSeeder::class);
+        $this->call(WorkflowDemoSeeder::class);
+
+        // Backfill unit_id on existing reports without unit
+        if ($jalan) {
+            Report::whereNull('unit_id')->update(['unit_id' => $jalan->id]);
+            User::whereIn('role', ['surveyor', 'engineer', 'ta'])
+                ->whereNull('unit_id')
+                ->update(['unit_id' => $jalan->id]);
+        }
     }
 }

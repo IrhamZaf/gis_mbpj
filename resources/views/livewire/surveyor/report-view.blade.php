@@ -1,4 +1,6 @@
 <div>
+  @include('livewire.partials.workflow-progress', ['report' => $report])
+
   <div class="row">
     <div class="col-md-6 mb-6">
       <div class="card h-100">
@@ -9,6 +11,8 @@
         <div class="card-body">
           <table class="table table-borderless">
             <tr><td class="fw-semibold" width="40%">No. Laporan</td><td><code>{{ $report->report_number }}</code></td></tr>
+            <tr><td class="fw-semibold">No. Fail</td><td><code>{{ $report->file_number ?? '—' }}</code></td></tr>
+            <tr><td class="fw-semibold">Unit</td><td>{{ $report->unit->name ?? '-' }}</td></tr>
             <tr><td class="fw-semibold">Kategori</td><td>{{ $report->category->name ?? '-' }}</td></tr>
             <tr><td class="fw-semibold">Surveyor</td><td>{{ $report->user->name ?? '-' }}</td></tr>
             <tr><td class="fw-semibold">Lokasi</td><td>{{ $report->location_name ?? '-' }}</td></tr>

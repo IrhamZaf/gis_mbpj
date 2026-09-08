@@ -26,6 +26,18 @@
           {{-- ═══ LEFT: Form fields ═══ --}}
           <div class="col-lg-7">
 
+            {{-- Unit (auto, read-only) --}}
+            <div class="mb-4">
+              <label class="form-label">Unit</label>
+              <input type="text" class="form-control" value="{{ $userUnit->name ?? '—' }}" readonly disabled>
+              <div class="form-text">Unit ditetapkan automatik mengikut akaun anda dan tidak boleh ditukar.</div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label">Nama Vendor (jika berkenaan)</label>
+              <input wire:model="vendor_name" type="text" class="form-control" placeholder="cth: ABC Survey Sdn Bhd">
+            </div>
+
             {{-- Kategori --}}
             <div class="mb-4">
               <label for="rpt-category" class="form-label">

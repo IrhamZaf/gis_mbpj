@@ -453,6 +453,9 @@ use Illuminate\Support\Facades\Route;
                 <small class="text-body-secondary">
                   @if (Auth::check())
                     {{ Auth::user()->role_label }}
+                    @if (Auth::user()->unit)
+                      · Unit {{ Auth::user()->unit->name }}
+                    @endif
                   @endif
                 </small>
               </div>

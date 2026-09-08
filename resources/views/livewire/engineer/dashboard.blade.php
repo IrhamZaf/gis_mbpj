@@ -1,9 +1,10 @@
 <div>
   @include('livewire.partials.dashboard-welcome', [
     'user' => $user,
-    'roleLabel' => 'Engineer',
-    'subtitle' => 'Semak laporan yang dihantar surveyor dan pantau status GIS dengan mudah.',
+    'roleLabel' => 'Engineer · Unit ' . $unitName,
+    'subtitle' => 'Dashboard Unit ' . $unitName . ' — semak laporan GIS dan pengesahan workflow.',
     'heroIcon' => 'tabler-tools',
+    'unitTheme' => $unitTheme,
     'actions' => [
       ['label' => 'Semak Laporan', 'url' => route('engineer.reports'), 'icon' => 'tabler-report-search', 'class' => 'btn-primary'],
       ['label' => 'Peta Interaktif', 'url' => route('engineer.map'), 'icon' => 'tabler-map', 'class' => 'btn-outline-primary'],
@@ -24,10 +25,10 @@
             <span class="badge bg-label-success">+{{ $submittedThisWeek }} minggu ini</span>
           </div>
           <h3 class="mb-1 fw-bold">{{ $totalSubmitted }}</h3>
-          <p class="mb-2 text-muted fw-medium">Laporan diterima</p>
+          <p class="mb-2 text-muted fw-medium">Laporan Unit {{ $unitName }}</p>
           <hr class="my-2">
           <div class="small text-muted">
-            <i class="ti tabler-calendar-today me-1 text-success"></i>{{ $submittedToday }} hari ini
+            <i class="ti tabler-calendar-today me-1 text-success"></i>{{ $submittedToday }} hari ini · {{ $pendingVerify ?? $underReview }} menunggu pengesahan
           </div>
         </div>
       </div>

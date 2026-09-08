@@ -6,6 +6,7 @@ use App\Livewire\Concerns\StoresSurveyAttachments;
 use App\Models\Report;
 use App\Models\ReportAttachment;
 use App\Models\ReportCategory;
+use App\Services\Workflow\ReportWorkflowService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -35,9 +36,7 @@ class ReportEdit extends Component
 
     public function mount(Report $report)
     {
-        if ($report->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->authorize('update', $report);
 
         $this->report        = $report;
         $this->category_id   = $report->category_id;
@@ -133,6 +132,7 @@ class ReportEdit extends Component
 
     private function store(string $status): void
     {
+        $this->authorize('update', $this->report);
         $this->validate();
 
         try {
@@ -142,19 +142,21 @@ class ReportEdit extends Component
                 'category_id'   => (int) $this->category_id,
                 'title'         => $this->title,
                 'description'   => $this->description,
-                'status'        => $status,
                 'latitude'      => $lat,
                 'longitude'     => $lng,
                 'location_name' => $this->location_name ?: null,
                 'gis_data'      => $this->gis_data,
-                'submitted_at'  => $status === 'submitted' ? now() : null,
             ]);
 
-            if (!empty($this->attachments)) {
+            if (! empty($this->attachments)) {
                 $this->storeAttachments($this->report, $this->attachments, $lat, $lng);
             }
 
-            session()->flash('message', $status === 'submitted' ? 'Laporan berjaya dikemaskini.' : 'Draf berjaya dikemaskini.');
+            if ($status === 'submitted') {
+                app(ReportWorkflowService::class)->submitReport($this->report->fresh(['unit']), Auth::user());
+            }
+
+            session()->flash('message', $status === 'submitted' ? 'Laporan berjaya dihantar.' : 'Draf berjaya dikemaskini.');
 
             $this->redirect(route('surveyor.reports'), navigate: false);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -173,6 +175,7 @@ class ReportEdit extends Component
         return view('livewire.surveyor.report-edit', [
             'categories'       => ReportCategory::orderBy('name')->get(),
             'savedAttachments' => $this->report->attachments()->get(),
+            'userUnit'         => $this->report->unit ?? Auth::user()->unit,
         ]);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Livewire\Surveyor;
 use App\Livewire\Concerns\StoresSurveyAttachments;
 use App\Models\Report;
 use App\Models\ReportCategory;
+use App\Services\Workflow\ReportWorkflowService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -26,6 +27,7 @@ class ReportCreate extends Component
     public string $title = '';
     public string $description = '';
     public string $location_name = '';
+    public string $vendor_name = '';
     public ?float $latitude = null;
     public ?float $longitude = null;
     public ?array $gis_data = null;
@@ -39,6 +41,7 @@ class ReportCreate extends Component
             'title'         => 'required|string|min:5|max:255',
             'description'   => 'required|string|min:10',
             'location_name' => 'nullable|string|max:255',
+            'vendor_name'   => 'nullable|string|max:255',
             'latitude'      => 'nullable|numeric|between:-90,90',
             'longitude'     => 'nullable|numeric|between:-180,180',
             'attachments.*' => 'nullable|file|max:20480',
@@ -95,29 +98,44 @@ class ReportCreate extends Component
     {
         $this->validate();
 
+        $user = Auth::user();
+        if (! $user->unit_id) {
+            $this->addError('submit', 'Akaun anda belum ditetapkan kepada unit. Sila hubungi Superadmin.');
+
+            return;
+        }
+
+        $this->authorize('create', Report::class);
+
         try {
             // Default to MBSJ centre if no map coordinates set
             [$lat, $lng] = $this->resolvedReportAnchor($this->latitude, $this->longitude);
 
             $report = Report::create([
-                'category_id'   => (int) $this->category_id,
-                'user_id'       => Auth::id(),
-                'title'         => $this->title,
-                'description'   => $this->description,
-                'status'        => $status,
-                'latitude'      => $lat,
-                'longitude'     => $lng,
-                'location_name' => $this->location_name ?: null,
-                'gis_data'      => $this->gis_data,
-                'submitted_at'  => $status === 'submitted' ? now() : null,
+                'category_id'     => (int) $this->category_id,
+                'user_id'         => $user->id,
+                'unit_id'         => $user->unit_id,
+                'title'           => $this->title,
+                'description'     => $this->description,
+                'status'          => 'draft',
+                'workflow_status' => null,
+                'latitude'        => $lat,
+                'longitude'       => $lng,
+                'location_name'   => $this->location_name ?: null,
+                'vendor_name'     => $this->vendor_name ?: null,
+                'gis_data'        => $this->gis_data,
             ]);
 
-            if (!empty($this->attachments)) {
+            if (! empty($this->attachments)) {
                 $this->storeAttachments($report, $this->attachments, $lat, $lng);
             }
 
+            if ($status === 'submitted') {
+                app(ReportWorkflowService::class)->submitReport($report->fresh(['unit']), $user);
+            }
+
             session()->flash('message', $status === 'submitted'
-                ? 'Laporan berjaya dihantar.'
+                ? 'Laporan berjaya dihantar. Tugasan lawatan tapak dihantar kepada TA.'
                 : 'Draf laporan berjaya disimpan.');
 
             $this->redirect(route('surveyor.reports'), navigate: false);
@@ -136,8 +154,11 @@ class ReportCreate extends Component
     // ── Render ───────────────────────────────────────────
     public function render()
     {
+        $user = Auth::user();
+
         return view('livewire.surveyor.report-create', [
             'categories' => ReportCategory::orderBy('name')->get(),
+            'userUnit'   => $user->unit,
         ]);
     }
 }

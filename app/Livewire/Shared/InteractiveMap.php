@@ -4,6 +4,7 @@ namespace App\Livewire\Shared;
 
 use App\Models\Report;
 use App\Models\ReportCategory;
+use App\Models\Unit;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -16,6 +17,7 @@ class InteractiveMap extends Component
     public string $search = '';
     public string $filterStatus = '';
     public string $filterCategory = '';
+    public string $filterUnit = '';
 
     public function updatedSearch(): void
     {
@@ -32,6 +34,11 @@ class InteractiveMap extends Component
         $this->dispatchMarkers();
     }
 
+    public function updatedFilterUnit(): void
+    {
+        $this->dispatchMarkers();
+    }
+
     private function dispatchMarkers(): void
     {
         $this->dispatch('map-markers-updated', markers: $this->markers);
@@ -41,14 +48,20 @@ class InteractiveMap extends Component
     {
         $user = Auth::user();
 
-        $query = Report::with('category')
+        $query = Report::with(['category', 'unit', 'user'])
             ->whereNotNull('latitude')
             ->whereNotNull('longitude');
 
-        if ($user->isSurveyor()) {
-            $query->where('user_id', $user->id);
-        } elseif ($user->isEngineer()) {
-            $query->submitted();
+        if ($user->isSuperadmin() || $user->isDirector()) {
+            $query->when($this->filterUnit, fn ($q) => $q->where('unit_id', $this->filterUnit));
+        } elseif ($user->isSurveyor() || $user->isEngineer() || $user->isTa()) {
+            $query->where('unit_id', $user->unit_id);
+            if ($user->isSurveyor()) {
+                $query->where('user_id', $user->id);
+            }
+            if ($user->isEngineer() || $user->isTa()) {
+                $query->where('status', '!=', 'draft');
+            }
         }
 
         $query
@@ -70,11 +83,15 @@ class InteractiveMap extends Component
                 'latitude'       => (float) $report->latitude,
                 'longitude'      => (float) $report->longitude,
                 'status'         => $report->status,
-                'status_label'   => $report->status === 'submitted' ? 'Dihantar' : 'Draf',
+                'status_label'   => $report->workflow_status_label ?: $report->status_label,
+                'workflow_status'=> $report->workflow_status,
                 'category'       => $report->category->name ?? '-',
                 'category_id'    => $categoryId,
                 'category_color' => $this->categoryColor($categoryId),
+                'unit'           => $report->unit->name ?? '-',
+                'surveyor'       => $report->user->name ?? '-',
                 'location_name'  => $report->location_name,
+                'date'           => $report->created_at?->format('d/m/Y'),
                 'url'            => $this->reportUrl($report, $user),
                 'gis_data'       => $report->gis_data,
             ];
@@ -97,8 +114,18 @@ class InteractiveMap extends Component
             return route('engineer.reports.view', $report);
         }
 
+        if ($user->isTa()) {
+            return route('ta.site-visits.form', $report);
+        }
+
+        if ($user->isDirector()) {
+            return route('director.reports.view', $report);
+        }
+
         if ($user->isSurveyor()) {
-            return route('surveyor.reports.edit', $report);
+            return $user->can('update', $report)
+                ? route('surveyor.reports.edit', $report)
+                : route('surveyor.reports.view', $report);
         }
 
         return null;
@@ -106,9 +133,16 @@ class InteractiveMap extends Component
 
     public function render()
     {
+        $user = Auth::user();
+
         return view('livewire.shared.interactive-map', [
             'markers'    => $this->markers,
             'categories' => ReportCategory::orderBy('name')->get(),
+            'units'      => ($user->isSuperadmin() || $user->isDirector())
+                ? Unit::active()->orderBy('sort_order')->orderBy('name')->get()
+                : collect(),
+            'isSuperadmin' => $user->isSuperadmin() || $user->isDirector(),
+            'lockedUnit'   => $user->unit?->name,
         ]);
     }
 }

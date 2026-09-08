@@ -13,13 +13,10 @@ class ReportView extends Component
 {
     public Report $report;
 
-    public function mount(Report $report)
+    public function mount(Report $report): void
     {
-        // Allow surveyor to view their own reports
-        if ($report->user_id !== auth()->id()) {
-            abort(403);
-        }
-        $this->report = $report->load(['category', 'user', 'attachments']);
+        $this->authorize('view', $report);
+        $this->report = $report->load(['category', 'user', 'unit', 'attachments', 'workflowHistories.user']);
     }
 
     public function render()

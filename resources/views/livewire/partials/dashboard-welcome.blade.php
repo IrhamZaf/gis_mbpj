@@ -17,7 +17,7 @@
           <div class="d-flex align-items-center gap-3 mb-3">
             <img src="{{ asset('assets/img/branding/mbsj-logo.png') }}" alt="MBSJ"
               width="52" height="52" class="rounded-circle border"
-              style="object-fit:contain;background:#000;">
+              style="object-fit:contain;background:#fff;">
             <div>
               <div class="d-flex flex-wrap align-items-center gap-2">
                 <span class="badge bg-label-{{ $badgeLabel }} fs-tiny">{{ $roleLabel }}</span>

@@ -8,4 +8,4 @@
   width="{{ $width }}"
   height="{{ $height }}"
   class="app-brand-logo-img"
-  style="object-fit:contain;display:block;" />
+  style="object-fit:contain;display:block;background:#fff;" />

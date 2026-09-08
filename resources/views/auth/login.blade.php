@@ -15,7 +15,7 @@ $customizerHidden = 'customizer-hide';
 <div class="authentication-wrapper authentication-cover">
   <!-- Logo -->
   <a href="{{ url('/') }}" class="auth-cover-brand d-flex align-items-center gap-2">
-    <span class="app-brand-logo demo">@include('_partials.macros', ["width" => 25, "height" => 22])</span>
+    <span class="app-brand-logo demo">@include('_partials.macros', ["width" => 72, "height" => 72])</span>
     <span class="app-brand-text demo text-heading fw-bold">{{ config('variables.templateName') }}</span>
   </a>
   <!-- /Logo -->
@@ -38,7 +38,15 @@ $customizerHidden = 'customizer-hide';
     <!-- Login -->
     <div class="d-flex col-12 col-lg-4 align-items-center authentication-bg p-sm-12 p-6">
       <div class="w-px-400 mx-auto mt-sm-12 mt-8">
-        <h4 class="mb-1">Selamat datang ke {{ config('variables.templateName') }}! 👋</h4>
+        <div class="text-center mb-5">
+          <img src="{{ asset('assets/img/branding/mbsj-logo.png') }}"
+            alt="MBSJ"
+            width="96"
+            height="96"
+            class="mb-3"
+            style="object-fit:contain;display:inline-block;background:#fff;border-radius:50%;padding:6px;" />
+        </div>
+        <h4 class="mb-1">Selamat datang ke {{ config('variables.templateName') }}!</h4>
         <p class="mb-6">Sila log masuk ke akaun anda untuk meneruskan</p>
 
         <form id="formAuthentication" class="mb-6" action="{{ route('login') }}" method="POST">

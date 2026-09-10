@@ -9,9 +9,16 @@
   @include('livewire.partials.workflow-progress', ['report' => $report])
 
   <div class="card border-0 shadow-sm mb-4">
-    <div class="card-header border-bottom">
-      <h5 class="mb-0">LAPORAN LAWATAN TAPAK — JABATAN KEJURUTERAAN MBSJ</h5>
-      <small class="text-muted">Rujukan: MBSJ.SPB.PT.PPP(KEJ)-01.RK(01) · Pindaan 05 · Kuat kuasa 15 Mei 2026</small>
+    <div class="card-header border-bottom d-flex flex-wrap justify-content-between align-items-start gap-2">
+      <div>
+        <h5 class="mb-0">LAPORAN LAWATAN TAPAK — JABATAN KEJURUTERAAN MBSJ</h5>
+        <small class="text-muted">Rujukan: MBSJ.SPB.PT.PPP(KEJ)-01.RK(01) · Pindaan 05 · Kuat kuasa 15 Mei 2026</small>
+      </div>
+      @can('downloadPdf', $report)
+        <a href="{{ route('reports.site-visit-pdf', $report) }}" class="btn btn-outline-danger" target="_blank">
+          <i class="ti tabler-printer me-1"></i>Cetak PDF
+        </a>
+      @endcan
     </div>
     <div class="card-body">
       <div class="row g-3 mb-4">

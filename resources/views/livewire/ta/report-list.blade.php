@@ -53,8 +53,18 @@
                     <button wire:click="startVisit({{ $r->id }})" class="btn btn-sm btn-primary">Mulakan Lawatan</button>
                   @elseif (in_array($r->workflow_status, ['site_visit_in_progress', 'engineer_returned'], true))
                     <a href="{{ route('ta.site-visits.form', $r) }}" class="btn btn-sm btn-warning">Sambung</a>
+                    @can('downloadPdf', $r)
+                      <a href="{{ route('reports.site-visit-pdf', $r) }}" class="btn btn-sm btn-outline-danger" target="_blank" title="Cetak PDF">
+                        <i class="ti tabler-printer"></i>
+                      </a>
+                    @endcan
                   @else
                     <a href="{{ route('ta.site-visits.form', $r) }}" class="btn btn-sm btn-outline-secondary">Lihat</a>
+                    @can('downloadPdf', $r)
+                      <a href="{{ route('reports.site-visit-pdf', $r) }}" class="btn btn-sm btn-outline-danger" target="_blank" title="Cetak PDF">
+                        <i class="ti tabler-printer"></i>
+                      </a>
+                    @endcan
                   @endif
                 </td>
               </tr>

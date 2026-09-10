@@ -15,6 +15,8 @@ class UserManagement extends Component
 {
     use WithPagination;
 
+    protected string $paginationTheme = 'bootstrap';
+
     public string $search = '';
     public string $filterRole = '';
     public string $filterUnit = '';

@@ -67,7 +67,15 @@
           </tbody>
         </table>
       </div>
-      <div class="mt-3">{{ $users->links() }}</div>
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+        <div class="small text-muted">
+          Menunjukkan {{ $users->firstItem() ?? 0 }}–{{ $users->lastItem() ?? 0 }}
+          daripada {{ $users->total() }} rekod
+        </div>
+        <div>
+          {{ $users->links() }}
+        </div>
+      </div>
     </div>
   </div>
 

@@ -84,19 +84,34 @@ class ReportPolicy
 
     public function downloadPdf(User $user, Report $report): bool
     {
-        if (! in_array($report->workflow_status, ['approved'], true) && $report->status !== 'completed') {
-            // Allow preview for roles in chain after site visit submitted
-            if (! in_array($report->workflow_status, [
+        if (! $this->view($user, $report)) {
+            return false;
+        }
+
+        // TA boleh cetak selepas lawatan dimulakan (ada rekod site visit / status berkaitan)
+        if ($user->isTa()) {
+            return in_array($report->workflow_status, [
+                'site_visit_in_progress',
+                'engineer_returned',
                 'pending_engineer_verification',
                 'engineer_verified',
                 'pending_director_approval',
                 'approved',
                 'director_rejected',
-            ], true)) {
-                return false;
-            }
+            ], true) || $report->siteVisit !== null;
         }
 
-        return $this->view($user, $report);
+        // Engineer / Pengarah / Superadmin — selepas lawatan dihantar atau selesai
+        if ($report->status === 'completed' || $report->workflow_status === 'approved') {
+            return true;
+        }
+
+        return in_array($report->workflow_status, [
+            'pending_engineer_verification',
+            'engineer_verified',
+            'pending_director_approval',
+            'approved',
+            'director_rejected',
+        ], true);
     }
 }

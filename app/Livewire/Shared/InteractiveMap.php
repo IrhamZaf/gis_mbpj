@@ -85,9 +85,9 @@ class InteractiveMap extends Component
                 'status'         => $report->status,
                 'status_label'   => $report->workflow_status_label ?: $report->status_label,
                 'workflow_status'=> $report->workflow_status,
-                'category'       => $report->category->name ?? '-',
+                'category'       => $report->category?->display_name ?? '-',
                 'category_id'    => $categoryId,
-                'category_color' => $this->categoryColor($categoryId, $report->category->name ?? null),
+                'category_color' => $this->categoryColor($categoryId, $report->category?->display_name ?? null),
                 'unit'           => $report->unit->name ?? '-',
                 'surveyor'       => $report->user->name ?? '-',
                 'location_name'  => $report->location_name,
@@ -162,29 +162,29 @@ class InteractiveMap extends Component
         // Prefer unit-scoped categories when names collide with global ones
         $preferred = $all
             ->sortByDesc(fn (ReportCategory $c) => $c->unit_id ? 1 : 0)
-            ->unique(fn (ReportCategory $c) => mb_strtolower(trim($c->name)))
+            ->unique(fn (ReportCategory $c) => mb_strtolower(trim($c->display_name)))
             ->values();
 
-        $nameCounts = $all->countBy(fn (ReportCategory $c) => mb_strtolower(trim($c->name)));
+        $nameCounts = $all->countBy(fn (ReportCategory $c) => mb_strtolower(trim($c->display_name)));
 
         $filter = $all->map(function (ReportCategory $c) use ($nameCounts) {
-            $key = mb_strtolower(trim($c->name));
-            $label = $c->name;
+            $key = mb_strtolower(trim($c->display_name));
+            $label = $c->display_name;
             if (($nameCounts[$key] ?? 0) > 1) {
-                $label .= $c->unit?->name ? ' — '.$c->unit->name : ' — Global';
+                $label .= $c->unit?->name ? ' — '.$c->unit->name : ' — '.__('app.global');
             }
 
             return (object) [
                 'id' => $c->id,
                 'name' => $label,
-                'color' => $this->categoryColor((int) $c->id, $c->name),
+                'color' => $this->categoryColor((int) $c->id, $c->display_name),
             ];
         });
 
         $legend = $preferred->map(fn (ReportCategory $c) => (object) [
             'id' => $c->id,
-            'name' => $c->name,
-            'color' => $this->categoryColor((int) $c->id, $c->name),
+            'name' => $c->display_name,
+            'color' => $this->categoryColor((int) $c->id, $c->display_name),
         ]);
 
         return ['filter' => $filter, 'legend' => $legend];

@@ -11,7 +11,7 @@
   <div class="row g-4 mb-4">
     <div class="col-lg-6">
       <div class="card border-0 shadow-sm h-100">
-        <div class="card-header border-bottom"><h5 class="mb-0">Laporan Surveyor</h5></div>
+        <div class="card-header border-bottom"><h5 class="mb-0">{{ __('app.surveyor_report') }}</h5></div>
         <div class="card-body">
           <table class="table table-borderless">
             <tr><td class="fw-semibold">No. Fail</td><td><code>{{ $report->file_number }}</code></td></tr>
@@ -26,11 +26,11 @@
     </div>
     <div class="col-lg-6">
       <div class="card border-0 shadow-sm h-100">
-        <div class="card-header border-bottom"><h5 class="mb-0">Lawatan TA & Ulasan Engineer</h5></div>
+        <div class="card-header border-bottom"><h5 class="mb-0">{{ __('app.ta_visit_engineer_review') }}</h5></div>
         <div class="card-body">
           @if ($report->siteVisit)
-            <p><strong>TA:</strong> {{ $report->siteVisit->ta->name ?? '-' }} · {{ $report->siteVisit->visit_date?->format('d/m/Y') }}</p>
-            <h6>Laporan PJ/PJK</h6>
+            <p><strong>{{ __('app.ta') }}:</strong> {{ $report->siteVisit->ta->name ?? '-' }} · {{ $report->siteVisit->visit_date?->format('d/m/Y') }}</p>
+            <h6>{{ __('app.pj_pjk_report') }}</h6>
             <p style="white-space:pre-wrap;">{{ $report->siteVisit->laporan_pj_pjk }}</p>
           @endif
           @if ($report->latestEngineerVerification)
@@ -46,16 +46,16 @@
 
   @if ($canApprove)
     <div class="card border-0 shadow-sm mb-4">
-      <div class="card-header border-bottom"><h5 class="mb-0">KEPUTUSAN PKJ</h5></div>
+      <div class="card-header border-bottom"><h5 class="mb-0">{{ __('app.director_decision') }}</h5></div>
       <div class="card-body">
-        <textarea wire:model="remarks" class="form-control @error('remarks') is-invalid @enderror" rows="3" placeholder="Ulasan / sebab penolakan..."></textarea>
+        <textarea wire:model="remarks" class="form-control @error('remarks') is-invalid @enderror" rows="3" placeholder="{{ __('app.remarks_placeholder') }}"></textarea>
         @error('remarks')<div class="invalid-feedback">{{ $message }}</div>@enderror
         <div class="d-flex gap-2 mt-3">
-          <button type="button" wire:click="approve" class="btn btn-success" wire:confirm="Luluskan laporan ini?">
-            <i class="ti tabler-stamp me-1"></i>Lulus
+          <button type="button" wire:click="approve" class="btn btn-success" wire:confirm="{{ __('app.confirm_approve') }}">
+            <i class="ti tabler-stamp me-1"></i>{{ __('app.approve') }}
           </button>
-          <button type="button" wire:click="reject" class="btn btn-outline-danger" wire:confirm="Tolak laporan ini?">
-            Tolak / Kembalikan
+          <button type="button" wire:click="reject" class="btn btn-outline-danger" wire:confirm="{{ __('app.confirm_reject') }}">
+            {{ __('app.reject_return') }}
           </button>
         </div>
       </div>
@@ -72,14 +72,14 @@
         default => url()->previous(),
       };
     @endphp
-    <a href="{{ $backUrl }}" class="btn btn-outline-secondary">Kembali</a>
+    <a href="{{ $backUrl }}" class="btn btn-outline-secondary">{{ __('app.back') }}</a>
     @if ($report->siteVisit)
       <a href="{{ route('site-visits.form', $report) }}" class="btn btn-outline-primary">
         <i class="ti tabler-clipboard-list me-1"></i>{{ __('app.site_visit') }}
       </a>
     @endif
     @can('downloadPdf', $report)
-      <a href="{{ route('reports.site-visit-pdf', $report) }}" class="btn btn-outline-primary" target="_blank">PDF Rasmi</a>
+      <a href="{{ route('reports.site-visit-pdf', $report) }}" class="btn btn-outline-primary" target="_blank">{{ __('app.official_pdf') }}</a>
     @endcan
   </div>
 </div>

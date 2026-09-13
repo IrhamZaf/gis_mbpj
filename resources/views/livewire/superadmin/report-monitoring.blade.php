@@ -1,53 +1,62 @@
 <div>
   <div class="card border-0 shadow-sm">
-    <div class="card-header border-bottom"><h5 class="mb-0">Pemantauan Laporan</h5></div>
+    <div class="card-header border-bottom"><h5 class="mb-0">{{ __('app.report_monitoring') }}</h5></div>
     <div class="card-body">
       <div class="row mb-4 g-3">
-        <div class="col-md-3"><input wire:model.live.debounce.300ms="search" type="text" class="form-control" placeholder="Cari tajuk / no. laporan..." /></div>
+        <div class="col-md-3"><input wire:model.live.debounce.300ms="search" type="text" class="form-control" placeholder="{{ __('app.search_reports') }}" /></div>
         <div class="col-md-2">
           <select wire:model.live="filterUnit" class="form-select">
-            <option value="">Semua Unit</option>
+            <option value="">{{ __('app.all_units') }}</option>
             @foreach($units as $u)<option value="{{ $u->id }}">{{ $u->name }}</option>@endforeach
           </select>
         </div>
         <div class="col-md-2">
           <select wire:model.live="filterStatus" class="form-select">
-            <option value="">Semua Status</option>
-            <option value="draft">Draf</option>
-            <option value="submitted">Dihantar (status)</option>
-            <option value="pending_site_visit">Menunggu Lawatan</option>
-            <option value="site_visit_in_progress">Lawatan Berjalan</option>
-            <option value="pending_engineer_verification">Menunggu Engineer</option>
-            <option value="engineer_returned">Dikembalikan Engineer</option>
-            <option value="pending_director_approval">Menunggu Pengarah</option>
-            <option value="approved">Diluluskan</option>
-            <option value="director_rejected">Ditolak</option>
-            <option value="completed">Selesai</option>
+            <option value="">{{ __('app.all_statuses') }}</option>
+            <option value="draft">{{ __('app.status_draft') }}</option>
+            <option value="submitted">{{ __('app.status_submitted') }}</option>
+            <option value="pending_site_visit">{{ __('app.wf_pending_site_visit') }}</option>
+            <option value="site_visit_in_progress">{{ __('app.wf_site_visit_in_progress') }}</option>
+            <option value="pending_engineer_verification">{{ __('app.wf_pending_engineer_verification') }}</option>
+            <option value="engineer_returned">{{ __('app.wf_engineer_returned') }}</option>
+            <option value="pending_director_approval">{{ __('app.wf_pending_director_approval') }}</option>
+            <option value="approved">{{ __('app.wf_approved') }}</option>
+            <option value="director_rejected">{{ __('app.wf_director_rejected') }}</option>
+            <option value="completed">{{ __('app.status_completed') }}</option>
           </select>
         </div>
         <div class="col-md-2">
           <select wire:model.live="filterCategory" class="form-select">
-            <option value="">Semua Kategori</option>
-            @foreach($categories as $c)<option value="{{ $c->id }}">{{ $c->name }}</option>@endforeach
+            <option value="">{{ __('app.all_categories') }}</option>
+            @foreach($categories as $c)<option value="{{ $c->id }}">{{ $c->display_name }}</option>@endforeach
           </select>
         </div>
         <div class="col-md-3">
           <select wire:model.live="filterSurveyor" class="form-select">
-            <option value="">Semua Surveyor</option>
+            <option value="">{{ __('app.all_surveyors') }}</option>
             @foreach($surveyors as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
           </select>
         </div>
       </div>
       <div class="table-responsive">
         <table class="table table-hover align-middle">
-          <thead class="table-light"><tr><th>No. Laporan</th><th>Tajuk</th><th>Unit</th><th>Kategori</th><th>Surveyor</th><th>Status</th><th>Tarikh</th><th></th></tr></thead>
+          <thead class="table-light"><tr>
+            <th>{{ __('app.report_no') }}</th>
+            <th>{{ __('app.title') }}</th>
+            <th>{{ __('app.unit') }}</th>
+            <th>{{ __('app.category') }}</th>
+            <th>{{ __('app.surveyor') }}</th>
+            <th>{{ __('app.status') }}</th>
+            <th>{{ __('app.date') }}</th>
+            <th></th>
+          </tr></thead>
           <tbody>
             @forelse ($reports as $r)
             <tr>
               <td><code>{{ $r->report_number }}</code></td>
               <td>{{ $r->title }}</td>
               <td>{{ $r->unit->name ?? '-' }}</td>
-              <td>{{ $r->category->name ?? '-' }}</td>
+              <td>{{ $r->category?->display_name ?? '-' }}</td>
               <td>{{ $r->user->name ?? '-' }}</td>
               <td>{!! $r->status_badge !!}</td>
               <td>{{ $r->created_at->format('d/m/Y') }}</td>
@@ -64,7 +73,7 @@
               </td>
             </tr>
             @empty
-            <tr><td colspan="8" class="text-center py-4">Tiada laporan.</td></tr>
+            <tr><td colspan="8" class="text-center py-4">{{ __('app.no_reports') }}</td></tr>
             @endforelse
           </tbody>
         </table>

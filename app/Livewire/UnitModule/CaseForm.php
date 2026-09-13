@@ -244,6 +244,6 @@ class CaseForm extends Component
             'category' => $category,
             'report' => $report,
             'progress' => $progress,
-        ])->title(($report ? 'Edit' : 'Cipta').' '.$category->name);
+        ])->title(($report ? __('app.edit') : __('app.create')).' '.$category->display_name);
     }
 }

@@ -55,7 +55,7 @@ class Unit extends Model
     public function getStatusBadgeAttribute(): string
     {
         return $this->isActive()
-            ? '<span class="badge bg-label-success">Aktif</span>'
-            : '<span class="badge bg-label-secondary">Nyahaktif</span>';
+            ? '<span class="badge bg-label-success">'.e(__('app.active')).'</span>'
+            : '<span class="badge bg-label-secondary">'.e(__('app.inactive')).'</span>';
     }
 }

@@ -6,7 +6,7 @@
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
     <div>
       <h4 class="mb-0">
-        {{ $report ? __('app.edit_case', ['name' => $category->name]) : __('app.create_case', ['name' => $category->name]) }}
+        {{ $report ? __('app.edit_case', ['name' => $category->display_name]) : __('app.create_case', ['name' => $category->display_name]) }}
       </h4>
       <small class="text-muted">{{ __('app.unit_label', ['name' => $unit->name]) }} @if($report) · {{ $report->report_number }} @endif</small>
     </div>

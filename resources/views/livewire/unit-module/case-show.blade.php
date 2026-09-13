@@ -7,7 +7,7 @@
     <div>
       <h4 class="mb-1">{{ __('app.case_label', ['number' => $report->report_number]) }}</h4>
       <div class="text-muted small">
-        {{ $report->unit->name ?? '-' }} · {{ $report->category->name ?? '-' }} · {!! $report->status_badge !!}
+        {{ $report->unit->name ?? '-' }} · {{ $report->category?->display_name ?? '-' }} · {!! $report->status_badge !!}
       </div>
     </div>
     <div class="d-flex flex-wrap gap-2">
@@ -45,7 +45,7 @@
           <div class="col-md-4"><div class="text-muted small">{{ __('app.case_id') }}</div><div class="fw-semibold">{{ $report->report_number }}</div></div>
           <div class="col-md-4"><div class="text-muted small">{{ __('app.file_number') }}</div><div class="fw-semibold">{{ $report->file_number ?? '—' }}</div></div>
           <div class="col-md-4"><div class="text-muted small">{{ __('app.unit') }}</div><div class="fw-semibold">{{ $report->unit->name ?? '—' }}</div></div>
-          <div class="col-md-4"><div class="text-muted small">{{ __('app.category') }}</div><div class="fw-semibold">{{ $report->category->name ?? '—' }}</div></div>
+          <div class="col-md-4"><div class="text-muted small">{{ __('app.category') }}</div><div class="fw-semibold">{{ $report->category?->display_name ?? '—' }}</div></div>
           <div class="col-md-8"><div class="text-muted small">{{ __('app.title') }}</div><div class="fw-semibold">{{ $report->title }}</div></div>
           <div class="col-md-4"><div class="text-muted small">{{ __('app.date') }}</div><div>{{ $report->created_at?->format('d/m/Y H:i') }}</div></div>
           <div class="col-md-4"><div class="text-muted small">{{ __('app.created_by') }}</div><div>{{ $report->user->name ?? '—' }}</div></div>

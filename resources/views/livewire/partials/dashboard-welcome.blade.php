@@ -1,5 +1,7 @@
 @php
-  $greeting = now()->hour < 12 ? 'Selamat pagi' : (now()->hour < 18 ? 'Selamat petang' : 'Selamat malam');
+  $greeting = now()->hour < 12
+    ? __('app.good_morning')
+    : (now()->hour < 18 ? __('app.good_afternoon') : __('app.good_evening'));
   $mapRoute = $mapRoute ?? '#';
   $unitTheme = $unitTheme ?? null;
   $accent = $unitTheme['color'] ?? '#0d6efd';
@@ -28,7 +30,7 @@
               <div class="text-muted small mt-1">
                 <i class="ti tabler-calendar-event me-1"></i>{{ now()->translatedFormat('l, d F Y') }}
                 @if ($unitDisplayName && $unitCode !== 'DEFAULT')
-                  · Unit {{ $unitDisplayName }}
+                  · {{ __('app.unit_label', ['name' => $unitDisplayName]) }}
                 @endif
               </div>
             </div>
@@ -74,7 +76,7 @@
           </p>
           <div class="mt-2">
             <span class="badge small text-white" style="background:{{ $accent }};">
-              <i class="ti tabler-activity me-1"></i>Aktif
+              <i class="ti tabler-activity me-1"></i>{{ __('app.active') }}
             </span>
           </div>
         </div>

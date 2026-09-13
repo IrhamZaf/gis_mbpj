@@ -60,6 +60,15 @@ class ReportCategory extends Model
         return $query->where('unit_id', $unitId);
     }
 
+    public function getDisplayNameAttribute(): string
+    {
+        return match ($this->code) {
+            'SINKHOLE' => __('app.sinkhole'),
+            'CERUN_RUNTUH' => __('app.cerun_runtuh'),
+            default => $this->name,
+        };
+    }
+
     public function isActive(): bool
     {
         return ($this->status ?? 'active') === 'active';

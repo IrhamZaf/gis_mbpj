@@ -258,25 +258,25 @@ class Report extends Model
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
-            'draft'     => 'Draf',
-            'submitted' => 'Dihantar',
-            'completed' => 'Selesai',
-            default     => ucfirst((string) $this->status),
+            'draft' => __('app.status_draft'),
+            'submitted' => __('app.status_submitted'),
+            'completed' => __('app.status_completed'),
+            default => ucfirst((string) $this->status),
         };
     }
 
     public function getWorkflowStatusLabelAttribute(): string
     {
         return match ($this->workflow_status) {
-            'pending_site_visit'              => 'Menunggu Lawatan Tapak',
-            'site_visit_in_progress'          => 'Lawatan Sedang Dijalankan',
-            'pending_engineer_verification'   => 'Menunggu Pengesahan Engineer',
-            'engineer_verified'               => 'Disahkan Engineer',
-            'engineer_returned'               => 'Dikembalikan Engineer',
-            'pending_director_approval'       => 'Menunggu Kelulusan Pengarah',
-            'approved'                        => 'Diluluskan',
-            'director_rejected'               => 'Ditolak Pengarah',
-            default                           => $this->status_label,
+            'pending_site_visit' => __('app.wf_pending_site_visit'),
+            'site_visit_in_progress' => __('app.wf_site_visit_in_progress'),
+            'pending_engineer_verification' => __('app.wf_pending_engineer_verification'),
+            'engineer_verified' => __('app.wf_engineer_verified'),
+            'engineer_returned' => __('app.wf_engineer_returned'),
+            'pending_director_approval' => __('app.wf_pending_director_approval'),
+            'approved' => __('app.wf_approved'),
+            'director_rejected' => __('app.wf_director_rejected'),
+            default => $this->status_label,
         };
     }
 

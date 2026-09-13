@@ -122,7 +122,7 @@ class SiteVisitForm extends Component
         $this->persistPhotos();
         app(ReportWorkflowService::class)->saveSiteVisitDraft($this->visit, Auth::user(), $this->payload());
         $this->visit->refresh();
-        session()->flash('message', 'Draf lawatan tapak disimpan.');
+        session()->flash('message', __('app.site_visit_draft_saved'));
     }
 
     public function submit(): void
@@ -135,13 +135,13 @@ class SiteVisitForm extends Component
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
         ], [
-            'laporan_pj_pjk.required' => 'Laporan PJ/PJK wajib diisi.',
-            'laporan_pj_pjk.min' => 'Laporan PJ/PJK terlalu singkat.',
+            'laporan_pj_pjk.required' => __('app.pj_pjk_report').' — '.__('app.select_file'),
+            'laporan_pj_pjk.min' => __('app.pj_pjk_report'),
         ]);
 
         $this->persistPhotos();
         app(ReportWorkflowService::class)->submitSiteVisit($this->visit, Auth::user(), $this->payload());
-        session()->flash('message', 'Laporan lawatan tapak dihantar untuk pengesahan Engineer.');
+        session()->flash('message', __('app.site_visit_submitted'));
         $this->redirect(route('ta.reports'), navigate: false);
     }
 

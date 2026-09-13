@@ -12,7 +12,7 @@
           style="width:36px;height:36px;background:{{ $theme['soft'] }};color:{{ $theme['color'] }};">
           <i class="ti {{ $theme['icon'] }}"></i>
         </span>
-        <h4 class="mb-0">{{ $category->name }}</h4>
+        <h4 class="mb-0">{{ $category->display_name }}</h4>
       </div>
       <div class="text-muted small">
         {{ __('app.unit_label', ['name' => $unit->name]) }}

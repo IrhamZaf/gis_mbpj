@@ -47,13 +47,15 @@ class CaseForm extends Component
     /** @var array<int, mixed> */
     public array $uploads = [];
 
-    public function mount(string $unitCode = 'SAL-CERUN', string $categoryCode = '', ?Report $report = null): void
+    public function mount(?Report $report = null, ?string $categoryCode = null, ?string $unitCode = null): void
     {
-        $this->unitCode = $unitCode;
+        $this->unitCode = $unitCode ?: 'SAL-CERUN';
+        $categoryCode = $categoryCode ?: '';
 
         // Edit route: /cases/{report}/edit — Livewire injects Report
         if ($report && $report->exists) {
             $this->authorize('update', $report);
+            $report->loadMissing('category');
             $this->reportId = $report->id;
             $this->title = $report->title;
             $this->description = $report->description ?? '';

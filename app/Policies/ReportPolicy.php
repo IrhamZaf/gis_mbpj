@@ -40,6 +40,10 @@ class ReportPolicy
 
     public function update(User $user, Report $report): bool
     {
+        if ($user->isSuperadmin() && $user->isActive()) {
+            return $report->status === 'draft';
+        }
+
         if (! $user->isSurveyor() || ! $user->isActive()) {
             return false;
         }

@@ -64,8 +64,20 @@
 
   @include('livewire.partials.workflow-audit', ['report' => $report])
 
-  <div class="d-flex gap-2">
-    <a href="{{ route('director.reports') }}" class="btn btn-outline-secondary">Kembali</a>
+  <div class="d-flex gap-2 flex-wrap">
+    @php
+      $backUrl = match (true) {
+        auth()->user()?->isSuperadmin() => route('superadmin.reports'),
+        auth()->user()?->isDirector() => route('director.reports'),
+        default => url()->previous(),
+      };
+    @endphp
+    <a href="{{ $backUrl }}" class="btn btn-outline-secondary">Kembali</a>
+    @if ($report->siteVisit)
+      <a href="{{ route('site-visits.form', $report) }}" class="btn btn-outline-primary">
+        <i class="ti tabler-clipboard-list me-1"></i>{{ __('app.site_visit') }}
+      </a>
+    @endif
     @can('downloadPdf', $report)
       <a href="{{ route('reports.site-visit-pdf', $report) }}" class="btn btn-outline-primary" target="_blank">PDF Rasmi</a>
     @endcan

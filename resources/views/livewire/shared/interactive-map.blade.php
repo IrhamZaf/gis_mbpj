@@ -77,13 +77,9 @@
           <span class="gis-legend-risk-area"></span>
           Kawasan risiko
         </span>
-        @foreach ($categories as $cat)
-          @php
-            $colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#34495e'];
-            $color = $colors[$cat->id % count($colors)];
-          @endphp
+        @foreach ($legendCategories as $cat)
           <span class="d-inline-flex align-items-center gap-1">
-            <span style="width:10px;height:10px;border-radius:50%;background:{{ $color }};display:inline-block;border:1px solid rgba(0,0,0,.15);"></span>
+            <span style="width:10px;height:10px;border-radius:50%;background:{{ $cat->color }};display:inline-block;border:1px solid rgba(0,0,0,.15);"></span>
             {{ $cat->name }}
           </span>
         @endforeach

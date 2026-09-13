@@ -37,6 +37,11 @@ class Unit extends Model
         return $this->hasMany(Report::class);
     }
 
+    public function categories(): HasMany
+    {
+        return $this->hasMany(ReportCategory::class)->orderBy('name');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', 'active');

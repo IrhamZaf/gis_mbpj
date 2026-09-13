@@ -5,6 +5,16 @@ use Illuminate\Support\Facades\Route;
 // ── Auth ─────────────────────────────────────────────
 Route::get('/login', App\Livewire\Auth\Login::class)->name('login');
 
+Route::get('/lang/{locale}', function (string $locale) {
+    if (! in_array($locale, ['en', 'ms'], true)) {
+        $locale = 'en';
+    }
+    session(['locale' => $locale]);
+    app()->setLocale($locale);
+
+    return redirect()->back();
+})->name('lang.switch');
+
 Route::post('/logout', function () {
     auth()->logout();
     request()->session()->invalidate();
@@ -32,6 +42,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/attachments/{attachment}/download', [App\Http\Controllers\AttachmentController::class, 'download'])->name('attachment.download');
     Route::get('/attachments/{attachment}/view', [App\Http\Controllers\AttachmentController::class, 'view'])->name('attachment.view');
     Route::get('/reports/{report}/site-visit-pdf', [App\Http\Controllers\SiteVisitPdfController::class, 'download'])->name('reports.site-visit-pdf');
+    Route::get('/reports/{report}/show', App\Livewire\Director\ReportView::class)->name('reports.show');
+    Route::get('/reports/{report}/site-visit', App\Livewire\Ta\SiteVisitForm::class)->name('site-visits.form');
 });
 
 // ═══════════════════════════════════════════════════════
@@ -46,6 +58,7 @@ Route::middleware(['auth', 'role:superadmin'])
         Route::get('/users',      App\Livewire\Superadmin\UserManagement::class)->name('users');
         Route::get('/categories', App\Livewire\Superadmin\CategoryManagement::class)->name('categories');
         Route::get('/reports',    App\Livewire\Superadmin\ReportMonitoring::class)->name('reports');
+        Route::get('/reports/{report}', App\Livewire\Director\ReportView::class)->name('reports.show');
         Route::get('/map',        App\Livewire\Shared\InteractiveMap::class)->name('map');
     });
 
@@ -73,7 +86,6 @@ Route::middleware(['auth', 'role:ta'])
     ->group(function () {
         Route::get('/', App\Livewire\Ta\Dashboard::class)->name('dashboard');
         Route::get('/reports', App\Livewire\Ta\ReportList::class)->name('reports');
-        Route::get('/reports/{report}/site-visit', App\Livewire\Ta\SiteVisitForm::class)->name('site-visits.form');
         Route::get('/map', App\Livewire\Shared\InteractiveMap::class)->name('map');
     });
 
@@ -112,4 +124,19 @@ Route::middleware(['auth', 'role:superadmin,director'])
     ->group(function () {
         Route::get('/', App\Livewire\Engineering\UnitHub::class)->name('hub');
         Route::get('/units/{unit:code}', App\Livewire\Engineering\UnitDashboard::class)->name('unit');
+    });
+
+// ═══════════════════════════════════════════════════════
+// SALIRAN & CERUN MODULE
+// ═══════════════════════════════════════════════════════
+Route::middleware(['auth'])
+    ->prefix('saliran-cerun')
+    ->name('saliran-cerun.')
+    ->group(function () {
+        Route::get('/', App\Livewire\UnitModule\UnitDashboard::class)->name('dashboard');
+        Route::get('/sinkhole', App\Livewire\UnitModule\CaseList::class)->name('sinkhole');
+        Route::get('/cerun-runtuh', App\Livewire\UnitModule\CaseList::class)->name('cerun');
+        Route::get('/cases/create/{categoryCode}', App\Livewire\UnitModule\CaseForm::class)->name('cases.create');
+        Route::get('/cases/{report}/edit', App\Livewire\UnitModule\CaseForm::class)->name('cases.edit');
+        Route::get('/cases/{report}', App\Livewire\UnitModule\CaseShow::class)->name('cases.show');
     });

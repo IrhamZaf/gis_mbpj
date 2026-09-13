@@ -58,32 +58,18 @@ use Illuminate\Support\Facades\Route;
     <!-- Language -->
     <li class="nav-item dropdown-language dropdown">
       <a class="nav-link dropdown-toggle hide-arrow btn btn-icon btn-text-secondary rounded-pill"
-        href="javascript:void(0);" data-bs-toggle="dropdown">
+        href="javascript:void(0);" data-bs-toggle="dropdown" title="{{ __('app.language') }}">
         <i class="icon-base ti tabler-language icon-22px text-heading"></i>
       </a>
       <ul class="dropdown-menu dropdown-menu-end">
         <li>
-          <a class="dropdown-item {{ app()->getLocale() === 'en' ? 'active' : '' }}" href="{{ url('lang/en') }}"
-            data-language="en" data-text-direction="ltr">
-            <span>English</span>
+          <a class="dropdown-item {{ app()->getLocale() === 'en' ? 'active' : '' }}" href="{{ route('lang.switch', 'en') }}">
+            <span>{{ __('app.english') }}</span>
           </a>
         </li>
         <li>
-          <a class="dropdown-item {{ app()->getLocale() === 'fr' ? 'active' : '' }}" href="{{ url('lang/fr') }}"
-            data-language="fr" data-text-direction="ltr">
-            <span>French</span>
-          </a>
-        </li>
-        <li>
-          <a class="dropdown-item {{ app()->getLocale() === 'ar' ? 'active' : '' }}" href="{{ url('lang/ar') }}"
-            data-language="ar" data-text-direction="rtl">
-            <span>Arabic</span>
-          </a>
-        </li>
-        <li>
-          <a class="dropdown-item {{ app()->getLocale() === 'de' ? 'active' : '' }}" href="{{ url('lang/de') }}"
-            data-language="de" data-text-direction="ltr">
-            <span>German</span>
+          <a class="dropdown-item {{ app()->getLocale() === 'ms' ? 'active' : '' }}" href="{{ route('lang.switch', 'ms') }}">
+            <span>{{ __('app.malay') }}</span>
           </a>
         </li>
       </ul>

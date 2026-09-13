@@ -37,6 +37,8 @@ class Report extends Model
         'latitude',
         'longitude',
         'location_name',
+        'address',
+        'gps_accuracy',
         'vendor_name',
         'gis_data',
         'submitted_at',
@@ -48,11 +50,12 @@ class Report extends Model
     protected function casts(): array
     {
         return [
-            'gis_data'     => 'array',
-            'latitude'     => 'decimal:7',
-            'longitude'    => 'decimal:7',
-            'submitted_at' => 'datetime',
-            'reviewed_at'  => 'datetime',
+            'gis_data'      => 'array',
+            'latitude'      => 'decimal:7',
+            'longitude'     => 'decimal:7',
+            'gps_accuracy'  => 'decimal:2',
+            'submitted_at'  => 'datetime',
+            'reviewed_at'   => 'datetime',
         ];
     }
 
@@ -60,11 +63,71 @@ class Report extends Model
     {
         static::creating(function ($report) {
             if (empty($report->report_number)) {
-                $date  = Carbon::now()->format('Ymd');
-                $count = static::whereDate('created_at', Carbon::today())->count() + 1;
-                $report->report_number = 'RPT-' . $date . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+                $report->report_number = static::generateCaseNumber($report->category_id);
             }
         });
+    }
+
+    public static function generateCaseNumber(?int $categoryId = null): string
+    {
+        $prefix = 'CS';
+        if ($categoryId) {
+            $category = ReportCategory::find($categoryId);
+            if ($category) {
+                $prefix = $category->casePrefix();
+            }
+        }
+
+        $year = Carbon::now()->format('Y');
+        $pattern = $prefix.'-'.$year.'-';
+        $last = static::where('report_number', 'like', $pattern.'%')
+            ->orderByDesc('report_number')
+            ->value('report_number');
+
+        $seq = 1;
+        if ($last && preg_match('/(\d+)$/', $last, $m)) {
+            $seq = (int) $m[1] + 1;
+        }
+
+        return $pattern.str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function currentAttachments()
+    {
+        return $this->hasMany(ReportAttachment::class)->where('is_current', true);
+    }
+
+    public function requiredDocumentsProgress(): array
+    {
+        $category = $this->category;
+        if (! $category) {
+            return ['total' => 0, 'uploaded' => 0, 'items' => []];
+        }
+
+        $types = $category->attachmentTypes;
+        $current = $this->attachments()->where('is_current', true)->get()->keyBy('attachment_type_id');
+        $items = [];
+        $uploaded = 0;
+
+        foreach ($types as $type) {
+            $has = $current->has($type->id);
+            if ($has) {
+                $uploaded++;
+            }
+            $items[] = [
+                'type' => $type,
+                'display_name' => $type->pivot->display_name ?? $type->name,
+                'uploaded' => $has,
+                'attachment' => $has ? $current->get($type->id) : null,
+            ];
+        }
+
+        return [
+            'total' => $types->count(),
+            'uploaded' => $uploaded,
+            'items' => $items,
+            'complete' => $types->count() > 0 && $uploaded >= $types->count(),
+        ];
     }
 
     public function category(): BelongsTo

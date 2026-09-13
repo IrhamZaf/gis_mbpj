@@ -40,7 +40,7 @@
       </div>
       <div class="table-responsive">
         <table class="table table-hover align-middle">
-          <thead class="table-light"><tr><th>No. Laporan</th><th>Tajuk</th><th>Unit</th><th>Kategori</th><th>Surveyor</th><th>Status</th><th>Tarikh</th></tr></thead>
+          <thead class="table-light"><tr><th>No. Laporan</th><th>Tajuk</th><th>Unit</th><th>Kategori</th><th>Surveyor</th><th>Status</th><th>Tarikh</th><th></th></tr></thead>
           <tbody>
             @forelse ($reports as $r)
             <tr>
@@ -51,9 +51,20 @@
               <td>{{ $r->user->name ?? '-' }}</td>
               <td>{!! $r->status_badge !!}</td>
               <td>{{ $r->created_at->format('d/m/Y') }}</td>
+              <td class="text-end text-nowrap">
+                @php
+                  $showUrl = ($r->unit?->code === 'SAL-CERUN')
+                    ? route('saliran-cerun.cases.show', $r)
+                    : route('superadmin.reports.show', $r);
+                @endphp
+                <a href="{{ $showUrl }}" class="btn btn-sm btn-outline-primary">{{ __('app.view') }}</a>
+                @if ($r->siteVisit)
+                  <a href="{{ route('site-visits.form', $r) }}" class="btn btn-sm btn-outline-secondary">{{ __('app.site_visit') }}</a>
+                @endif
+              </td>
             </tr>
             @empty
-            <tr><td colspan="7" class="text-center py-4">Tiada laporan.</td></tr>
+            <tr><td colspan="8" class="text-center py-4">Tiada laporan.</td></tr>
             @endforelse
           </tbody>
         </table>

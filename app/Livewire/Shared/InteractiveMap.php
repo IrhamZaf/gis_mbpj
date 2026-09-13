@@ -87,7 +87,7 @@ class InteractiveMap extends Component
                 'workflow_status'=> $report->workflow_status,
                 'category'       => $report->category->name ?? '-',
                 'category_id'    => $categoryId,
-                'category_color' => $this->categoryColor($categoryId),
+                'category_color' => $this->categoryColor($categoryId, $report->category->name ?? null),
                 'unit'           => $report->unit->name ?? '-',
                 'surveyor'       => $report->user->name ?? '-',
                 'location_name'  => $report->location_name,
@@ -98,12 +98,17 @@ class InteractiveMap extends Component
         })->values()->all();
     }
 
-    private function categoryColor(int $categoryId): string
+    private function categoryColor(int $categoryId, ?string $categoryName = null): string
     {
         $colors = [
             '#e74c3c', '#3498db', '#2ecc71', '#f39c12',
             '#9b59b6', '#1abc9c', '#e67e22', '#34495e',
         ];
+
+        // Same display name → same colour (avoids duplicate-looking legend chips)
+        if ($categoryName) {
+            return $colors[crc32(mb_strtolower(trim($categoryName))) % count($colors)];
+        }
 
         return $colors[$categoryId % count($colors)];
     }
@@ -115,11 +120,19 @@ class InteractiveMap extends Component
         }
 
         if ($user->isTa()) {
-            return route('ta.site-visits.form', $report);
+            return route('site-visits.form', $report);
         }
 
         if ($user->isDirector()) {
             return route('director.reports.view', $report);
+        }
+
+        if ($user->isSuperadmin()) {
+            if ($report->unit?->code === 'SAL-CERUN') {
+                return route('saliran-cerun.cases.show', $report);
+            }
+
+            return route('superadmin.reports.show', $report);
         }
 
         if ($user->isSurveyor()) {
@@ -131,18 +144,66 @@ class InteractiveMap extends Component
         return null;
     }
 
+    /**
+     * Categories for filter + legend (no duplicate display names).
+     *
+     * @return array{filter: \Illuminate\Support\Collection, legend: \Illuminate\Support\Collection}
+     */
+    protected function mapCategories(): array
+    {
+        $all = ReportCategory::query()
+            ->with('unit:id,name,code')
+            ->where(function ($q) {
+                $q->whereNull('status')->orWhere('status', 'active');
+            })
+            ->orderBy('name')
+            ->get();
+
+        // Prefer unit-scoped categories when names collide with global ones
+        $preferred = $all
+            ->sortByDesc(fn (ReportCategory $c) => $c->unit_id ? 1 : 0)
+            ->unique(fn (ReportCategory $c) => mb_strtolower(trim($c->name)))
+            ->values();
+
+        $nameCounts = $all->countBy(fn (ReportCategory $c) => mb_strtolower(trim($c->name)));
+
+        $filter = $all->map(function (ReportCategory $c) use ($nameCounts) {
+            $key = mb_strtolower(trim($c->name));
+            $label = $c->name;
+            if (($nameCounts[$key] ?? 0) > 1) {
+                $label .= $c->unit?->name ? ' — '.$c->unit->name : ' — Global';
+            }
+
+            return (object) [
+                'id' => $c->id,
+                'name' => $label,
+                'color' => $this->categoryColor((int) $c->id, $c->name),
+            ];
+        });
+
+        $legend = $preferred->map(fn (ReportCategory $c) => (object) [
+            'id' => $c->id,
+            'name' => $c->name,
+            'color' => $this->categoryColor((int) $c->id, $c->name),
+        ]);
+
+        return ['filter' => $filter, 'legend' => $legend];
+    }
+
     public function render()
     {
         $user = Auth::user();
+        $categories = $this->mapCategories();
 
         return view('livewire.shared.interactive-map', [
-            'markers'    => $this->markers,
-            'categories' => ReportCategory::orderBy('name')->get(),
-            'units'      => ($user->isSuperadmin() || $user->isDirector())
+            'markers' => $this->markers,
+            'categories' => $categories['filter'],
+            'legendCategories' => $categories['legend'],
+            'units' => ($user->isSuperadmin() || $user->isDirector())
                 ? Unit::active()->orderBy('sort_order')->orderBy('name')->get()
                 : collect(),
             'isSuperadmin' => $user->isSuperadmin() || $user->isDirector(),
-            'lockedUnit'   => $user->unit?->name,
+            'lockedUnit' => $user->unit?->name,
         ]);
     }
 }

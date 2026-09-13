@@ -20,21 +20,33 @@ class SiteVisitForm extends Component
     use WithFileUploads;
 
     public Report $report;
+
     public SiteVisit $visit;
 
     public string $file_number = '';
+
     public string $reference = 'MBSJ.SPB.PT.PPP(KEJ)-01.RK(01)';
+
     public string $visit_date = '';
+
     public string $visit_time = '';
+
     public ?float $latitude = null;
+
     public ?float $longitude = null;
+
     public ?float $gps_accuracy = null;
+
     public string $laporan_pj_pjk = '';
+
     public string $visit_notes = '';
+
     public string $ta_designation = '';
+
     public string $ta_signature = '';
 
     public $photos = [];
+
     public array $photo_captions = [];
 
     public function mount(Report $report): void
@@ -42,25 +54,26 @@ class SiteVisitForm extends Component
         $user = Auth::user();
         $this->authorize('view', $report);
 
-        if (! in_array($report->workflow_status, ['pending_site_visit', 'site_visit_in_progress', 'engineer_returned', 'pending_engineer_verification'], true)) {
-            abort(403);
-        }
-
-        if (in_array($report->workflow_status, ['pending_site_visit', 'engineer_returned'], true)
-            && $user->can('startSiteVisit', $report)) {
+        // TA starts / resumes site visit when allowed
+        if ($user->can('startSiteVisit', $report)) {
             app(ReportWorkflowService::class)->startSiteVisit($report, $user);
             $report->refresh();
         }
 
         $this->report = $report->load(['user', 'unit', 'category', 'attachments', 'workflowHistories.user']);
-        $this->visit = $report->siteVisit()->firstOrFail();
+        $visit = $report->siteVisit()->first();
 
-        if ($this->visit->isSubmitted() && $report->workflow_status === 'pending_engineer_verification') {
-            // read-only after submit unless returned
-        } elseif ($this->visit->ta_user_id !== $user->id && $user->isTa()) {
-            // allow other TA of same unit to view
+        if (! $visit) {
+            abort(404, 'Borang lawatan tapak belum wujud.');
         }
 
+        // Superadmin / Director: read-only view anytime they can view the report
+        // TA / others: must be unit staff (enforced by view policy) with an existing visit
+        if (! $user->isSuperadmin() && ! $user->isDirector() && ! $user->isTa() && ! $user->isEngineer()) {
+            abort(403);
+        }
+
+        $this->visit = $visit;
         $this->fillFromVisit();
     }
 
@@ -76,12 +89,15 @@ class SiteVisitForm extends Component
         $this->gps_accuracy = $v->gps_accuracy ? (float) $v->gps_accuracy : null;
         $this->laporan_pj_pjk = $v->laporan_pj_pjk ?? '';
         $this->visit_notes = $v->visit_notes ?? '';
-        $this->ta_designation = $v->ta_designation ?: Auth::user()->default_designation;
+        $this->ta_designation = $v->ta_designation ?: (Auth::user()->default_designation ?? '');
         $this->ta_signature = $v->ta_signature ?: Auth::user()->name;
     }
 
     public function setGps(float $lat, float $lng, ?float $accuracy = null): void
     {
+        if (! $this->canEditForm()) {
+            return;
+        }
         $this->latitude = round($lat, 7);
         $this->longitude = round($lng, 7);
         $this->gps_accuracy = $accuracy;
@@ -89,6 +105,9 @@ class SiteVisitForm extends Component
 
     public function removePhoto(int $id): void
     {
+        if (! $this->canEditForm()) {
+            return;
+        }
         if ($this->visit->isSubmitted() && $this->report->workflow_status !== 'engineer_returned') {
             return;
         }
@@ -110,14 +129,14 @@ class SiteVisitForm extends Component
     {
         $this->authorize('manageSiteVisit', $this->report);
         $this->validate([
-            'visit_date'     => 'required|date',
-            'visit_time'     => 'required',
+            'visit_date' => 'required|date',
+            'visit_time' => 'required',
             'laporan_pj_pjk' => 'required|string|min:20',
-            'latitude'       => 'nullable|numeric',
-            'longitude'      => 'nullable|numeric',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ], [
             'laporan_pj_pjk.required' => 'Laporan PJ/PJK wajib diisi.',
-            'laporan_pj_pjk.min'      => 'Laporan PJ/PJK terlalu singkat.',
+            'laporan_pj_pjk.min' => 'Laporan PJ/PJK terlalu singkat.',
         ]);
 
         $this->persistPhotos();
@@ -129,17 +148,17 @@ class SiteVisitForm extends Component
     private function payload(): array
     {
         return [
-            'file_number'    => $this->file_number,
-            'reference'      => $this->reference,
-            'visit_date'     => $this->visit_date,
-            'visit_time'     => $this->visit_time,
-            'latitude'       => $this->latitude,
-            'longitude'      => $this->longitude,
-            'gps_accuracy'   => $this->gps_accuracy,
+            'file_number' => $this->file_number,
+            'reference' => $this->reference,
+            'visit_date' => $this->visit_date,
+            'visit_time' => $this->visit_time,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
+            'gps_accuracy' => $this->gps_accuracy,
             'laporan_pj_pjk' => $this->laporan_pj_pjk,
-            'visit_notes'    => $this->visit_notes ?: null,
+            'visit_notes' => $this->visit_notes ?: null,
             'ta_designation' => $this->ta_designation,
-            'ta_signature'   => $this->ta_signature ?: Auth::user()->name,
+            'ta_signature' => $this->ta_signature ?: Auth::user()->name,
         ];
     }
 
@@ -149,18 +168,18 @@ class SiteVisitForm extends Component
             if (! $file) {
                 continue;
             }
-            $path = $file->store('site-visits/' . $this->visit->id, 'public');
+            $path = $file->store('site-visits/'.$this->visit->id, 'public');
             SiteVisitPhoto::create([
                 'site_visit_id' => $this->visit->id,
-                'user_id'       => Auth::id(),
-                'file_name'     => $file->getClientOriginalName(),
-                'file_path'     => $path,
-                'file_type'     => $file->getMimeType(),
-                'file_size'     => $file->getSize(),
-                'caption'       => $this->photo_captions[$i] ?? null,
-                'latitude'      => $this->latitude,
-                'longitude'     => $this->longitude,
-                'taken_at'      => now(),
+                'user_id' => Auth::id(),
+                'file_name' => $file->getClientOriginalName(),
+                'file_path' => $path,
+                'file_type' => $file->getMimeType(),
+                'file_size' => $file->getSize(),
+                'caption' => $this->photo_captions[$i] ?? null,
+                'latitude' => $this->latitude,
+                'longitude' => $this->longitude,
+                'taken_at' => now(),
             ]);
         }
         $this->photos = [];
@@ -191,15 +210,28 @@ class SiteVisitForm extends Component
         return $earth * 2 * atan2(sqrt($a), sqrt(1 - $a));
     }
 
+    protected function canEditForm(): bool
+    {
+        $user = Auth::user();
+        if (! $user || $user->isSuperadmin() || $user->isDirector()) {
+            return false;
+        }
+
+        $canEdit = $user->can('manageSiteVisit', $this->report)
+            || ($this->report->workflow_status === 'engineer_returned' && $user->isTa());
+
+        return $canEdit && (! $this->visit->isSubmitted() || $this->report->workflow_status === 'engineer_returned');
+    }
+
     public function render()
     {
-        $canEdit = Auth::user()->can('manageSiteVisit', $this->report)
-            || ($this->report->workflow_status === 'engineer_returned' && Auth::user()->isTa());
-
         return view('livewire.ta.site-visit-form', [
             'savedPhotos' => $this->visit->photos()->latest()->get(),
-            'canEdit'     => $canEdit && (! $this->visit->isSubmitted() || $this->report->workflow_status === 'engineer_returned'),
-            'distanceKm'  => $this->distanceKm,
+            'canEdit' => $this->canEditForm(),
+            'distanceKm' => $this->distanceKm,
+            'backUrl' => Auth::user()?->isSuperadmin()
+                ? route('superadmin.reports')
+                : (Auth::user()?->isDirector() ? route('director.reports') : route('ta.reports')),
         ]);
     }
 }

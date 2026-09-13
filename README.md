@@ -31,9 +31,34 @@ Surveyor Hantar → TA Lawatan Tapak → Engineer Sahkan → Pengarah Lulus → 
 - Audit trail + PDF rasmi
 - Peta Interaktif (filter unit)
 
-## Unit Engineering (seed)
+## Unit Engineering
 
-Jalan, Saliran, Struktur, Elektrik, Mekanikal, Infrastruktur, Cerun
+Aktif (fasa semasa):
+
+| Kod | Nama |
+|-----|------|
+| SAL-CERUN | Saliran & Cerun (Sinkhole / Cerun Runtuh) |
+| JLN | Jalan |
+| STR | Structure |
+| ME | M&E |
+
+Modul penuh kini: **Saliran & Cerun** (`/saliran-cerun`).
+
+Akaun uji modul:
+
+| Email | Role | Password |
+|-------|------|----------|
+| surveyor.saliran-cerun@mbsj.gov.my | Surveyor | password |
+| ta.saliran-cerun@mbsj.gov.my | TA | password |
+| engineer.saliran-cerun@mbsj.gov.my | Engineer | password |
+
+Seed:
+
+```bash
+php artisan migrate
+php artisan db:seed --class=SaliranCerunCategorySeeder
+php artisan db:seed --class=SaliranCerunStaffSeeder
+```
 
 ## Setup Ringkas
 
@@ -63,18 +88,13 @@ Password semua: `password`
 | director@mbsj.gov.my | Pengarah | — |
 | ta@mbsj.gov.my | TA | Jalan |
 | engineer@mbsj.gov.my | Engineer | Jalan |
-| ta.saliran@mbsj.gov.my | TA | Saliran |
-| engineer.saliran@mbsj.gov.my | Engineer | Saliran |
-| ta.struktur@mbsj.gov.my | TA | Struktur |
-| engineer.struktur@mbsj.gov.my | Engineer | Struktur |
-| ta.elektrik@mbsj.gov.my | TA | Elektrik |
-| engineer.elektrik@mbsj.gov.my | Engineer | Elektrik |
-| ta.mekanikal@mbsj.gov.my | TA | Mekanikal |
-| engineer.mekanikal@mbsj.gov.my | Engineer | Mekanikal |
-| ta.infrastruktur@mbsj.gov.my | TA | Infrastruktur |
-| engineer.infrastruktur@mbsj.gov.my | Engineer | Infrastruktur |
-| ta.cerun@mbsj.gov.my | TA | Cerun |
-| engineer.cerun@mbsj.gov.my | Engineer | Cerun |
+| surveyor.saliran-cerun@mbsj.gov.my | Surveyor | Saliran & Cerun |
+| ta.saliran-cerun@mbsj.gov.my | TA | Saliran & Cerun |
+| engineer.saliran-cerun@mbsj.gov.my | Engineer | Saliran & Cerun |
+| ta.structure@mbsj.gov.my | TA | Structure |
+| engineer.structure@mbsj.gov.my | Engineer | Structure |
+| ta.me@mbsj.gov.my | TA | M&E |
+| engineer.me@mbsj.gov.my | Engineer | M&E |
 
 Login TA/Engineer unit berbeza → dashboard bertema & data unit tersebut. Superadmin/Pengarah: menu **Engineering** → pilih unit.
 

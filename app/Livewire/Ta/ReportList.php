@@ -36,7 +36,7 @@ class ReportList extends Component
         $report = Report::findOrFail($reportId);
         $this->authorize('startSiteVisit', $report);
         app(ReportWorkflowService::class)->startSiteVisit($report, Auth::user());
-        $this->redirect(route('ta.site-visits.form', $report), navigate: false);
+        $this->redirect(route('site-visits.form', $report), navigate: false);
     }
 
     public function render()

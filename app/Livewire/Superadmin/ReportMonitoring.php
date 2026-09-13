@@ -50,7 +50,7 @@ class ReportMonitoring extends Component
 
     public function render()
     {
-        $reports = Report::with(['category', 'user', 'unit'])
+        $reports = Report::with(['category', 'user', 'unit', 'siteVisit'])
             ->when($this->search, fn ($q) => $q->where(function ($q) {
                 $q->where('title', 'like', "%{$this->search}%")
                     ->orWhere('report_number', 'like', "%{$this->search}%");

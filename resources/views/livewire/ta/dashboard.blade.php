@@ -63,7 +63,7 @@
               <td>{!! $r->status_badge !!}</td>
               <td class="text-end">
                 @if (in_array($r->workflow_status, ['pending_site_visit', 'site_visit_in_progress', 'engineer_returned'], true))
-                  <a href="{{ route('ta.site-visits.form', $r) }}" class="btn btn-sm btn-primary">Buka</a>
+                  <a href="{{ route('site-visits.form', $r) }}" class="btn btn-sm btn-primary">Buka</a>
                 @endif
               </td>
             </tr>

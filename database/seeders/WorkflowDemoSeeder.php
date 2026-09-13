@@ -24,11 +24,12 @@ class WorkflowDemoSeeder extends Seeder
 
         $units = Unit::active()->orderBy('sort_order')->get()->keyBy('code');
         $jalan = $units['JLN'] ?? null;
-        $saliran = $units['SLR'] ?? null;
-        $cerun = $units['CRN'] ?? null;
+        $saliranCerun = $units['SAL-CERUN'] ?? null;
+        $structure = $units['STR'] ?? null;
+        $me = $units['ME'] ?? null;
 
-        if (! $jalan) {
-            $this->command?->error('Units missing. Run UnitSeeder first.');
+        if (! $jalan || ! $saliranCerun || ! $structure || ! $me) {
+            $this->command?->error('Units missing. Run UnitSeeder first (need SAL-CERUN, JLN, STR, ME).');
 
             return;
         }
@@ -47,10 +48,9 @@ class WorkflowDemoSeeder extends Seeder
             ['name' => 'Ahmad Surveyor (Vendor)', 'password' => $password, 'role' => 'surveyor', 'unit_id' => $jalan->id, 'status' => 'active', 'phone' => '012-1111001']
         );
 
-        // Keep previously seeded surveyors if already used in demos (no new units)
-        $surveyorSlr = User::updateOrCreate(
-            ['email' => 'surveyor.saliran@mbsj.gov.my'],
-            ['name' => 'Siti Surveyor (Saliran)', 'password' => $password, 'role' => 'surveyor', 'unit_id' => $saliran?->id, 'status' => 'active', 'phone' => '012-1111002']
+        $surveyorSalCerun = User::updateOrCreate(
+            ['email' => 'surveyor.saliran-cerun@mbsj.gov.my'],
+            ['name' => 'Surveyor Saliran & Cerun', 'password' => $password, 'role' => 'surveyor', 'unit_id' => $saliranCerun->id, 'status' => 'active', 'phone' => '012-1111002']
         );
 
         $director = User::updateOrCreate(
@@ -58,15 +58,12 @@ class WorkflowDemoSeeder extends Seeder
             ['name' => 'Pengarah Kejuruteraan', 'password' => $password, 'role' => 'director', 'unit_id' => null, 'status' => 'active', 'phone' => '03-8000-0099']
         );
 
-        // ── TA + Engineer for EVERY unit ───────────────────
+        // ── TA + Engineer for the 4 active units ───────────
         $staffSeed = [
             'JLN' => ['slug' => null, 'ta' => 'Ali TA', 'eng' => 'Rahman Engineer', 'ta_phone' => '012-2222001', 'eng_phone' => '012-3333001'],
-            'SLR' => ['slug' => 'saliran', 'ta' => 'Fatimah TA', 'eng' => 'Kumar Engineer', 'ta_phone' => '012-2222002', 'eng_phone' => '012-3333002'],
-            'STR' => ['slug' => 'struktur', 'ta' => 'Wong TA', 'eng' => 'Azlan Engineer', 'ta_phone' => '012-2222003', 'eng_phone' => '012-3333003'],
-            'ELK' => ['slug' => 'elektrik', 'ta' => 'Ravi TA', 'eng' => 'Mei Engineer', 'ta_phone' => '012-2222004', 'eng_phone' => '012-3333004'],
-            'MEK' => ['slug' => 'mekanikal', 'ta' => 'Hassan TA', 'eng' => 'Priya Engineer', 'ta_phone' => '012-2222005', 'eng_phone' => '012-3333005'],
-            'INF' => ['slug' => 'infrastruktur', 'ta' => 'Diana TA', 'eng' => 'Farid Engineer', 'ta_phone' => '012-2222006', 'eng_phone' => '012-3333006'],
-            'CRN' => ['slug' => 'cerun', 'ta' => 'Nora TA', 'eng' => 'Lim Engineer', 'ta_phone' => '012-2222007', 'eng_phone' => '012-3333007'],
+            'SAL-CERUN' => ['slug' => 'saliran-cerun', 'ta' => 'Fatimah TA', 'eng' => 'Kumar Engineer', 'ta_phone' => '012-2222002', 'eng_phone' => '012-3333002'],
+            'STR' => ['slug' => 'structure', 'ta' => 'Wong TA', 'eng' => 'Azlan Engineer', 'ta_phone' => '012-2222003', 'eng_phone' => '012-3333003'],
+            'ME' => ['slug' => 'me', 'ta' => 'Ravi TA', 'eng' => 'Mei Engineer', 'ta_phone' => '012-2222004', 'eng_phone' => '012-3333004'],
         ];
 
         $taByCode = [];
@@ -74,6 +71,7 @@ class WorkflowDemoSeeder extends Seeder
         $accountTable = [
             ['admin@mbsj.gov.my', 'superadmin', '-'],
             ['surveyor@mbsj.gov.my', 'surveyor', 'Jalan'],
+            ['surveyor.saliran-cerun@mbsj.gov.my', 'surveyor', 'Saliran & Cerun'],
             ['director@mbsj.gov.my', 'director', '-'],
         ];
 
@@ -116,9 +114,8 @@ class WorkflowDemoSeeder extends Seeder
 
         $taJln = $taByCode['JLN'];
         $engJln = $engByCode['JLN'];
-        $taSlr = $taByCode['SLR'] ?? null;
-        $engSlr = $engByCode['SLR'] ?? null;
-        $engCrn = $engByCode['CRN'] ?? null;
+        $taSalCerun = $taByCode['SAL-CERUN'] ?? null;
+        $engSalCerun = $engByCode['SAL-CERUN'] ?? null;
 
         // Categories
         $cats = collect([
@@ -149,9 +146,7 @@ class WorkflowDemoSeeder extends Seeder
             'RPT-WF-SALIRAN-01',
             'RPT-WF-CERUN-01',
             'RPT-WF-STR-01',
-            'RPT-WF-ELK-01',
-            'RPT-WF-MEK-01',
-            'RPT-WF-INF-01',
+            'RPT-WF-ME-01',
         ];
 
         $oldIds = Report::whereIn('report_number', $demoNumbers)->pluck('id');
@@ -486,16 +481,19 @@ class WorkflowDemoSeeder extends Seeder
             'approved_at'      => now()->subDays(3),
         ]);
 
-        // 9) Other unit — Saliran (unit isolation demo)
-        if ($saliran && $surveyorSlr && $taSlr && $engSlr) {
+        // 9) Saliran & Cerun — unit isolation demo (use unit categories)
+        $sinkholeUnitCat = ReportCategory::where('unit_id', $saliranCerun->id)->where('code', 'SINKHOLE')->first();
+        $cerunUnitCat = ReportCategory::where('unit_id', $saliranCerun->id)->where('code', 'CERUN_RUNTUH')->first();
+
+        if ($saliranCerun && $surveyorSalCerun && $taSalCerun && $engSalCerun && $sinkholeUnitCat) {
             $saliranRpt = $this->makeReport([
                 'report_number'   => 'RPT-WF-SALIRAN-01',
-                'file_number'     => 'MBSJ/ENG/SLR/2026/201',
-                'category_id'     => $cats['saliran-tertutup']->id,
-                'user_id'         => $surveyorSlr->id,
-                'unit_id'         => $saliran->id,
-                'title'           => 'Longkang tersumbat di SS12 — Unit Saliran',
-                'description'     => 'Longkang utama tersumbat menyebabkan banjir kilat. Data unit Saliran sahaja.',
+                'file_number'     => 'MBSJ/ENG/SC/2026/201',
+                'category_id'     => $sinkholeUnitCat->id,
+                'user_id'         => $surveyorSalCerun->id,
+                'unit_id'         => $saliranCerun->id,
+                'title'           => 'Sinkhole di SS12 — Saliran & Cerun',
+                'description'     => 'Lubang sinkhole muncul selepas hujan. Data unit Saliran & Cerun sahaja.',
                 'status'          => 'submitted',
                 'workflow_status' => 'pending_engineer_verification',
                 'latitude'        => 3.0955,
@@ -504,11 +502,11 @@ class WorkflowDemoSeeder extends Seeder
                 'vendor_name'     => 'DrainTech Survey',
                 'submitted_at'    => now()->subDays(2),
             ]);
-            $this->history($saliranRpt, $surveyorSlr, 'submit_report', null, 'pending_site_visit', 'Laporan dihantar', now()->subDays(2));
-            $this->history($saliranRpt, $taSlr, 'submit_site_visit', 'site_visit_in_progress', 'pending_engineer_verification', 'Lawatan Saliran dihantar', now()->subDay());
+            $this->history($saliranRpt, $surveyorSalCerun, 'submit_report', null, 'pending_site_visit', 'Laporan dihantar', now()->subDays(2));
+            $this->history($saliranRpt, $taSalCerun, 'submit_site_visit', 'site_visit_in_progress', 'pending_engineer_verification', 'Lawatan Saliran & Cerun dihantar', now()->subDay());
             SiteVisit::create([
                 'report_id'      => $saliranRpt->id,
-                'ta_user_id'     => $taSlr->id,
+                'ta_user_id'     => $taSalCerun->id,
                 'file_number'    => $saliranRpt->file_number,
                 'reference'      => 'MBSJ.SPB.PT.PPP(KEJ)-01.RK(01)',
                 'visit_date'     => now()->subDay()->toDateString(),
@@ -516,24 +514,24 @@ class WorkflowDemoSeeder extends Seeder
                 'latitude'       => 3.0956,
                 'longitude'      => 101.6156,
                 'gps_accuracy'   => 5.0,
-                'laporan_pj_pjk' => "Longkang tersumbat dengan sampah & mendapan. Perlu pembersihan segera.",
+                'laporan_pj_pjk' => "Sinkhole dikesan berhampiran longkang. Perlu tindakan segera.",
                 'ta_designation' => 'Pembantu Teknik',
-                'ta_signature'   => $taSlr->name,
+                'ta_signature'   => $taSalCerun->name,
                 'status'         => 'submitted',
                 'submitted_at'   => now()->subDay(),
             ]);
         }
 
-        // 10) Cerun unit — pending visit (use existing surveyor vendor as submitter)
-        if ($cerun) {
+        // 10) Cerun Runtuh under Saliran & Cerun — pending visit
+        if ($saliranCerun && $surveyorSalCerun && $cerunUnitCat) {
             $cerunRpt = $this->makeReport([
                 'report_number'   => 'RPT-WF-CERUN-01',
-                'file_number'     => 'MBSJ/ENG/CRN/2026/301',
-                'category_id'     => $cats['cerun-tanah-runtuh']->id,
-                'user_id'         => $surveyorJln->id,
-                'unit_id'         => $cerun->id,
-                'title'           => 'Cerun tidak stabil di Ara Damansara',
-                'description'     => 'Cerun tepi jalan menunjukkan tanda ketidakstabilan selepas hujan. Menunggu lawatan TA Cerun.',
+                'file_number'     => 'MBSJ/ENG/CR/2026/301',
+                'category_id'     => $cerunUnitCat->id,
+                'user_id'         => $surveyorSalCerun->id,
+                'unit_id'         => $saliranCerun->id,
+                'title'           => 'Cerun Runtuh di Ara Damansara',
+                'description'     => 'Cerun tepi jalan menunjukkan tanda ketidakstabilan selepas hujan. Menunggu lawatan TA.',
                 'status'          => 'submitted',
                 'workflow_status' => 'pending_site_visit',
                 'latitude'        => 3.1289,
@@ -542,51 +540,30 @@ class WorkflowDemoSeeder extends Seeder
                 'vendor_name'     => 'ABC Survey Sdn Bhd',
                 'submitted_at'    => now()->subHours(10),
             ]);
-            $this->history($cerunRpt, $surveyorJln, 'submit_report', null, 'pending_site_visit', 'Laporan Cerun dihantar', now()->subHours(10));
+            $this->history($cerunRpt, $surveyorSalCerun, 'submit_report', null, 'pending_site_visit', 'Laporan Cerun dihantar', now()->subHours(10));
         }
 
-        // 11) Demo reports for remaining units so each unit dashboard has data
+        // 11) Demo reports for Structure + M&E
         $extraUnitDemos = [
             'STR' => [
                 'number' => 'RPT-WF-STR-01',
                 'file' => 'MBSJ/ENG/STR/2026/401',
                 'cat' => 'jalan-rosak',
-                'title' => 'Retakan struktur jejambat USJ — Unit Struktur',
-                'desc' => 'Retakan kecil pada struktur jejambat. Menunggu lawatan TA Struktur.',
+                'title' => 'Retakan struktur jejambat USJ — Unit Structure',
+                'desc' => 'Retakan kecil pada struktur jejambat. Menunggu lawatan TA Structure.',
                 'lat' => 3.0712, 'lng' => 101.5888,
                 'loc' => 'Jejambat USJ, Subang Jaya',
                 'workflow' => 'pending_site_visit',
             ],
-            'ELK' => [
-                'number' => 'RPT-WF-ELK-01',
-                'file' => 'MBSJ/ENG/ELK/2026/501',
+            'ME' => [
+                'number' => 'RPT-WF-ME-01',
+                'file' => 'MBSJ/ENG/ME/2026/501',
                 'cat' => 'utiliti-bawah-tanah',
-                'title' => 'Lampu jalan rosak SS15 — Unit Elektrik',
-                'desc' => 'Beberapa tiang lampu jalan tidak berfungsi. Menunggu semakan TA Elektrik.',
+                'title' => 'Lampu jalan rosak SS15 — Unit M&E',
+                'desc' => 'Beberapa tiang lampu jalan tidak berfungsi. Menunggu semakan TA M&E.',
                 'lat' => 3.0741, 'lng' => 101.5861,
                 'loc' => 'Jalan SS15/2, Subang Jaya',
                 'workflow' => 'pending_site_visit',
-            ],
-            'MEK' => [
-                'number' => 'RPT-WF-MEK-01',
-                'file' => 'MBSJ/ENG/MEK/2026/601',
-                'cat' => 'utiliti-bawah-tanah',
-                'title' => 'Pam air rosak stesen sementara — Unit Mekanikal',
-                'desc' => 'Pam mekanikal di stesen sementara berbunyi abnormal. Draf surveyor.',
-                'lat' => 3.0605, 'lng' => 101.5955,
-                'loc' => 'USJ 5, Subang Jaya',
-                'workflow' => null,
-                'status' => 'draft',
-            ],
-            'INF' => [
-                'number' => 'RPT-WF-INF-01',
-                'file' => 'MBSJ/ENG/INF/2026/701',
-                'cat' => 'jalan-rosak',
-                'title' => 'Kerosakan infrastruktur pejalan kaki SS19',
-                'desc' => 'Laluan pejalan kaki rosak. Menunggu pengesahan Engineer Infrastruktur.',
-                'lat' => 3.0522, 'lng' => 101.5822,
-                'loc' => 'SS19, Subang Jaya',
-                'workflow' => 'pending_engineer_verification',
             ],
         ];
 

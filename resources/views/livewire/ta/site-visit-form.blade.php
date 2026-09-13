@@ -117,7 +117,7 @@
           <input wire:model="ta_signature" type="text" class="form-control" @disabled(!$canEdit)>
         </div>
         <div class="col-md-6 d-flex align-items-end justify-content-end gap-2">
-          <a href="{{ route('ta.reports') }}" class="btn btn-outline-secondary">Kembali</a>
+          <a href="{{ $backUrl }}" class="btn btn-outline-secondary">Kembali</a>
           @if ($canEdit)
             <button type="button" wire:click="saveDraft" class="btn btn-outline-primary">Simpan Draf</button>
             <button type="button" wire:click="submit" class="btn btn-primary" wire:confirm="Hantar laporan lawatan kepada Engineer?">

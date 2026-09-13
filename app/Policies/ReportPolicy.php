@@ -88,6 +88,11 @@ class ReportPolicy
             return false;
         }
 
+        // Superadmin / Pengarah — boleh jana/lihat PDF untuk sebarang laporan yang boleh dilihat
+        if ($user->isSuperadmin() || $user->isDirector()) {
+            return true;
+        }
+
         // TA boleh cetak selepas lawatan dimulakan (ada rekod site visit / status berkaitan)
         if ($user->isTa()) {
             return in_array($report->workflow_status, [
@@ -101,7 +106,7 @@ class ReportPolicy
             ], true) || $report->siteVisit !== null;
         }
 
-        // Engineer / Pengarah / Superadmin — selepas lawatan dihantar atau selesai
+        // Engineer — selepas lawatan dihantar atau selesai
         if ($report->status === 'completed' || $report->workflow_status === 'approved') {
             return true;
         }

@@ -49,7 +49,7 @@ class SaliranCerunStaffSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'surveyor.saliran-cerun@mbsj.gov.my'],
             [
-                'name' => 'Surveyor Saliran & Cerun',
+                'name' => 'Surveyor NZ Survey Consultant',
                 'password' => $password,
                 'role' => 'surveyor',
                 'unit_id' => $unit->id,

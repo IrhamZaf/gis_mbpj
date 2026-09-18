@@ -35,7 +35,7 @@
 
             <div class="mb-4">
               <label class="form-label">Nama Vendor (jika berkenaan)</label>
-              <input wire:model="vendor_name" type="text" class="form-control" placeholder="cth: ABC Survey Sdn Bhd">
+              <input wire:model="vendor_name" type="text" class="form-control" placeholder="cth: NZ Survey Consultant">
             </div>
 
             {{-- Kategori --}}

@@ -9,7 +9,7 @@ Dibina dengan **Laravel**, **Livewire** dan peta interaktif (Leaflet).
 | Peranan | Fungsi |
 |---------|--------|
 | **Superadmin** | Urus unit, pengguna, kategori; Hub Engineering; pantau semua laporan |
-| **Surveyor / Vendor** | Cipta & hantar laporan lapangan + GIS (akaun vendor sedia ada) |
+| **Surveyor / Vendor** | NZ Survey Consultant — cipta & hantar laporan lapangan + GIS |
 | **TA** | Lawatan tapak mengikut unit masing-masing |
 | **Engineer** | Semak & sahkan laporan unit sendiri |
 | **Pengarah** | Lulus / tolak; lihat Hub Engineering semua unit |

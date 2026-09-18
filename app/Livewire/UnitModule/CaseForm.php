@@ -8,6 +8,7 @@ use App\Models\ReportCategory;
 use App\Models\Unit;
 use App\Services\Attachments\TechnicalAttachmentService;
 use App\Services\Workflow\ReportWorkflowService;
+use App\Support\SurveyVendor;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -61,7 +62,7 @@ class CaseForm extends Component
             $this->description = $report->description ?? '';
             $this->location_name = $report->location_name ?? '';
             $this->address = $report->address ?? '';
-            $this->vendor_name = $report->vendor_name ?? '';
+            $this->vendor_name = $report->vendor_name ?: SurveyVendor::name();
             $this->latitude = $report->latitude ? (float) $report->latitude : null;
             $this->longitude = $report->longitude ? (float) $report->longitude : null;
             $this->gps_accuracy = $report->gps_accuracy ? (float) $report->gps_accuracy : null;
@@ -72,6 +73,7 @@ class CaseForm extends Component
         }
 
         $this->categoryCode = $categoryCode;
+        $this->vendor_name = SurveyVendor::name();
     }
 
     #[On('report-coordinates-updated')]
@@ -167,7 +169,7 @@ class CaseForm extends Component
                 'description' => $this->description,
                 'location_name' => $this->location_name ?: null,
                 'address' => $this->address ?: null,
-                'vendor_name' => $this->vendor_name ?: null,
+                'vendor_name' => $this->vendor_name ?: SurveyVendor::name(),
                 'latitude' => $this->latitude,
                 'longitude' => $this->longitude,
                 'gps_accuracy' => $this->gps_accuracy,
@@ -182,7 +184,7 @@ class CaseForm extends Component
                 'description' => $this->description,
                 'location_name' => $this->location_name ?: null,
                 'address' => $this->address ?: null,
-                'vendor_name' => $this->vendor_name ?: ($user->name),
+                'vendor_name' => $this->vendor_name ?: SurveyVendor::name(),
                 'latitude' => $this->latitude,
                 'longitude' => $this->longitude,
                 'gps_accuracy' => $this->gps_accuracy,

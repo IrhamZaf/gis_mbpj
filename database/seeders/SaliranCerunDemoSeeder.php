@@ -152,7 +152,7 @@ class SaliranCerunDemoSeeder extends Seeder
                 array_merge($demo, [
                     'user_id' => $surveyor->id,
                     'unit_id' => $unit->id,
-                    'vendor_name' => 'ABC Survey Sdn Bhd',
+                    'vendor_name' => 'NZ Survey Consultant',
                 ])
             );
 

@@ -28,7 +28,7 @@
       </div>
       <div class="col-md-6">
         <label class="form-label">{{ __('app.vendor') }}</label>
-        <input wire:model="vendor_name" type="text" class="form-control">
+        <input wire:model="vendor_name" type="text" class="form-control" placeholder="NZ Survey Consultant">
       </div>
       <div class="col-md-6">
         <label class="form-label">{{ __('app.address') }}</label>

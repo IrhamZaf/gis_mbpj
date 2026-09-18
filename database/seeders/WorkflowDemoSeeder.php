@@ -45,12 +45,12 @@ class WorkflowDemoSeeder extends Seeder
         // Surveyor kekal akaun sedia ada (vendor) — jangan seed surveyor baharu per unit
         $surveyorJln = User::updateOrCreate(
             ['email' => 'surveyor@mbsj.gov.my'],
-            ['name' => 'Ahmad Surveyor (Vendor)', 'password' => $password, 'role' => 'surveyor', 'unit_id' => $jalan->id, 'status' => 'active', 'phone' => '012-1111001']
+            ['name' => 'Surveyor NZ Survey Consultant', 'password' => $password, 'role' => 'surveyor', 'unit_id' => $jalan->id, 'status' => 'active', 'phone' => '012-1111001']
         );
 
         $surveyorSalCerun = User::updateOrCreate(
             ['email' => 'surveyor.saliran-cerun@mbsj.gov.my'],
-            ['name' => 'Surveyor Saliran & Cerun', 'password' => $password, 'role' => 'surveyor', 'unit_id' => $saliranCerun->id, 'status' => 'active', 'phone' => '012-1111002']
+            ['name' => 'Surveyor NZ Survey Consultant', 'password' => $password, 'role' => 'surveyor', 'unit_id' => $saliranCerun->id, 'status' => 'active', 'phone' => '012-1111002']
         );
 
         $director = User::updateOrCreate(
@@ -172,7 +172,7 @@ class WorkflowDemoSeeder extends Seeder
             'latitude'        => 3.0735,
             'longitude'       => 101.5852,
             'location_name'   => 'Jalan SS15/4, Subang Jaya',
-            'vendor_name'     => 'ABC Survey Sdn Bhd',
+            'vendor_name'     => 'NZ Survey Consultant',
             'submitted_at'    => null,
         ]);
 
@@ -190,7 +190,7 @@ class WorkflowDemoSeeder extends Seeder
             'latitude'        => 3.1182,
             'longitude'       => 101.6234,
             'location_name'   => 'Persimpangan Jalan SS2/24, Subang Jaya',
-            'vendor_name'     => 'ABC Survey Sdn Bhd',
+            'vendor_name'     => 'NZ Survey Consultant',
             'submitted_at'    => now()->subDays(1),
         ]);
         $this->history($pendingVisit, $surveyorJln, 'submit_report', null, 'pending_site_visit', 'Laporan dihantar oleh Surveyor', now()->subDays(1));
@@ -209,7 +209,7 @@ class WorkflowDemoSeeder extends Seeder
             'latitude'        => 3.0648,
             'longitude'       => 101.5921,
             'location_name'   => 'Persiaran Tujuan, USJ 1',
-            'vendor_name'     => 'GeoMap Ventures',
+            'vendor_name'     => 'NZ Survey Consultant',
             'submitted_at'    => now()->subDays(2),
         ]);
         $this->history($inProgress, $surveyorJln, 'submit_report', null, 'pending_site_visit', 'Laporan dihantar', now()->subDays(2));
@@ -244,7 +244,7 @@ class WorkflowDemoSeeder extends Seeder
             'latitude'        => 3.0821,
             'longitude'       => 101.6108,
             'location_name'   => 'Jalan SS3/45, Subang Jaya',
-            'vendor_name'     => 'ABC Survey Sdn Bhd',
+            'vendor_name'     => 'NZ Survey Consultant',
             'submitted_at'    => now()->subDays(4),
         ]);
         $this->history($pendingEng, $surveyorJln, 'submit_report', null, 'pending_site_visit', 'Laporan dihantar', now()->subDays(4));
@@ -282,7 +282,7 @@ class WorkflowDemoSeeder extends Seeder
             'latitude'        => 3.1073,
             'longitude'       => 101.6067,
             'location_name'   => 'Jalan SS7/13, Kelana Jaya',
-            'vendor_name'     => 'GeoMap Ventures',
+            'vendor_name'     => 'NZ Survey Consultant',
             'submitted_at'    => now()->subDays(6),
             'review_note'     => 'Sila kemaskini foto keadaan sebenar dan lengkapkan ukuran kedalaman retakan.',
             'reviewed_at'     => now()->subDays(1),
@@ -331,7 +331,7 @@ class WorkflowDemoSeeder extends Seeder
             'latitude'        => 3.0912,
             'longitude'       => 101.5987,
             'location_name'   => 'Jalan SS14/1, Subang Jaya',
-            'vendor_name'     => 'ABC Survey Sdn Bhd',
+            'vendor_name'     => 'NZ Survey Consultant',
             'submitted_at'    => now()->subDays(8),
             'reviewed_at'     => now()->subDays(1)->setTime(9, 10),
             'reviewed_by'     => $engJln->id,
@@ -379,7 +379,7 @@ class WorkflowDemoSeeder extends Seeder
             'latitude'        => 3.0489,
             'longitude'       => 101.6012,
             'location_name'   => 'Persiaran Kewajipan, USJ 9',
-            'vendor_name'     => 'ABC Survey Sdn Bhd',
+            'vendor_name'     => 'NZ Survey Consultant',
             'submitted_at'    => now()->subDays(14),
             'reviewed_at'     => now()->subDays(5),
             'reviewed_by'     => $engJln->id,
@@ -437,7 +437,7 @@ class WorkflowDemoSeeder extends Seeder
             'latitude'        => 3.0551,
             'longitude'       => 101.5789,
             'location_name'   => 'Jalan SS18/1, Subang Jaya',
-            'vendor_name'     => 'GeoMap Ventures',
+            'vendor_name'     => 'NZ Survey Consultant',
             'submitted_at'    => now()->subDays(12),
             'reviewed_at'     => now()->subDays(4),
             'reviewed_by'     => $engJln->id,
@@ -499,7 +499,7 @@ class WorkflowDemoSeeder extends Seeder
                 'latitude'        => 3.0955,
                 'longitude'       => 101.6155,
                 'location_name'   => 'Jalan SS12/1, Subang Jaya',
-                'vendor_name'     => 'DrainTech Survey',
+                'vendor_name'     => 'NZ Survey Consultant',
                 'submitted_at'    => now()->subDays(2),
             ]);
             $this->history($saliranRpt, $surveyorSalCerun, 'submit_report', null, 'pending_site_visit', 'Laporan dihantar', now()->subDays(2));
@@ -537,7 +537,7 @@ class WorkflowDemoSeeder extends Seeder
                 'latitude'        => 3.1289,
                 'longitude'       => 101.5784,
                 'location_name'   => 'Ara Damansara, Subang Jaya',
-                'vendor_name'     => 'ABC Survey Sdn Bhd',
+                'vendor_name'     => 'NZ Survey Consultant',
                 'submitted_at'    => now()->subHours(10),
             ]);
             $this->history($cerunRpt, $surveyorSalCerun, 'submit_report', null, 'pending_site_visit', 'Laporan Cerun dihantar', now()->subHours(10));
@@ -587,7 +587,7 @@ class WorkflowDemoSeeder extends Seeder
                 'latitude'        => $demo['lat'],
                 'longitude'       => $demo['lng'],
                 'location_name'   => $demo['loc'],
-                'vendor_name'     => 'ABC Survey Sdn Bhd',
+                'vendor_name'     => 'NZ Survey Consultant',
                 'submitted_at'    => $status === 'draft' ? null : now()->subDays(1),
             ]);
 

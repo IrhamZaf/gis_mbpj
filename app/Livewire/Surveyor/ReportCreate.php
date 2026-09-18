@@ -6,6 +6,7 @@ use App\Livewire\Concerns\StoresSurveyAttachments;
 use App\Models\Report;
 use App\Models\ReportCategory;
 use App\Services\Workflow\ReportWorkflowService;
+use App\Support\SurveyVendor;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -32,6 +33,11 @@ class ReportCreate extends Component
     public ?float $longitude = null;
     public ?array $gis_data = null;
     public array $attachments = [];
+
+    public function mount(): void
+    {
+        $this->vendor_name = SurveyVendor::name();
+    }
 
     // ── Validation ──────────────────────────────────────
     protected function rules(): array
@@ -122,7 +128,7 @@ class ReportCreate extends Component
                 'latitude'        => $lat,
                 'longitude'       => $lng,
                 'location_name'   => $this->location_name ?: null,
-                'vendor_name'     => $this->vendor_name ?: null,
+                'vendor_name'     => $this->vendor_name ?: SurveyVendor::name(),
                 'gis_data'        => $this->gis_data,
             ]);
 

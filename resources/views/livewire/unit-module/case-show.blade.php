@@ -11,11 +11,11 @@
       </div>
     </div>
     <div class="d-flex flex-wrap gap-2">
-      @if ($report->status === 'draft' && (auth()->id() === $report->user_id || auth()->user()->isSuperadmin()))
-        <a href="{{ route('saliran-cerun.cases.edit', $report) }}" class="btn btn-outline-primary">{{ __('app.edit') }}</a>
+      @can('update', $report)
+        <a href="{{ $editUrl }}" class="btn btn-outline-primary">{{ __('app.edit') }}</a>
         <button type="button" wire:click="submitCase" class="btn btn-primary"
           wire:confirm="{{ __('app.confirm_submit_short') }}">{{ __('app.submit') }}</button>
-      @endif
+      @endcan
       @can('downloadPdf', $report)
         <a href="{{ route('reports.site-visit-pdf', $report) }}" class="btn btn-outline-danger" target="_blank">
           <i class="ti tabler-printer me-1"></i>{{ __('app.generate_pdf') }}
@@ -23,6 +23,16 @@
       @endcan
     </div>
   </div>
+
+  @if ($isReadOnly)
+    <div class="alert alert-secondary border d-flex align-items-start gap-2 mb-4" role="status">
+      <i class="ti tabler-lock mt-1"></i>
+      <div>
+        <div class="fw-semibold">{{ __('app.read_only_title') }}</div>
+        <div class="small mb-0">{{ __('app.read_only_body', ['unit' => $report->unit->name ?? '-']) }}</div>
+      </div>
+    </div>
+  @endif
 
   <ul class="nav nav-tabs mb-4">
     @foreach ([
@@ -80,7 +90,7 @@
       if (lat && lng && window.L) {
         const map = L.map('case-gis-map').setView([lat, lng], 16);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-        const color = cat === 'CERUN_RUNTUH' ? '#dc3545' : '#0dcaf0';
+        const color = (cat === 'CERUN' || cat === 'CERUN_RUNTUH') ? '#dc3545' : (cat === 'BOREHOLE' ? '#6c757d' : '#0dcaf0');
         L.circleMarker([lat, lng], { radius: 10, color, fillColor: color, fillOpacity: 0.9 })
           .addTo(map)
           .bindPopup(`<strong>{{ $report->report_number }}</strong><br>{{ $report->category->name }}<br>{{ addslashes($report->title) }}`);

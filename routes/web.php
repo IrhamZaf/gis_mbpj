@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\UnitModule;
 use Illuminate\Support\Facades\Route;
 
 // ── Auth ─────────────────────────────────────────────
@@ -127,16 +128,35 @@ Route::middleware(['auth', 'role:superadmin,director'])
     });
 
 // ═══════════════════════════════════════════════════════
-// SALIRAN & CERUN MODULE
+// UNIT MODULES (Saliran & Cerun / Jalan / Structure / M&E)
 // ═══════════════════════════════════════════════════════
-Route::middleware(['auth'])
-    ->prefix('saliran-cerun')
-    ->name('saliran-cerun.')
-    ->group(function () {
-        Route::get('/', App\Livewire\UnitModule\UnitDashboard::class)->name('dashboard');
-        Route::get('/sinkhole', App\Livewire\UnitModule\CaseList::class)->name('sinkhole');
-        Route::get('/cerun-runtuh', App\Livewire\UnitModule\CaseList::class)->name('cerun');
-        Route::get('/cases/create/{categoryCode}', App\Livewire\UnitModule\CaseForm::class)->name('cases.create');
-        Route::get('/cases/{report}/edit', App\Livewire\UnitModule\CaseForm::class)->name('cases.edit');
-        Route::get('/cases/{report}', App\Livewire\UnitModule\CaseShow::class)->name('cases.show');
-    });
+foreach (UnitModule::UNIT_SLUGS as $unitSlug => $unitCode) {
+    Route::middleware(['auth'])
+        ->prefix($unitSlug)
+        ->name($unitSlug.'.')
+        ->group(function () use ($unitCode) {
+            Route::get('/', App\Livewire\UnitModule\UnitDashboard::class)
+                ->defaults('unitCode', $unitCode)
+                ->name('dashboard');
+
+            foreach (UnitModule::CATEGORY_SLUGS as $categorySlug => $categoryCode) {
+                Route::get('/'.$categorySlug, App\Livewire\UnitModule\CaseList::class)
+                    ->defaults('unitCode', $unitCode)
+                    ->defaults('categoryCode', $categoryCode)
+                    ->name($categorySlug);
+            }
+
+            Route::get('/cases/create/{categoryCode}', App\Livewire\UnitModule\CaseForm::class)
+                ->defaults('unitCode', $unitCode)
+                ->name('cases.create');
+            Route::get('/cases/{report}/edit', App\Livewire\UnitModule\CaseForm::class)
+                ->defaults('unitCode', $unitCode)
+                ->name('cases.edit');
+            Route::get('/cases/{report}', App\Livewire\UnitModule\CaseShow::class)
+                ->defaults('unitCode', $unitCode)
+                ->name('cases.show');
+        });
+}
+
+// Backward-compatible redirect (old Cerun Runtuh URL)
+Route::redirect('/saliran-cerun/cerun-runtuh', '/saliran-cerun/cerun')->middleware('auth');

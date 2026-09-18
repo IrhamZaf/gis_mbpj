@@ -43,7 +43,15 @@ class ReportCreate extends Component
     protected function rules(): array
     {
         return [
-            'category_id'   => ['required', Rule::exists('report_categories', 'id')],
+            'category_id'   => [
+                'required',
+                Rule::exists('report_categories', 'id')->where(function ($q) {
+                    $unitId = Auth::user()?->unit_id;
+                    if ($unitId) {
+                        $q->where('unit_id', $unitId);
+                    }
+                }),
+            ],
             'title'         => 'required|string|min:5|max:255',
             'description'   => 'required|string|min:10',
             'location_name' => 'nullable|string|max:255',
@@ -163,7 +171,11 @@ class ReportCreate extends Component
         $user = Auth::user();
 
         return view('livewire.surveyor.report-create', [
-            'categories' => ReportCategory::orderBy('name')->get(),
+            'categories' => ReportCategory::query()
+                ->active()
+                ->when($user->unit_id, fn ($q) => $q->forUnit($user->unit_id))
+                ->orderBy('name')
+                ->get(),
             'userUnit'   => $user->unit,
         ]);
     }

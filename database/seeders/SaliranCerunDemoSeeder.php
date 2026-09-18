@@ -18,7 +18,7 @@ class SaliranCerunDemoSeeder extends Seeder
 
         $unit = Unit::where('code', 'SAL-CERUN')->firstOrFail();
         $sinkhole = ReportCategory::where('unit_id', $unit->id)->where('code', 'SINKHOLE')->firstOrFail();
-        $cerun = ReportCategory::where('unit_id', $unit->id)->where('code', 'CERUN_RUNTUH')->firstOrFail();
+        $cerun = ReportCategory::where('unit_id', $unit->id)->where('code', 'CERUN')->firstOrFail();
 
         $surveyor = User::where('email', 'surveyor.saliran-cerun@mbsj.gov.my')->first()
             ?? User::where('role', 'surveyor')->where('unit_id', $unit->id)->first()

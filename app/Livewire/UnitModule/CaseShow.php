@@ -3,8 +3,8 @@
 namespace App\Livewire\UnitModule;
 
 use App\Models\Report;
-use App\Models\Unit;
 use App\Services\Workflow\ReportWorkflowService;
+use App\Support\UnitModule;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -19,13 +19,16 @@ class CaseShow extends Component
     public function mount(Report $report): void
     {
         $this->authorize('view', $report);
-        $unit = Unit::where('code', 'SAL-CERUN')->first();
-        if ($unit && (int) $report->unit_id !== (int) $unit->id && ! Auth::user()->isSuperadmin() && ! Auth::user()->isDirector()) {
-            // Still allow if user's unit matches report
-            if ((int) Auth::user()->unit_id !== (int) $report->unit_id) {
-                abort(403);
+        $report->loadMissing('unit');
+
+        // Ensure URL unit slug matches report unit (prevent cross-unit URL confusion)
+        $routeName = request()->route()?->getName() ?? '';
+        foreach (UnitModule::UNIT_SLUGS as $slug => $code) {
+            if (str_starts_with($routeName, $slug.'.') && $report->unit?->code && $report->unit->code !== $code) {
+                abort(404);
             }
         }
+
         $this->report = $report->load([
             'category.attachmentTypes',
             'unit',
@@ -45,6 +48,7 @@ class CaseShow extends Component
 
     public function submitCase(): void
     {
+        $this->authorize('update', $this->report);
         app(ReportWorkflowService::class)->submitReport($this->report->fresh(), Auth::user());
         session()->flash('message', __('app.case_submitted'));
         $this->report = $this->report->fresh([
@@ -55,6 +59,7 @@ class CaseShow extends Component
 
     public function render()
     {
+        $user = Auth::user();
         $progress = $this->report->requiredDocumentsProgress();
         $siteStatus = match ($this->report->workflow_status) {
             'pending_site_visit' => __('app.pending'),
@@ -64,6 +69,12 @@ class CaseShow extends Component
             default => __('app.pending'),
         };
 
+        $unitCode = $this->report->unit?->code ?? 'SAL-CERUN';
+        $canUpdate = $user->can('update', $this->report);
+        $isReadOnly = ! $user->isSuperadmin()
+            && ! $user->isDirector()
+            && ! $user->belongsToSameUnit($this->report);
+
         return view('livewire.unit-module.case-show', [
             'progress' => $progress,
             'siteStatus' => $siteStatus,
@@ -72,6 +83,11 @@ class CaseShow extends Component
                 ->orderByDesc('version')
                 ->get()
                 ->groupBy('attachment_type_id'),
+            'listUrl' => UnitModule::categoryRoute($unitCode, $this->report->category?->code ?? 'SINKHOLE'),
+            'editUrl' => UnitModule::caseEditRoute($unitCode, $this->report),
+            'dashboardUrl' => UnitModule::dashboardRoute($unitCode),
+            'canUpdate' => $canUpdate,
+            'isReadOnly' => $isReadOnly,
         ])->title($this->report->report_number);
     }
 }

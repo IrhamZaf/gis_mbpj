@@ -16,17 +16,18 @@ class ReportCreateTest extends TestCase
 
     public function test_surveyor_can_submit_report(): void
     {
+        $this->seed(\Database\Seeders\UnitCategorySeeder::class);
+
+        $unit = \App\Models\Unit::where('code', 'JLN')->firstOrFail();
+        $category = \App\Models\ReportCategory::where('unit_id', $unit->id)->where('code', 'SINKHOLE')->firstOrFail();
+
         $surveyor = User::create([
             'name'     => 'Surveyor Test',
             'email'    => 'surveyor-test@example.com',
             'password' => bcrypt('password'),
             'role'     => 'surveyor',
-        ]);
-
-        $category = ReportCategory::create([
-            'name'        => 'Sinkhole',
-            'slug'        => 'sinkhole-test',
-            'description' => 'Test',
+            'unit_id'  => $unit->id,
+            'status'   => 'active',
         ]);
 
         Livewire::actingAs($surveyor)
@@ -41,6 +42,7 @@ class ReportCreateTest extends TestCase
         $this->assertDatabaseHas('reports', [
             'user_id'     => $surveyor->id,
             'category_id' => $category->id,
+            'unit_id'     => $unit->id,
             'title'       => 'Laporan ujian sinkhole',
             'status'      => 'submitted',
         ]);

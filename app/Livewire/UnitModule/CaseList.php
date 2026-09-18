@@ -5,9 +5,11 @@ namespace App\Livewire\UnitModule;
 use App\Models\Report;
 use App\Models\ReportCategory;
 use App\Models\Unit;
+use App\Support\UnitModule;
 use App\Support\UnitTheme;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -24,33 +26,57 @@ class CaseList extends Component
 
     public string $search = '';
 
+    #[Url]
     public string $filterStatus = '';
 
     public function mount(string $unitCode = 'SAL-CERUN', string $categoryCode = ''): void
     {
         $this->unitCode = $unitCode;
         if ($categoryCode !== '') {
-            $this->categoryCode = $categoryCode;
+            $this->categoryCode = UnitModule::normalizeCategoryCode($categoryCode) ?? $categoryCode;
         }
-        $this->syncCategoryFromRoute();
+        $this->syncFromRoute();
     }
 
     public function boot(): void
     {
-        // Same Livewire component serves Sinkhole + Cerun Runtuh URLs;
+        // Same Livewire component serves multiple category URLs;
         // re-sync on every request so wire:navigate does not keep the wrong category.
-        $this->syncCategoryFromRoute();
+        $this->syncFromRoute();
     }
 
-    protected function syncCategoryFromRoute(): void
+    protected function syncFromRoute(): void
     {
-        $route = request()->route()?->getName();
+        $route = request()->route();
+        $routeName = $route?->getName() ?? '';
 
-        $this->categoryCode = match ($route) {
-            'saliran-cerun.cerun' => 'CERUN_RUNTUH',
-            'saliran-cerun.sinkhole' => 'SINKHOLE',
-            default => $this->categoryCode !== '' ? $this->categoryCode : 'SINKHOLE',
-        };
+        foreach (UnitModule::UNIT_SLUGS as $slug => $code) {
+            if (! str_starts_with($routeName, $slug.'.')) {
+                continue;
+            }
+
+            $this->unitCode = $code;
+            $suffix = substr($routeName, strlen($slug) + 1);
+            if (isset(UnitModule::CATEGORY_SLUGS[$suffix])) {
+                $this->categoryCode = UnitModule::CATEGORY_SLUGS[$suffix];
+            }
+
+            return;
+        }
+
+        // Fallbacks from route defaults / params
+        $defaultUnit = $route?->parameter('unitCode') ?? $route?->defaults['unitCode'] ?? null;
+        $defaultCat = $route?->parameter('categoryCode') ?? $route?->defaults['categoryCode'] ?? null;
+        if (is_string($defaultUnit) && $defaultUnit !== '') {
+            $this->unitCode = $defaultUnit;
+        }
+        if (is_string($defaultCat) && $defaultCat !== '') {
+            $this->categoryCode = UnitModule::normalizeCategoryCode($defaultCat) ?? $defaultCat;
+        }
+
+        if ($this->categoryCode === '') {
+            $this->categoryCode = 'SINKHOLE';
+        }
     }
 
     public function updatingSearch(): void
@@ -65,25 +91,32 @@ class CaseList extends Component
 
     public function render()
     {
-        $this->syncCategoryFromRoute();
+        $this->syncFromRoute();
 
         $unit = Unit::where('code', $this->unitCode)->firstOrFail();
         $user = Auth::user();
-        if (! $user->isSuperadmin() && ! $user->isDirector() && (int) $user->unit_id !== (int) $unit->id) {
+
+        if (! $user->canBrowseAllUnits()) {
             abort(403);
         }
 
+        $isOwnUnit = $user->isSuperadmin() || $user->canWriteUnit($unit->id);
+
         $category = ReportCategory::active()
             ->forUnit($unit->id)
-            ->where('code', $this->categoryCode)
+            ->whereIn('code', array_filter([
+                $this->categoryCode,
+                $this->categoryCode === 'CERUN' ? 'CERUN_RUNTUH' : null,
+            ]))
             ->firstOrFail();
+
+        $this->categoryCode = UnitModule::normalizeCategoryCode($category->code) ?? $category->code;
 
         $theme = UnitTheme::forCategory($category->code);
 
         $base = Report::query()
-            ->where('unit_id', $unit->id)
-            ->where('category_id', $category->id)
-            ->when($user->isSurveyor(), fn ($q) => $q->where('user_id', $user->id));
+            ->forUnitListing($user, $unit->id)
+            ->where('category_id', $category->id);
 
         $stats = [
             'total' => (clone $base)->count(),
@@ -117,6 +150,11 @@ class CaseList extends Component
             ->paginate(10);
 
         $docsTotal = $category->attachmentTypes()->count();
+        $siblingCategories = ReportCategory::active()
+            ->forUnit($unit->id)
+            ->whereIn('code', UnitModule::CATEGORY_CODES)
+            ->orderByRaw("CASE code WHEN 'SINKHOLE' THEN 1 WHEN 'CERUN' THEN 2 WHEN 'BOREHOLE' THEN 3 ELSE 9 END")
+            ->get();
 
         return view('livewire.unit-module.case-list', [
             'unit' => $unit,
@@ -125,8 +163,13 @@ class CaseList extends Component
             'stats' => $stats,
             'reports' => $reports,
             'docsTotal' => $docsTotal,
-            'canCreate' => $user->isSurveyor() || $user->isSuperadmin(),
-            'listRoute' => $category->code === 'CERUN_RUNTUH' ? 'saliran-cerun.cerun' : 'saliran-cerun.sinkhole',
-        ])->title($category->name.' — '.$unit->name);
+            'canCreate' => $isOwnUnit && ($user->isSurveyor() || $user->isSuperadmin()),
+            'canEdit' => $isOwnUnit && ($user->isSurveyor() || $user->isSuperadmin()),
+            'isOwnUnit' => $isOwnUnit,
+            'isReadOnly' => ! $isOwnUnit,
+            'siblingCategories' => $siblingCategories,
+            'dashboardUrl' => UnitModule::dashboardRoute($unit->code),
+            'createUrl' => UnitModule::caseCreateRoute($unit->code, $category->code),
+        ])->title($category->display_name.' — '.$unit->name);
     }
 }

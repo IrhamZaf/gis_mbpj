@@ -111,4 +111,53 @@ class User extends Authenticatable
     {
         return in_array($this->role, ['surveyor', 'engineer', 'ta'], true);
     }
+
+    /**
+     * Whether this user belongs to the same engineering unit as the report.
+     * Superadmin / Director are not unit-bound for write checks — callers should
+     * treat them separately when full access is intended.
+     */
+    public function belongsToSameUnit(Report $report): bool
+    {
+        if (! $this->unit_id || ! $report->unit_id) {
+            return false;
+        }
+
+        return (int) $this->unit_id === (int) $report->unit_id;
+    }
+
+    /**
+     * Staff who may browse / read reports across all units.
+     */
+    public function canBrowseAllUnits(): bool
+    {
+        return $this->isActive() && (
+            $this->isSuperadmin()
+            || $this->isDirector()
+            || $this->isSurveyor()
+            || $this->isEngineer()
+            || $this->isTa()
+        );
+    }
+
+    /**
+     * Write / mutate a unit's reports (create, edit, upload, workflow actions).
+     */
+    public function canWriteUnit(?int $unitId): bool
+    {
+        if (! $this->isActive()) {
+            return false;
+        }
+
+        if ($this->isSuperadmin()) {
+            return true;
+        }
+
+        if ($this->isDirector()) {
+            // Director approves globally but does not "own" a unit for edits
+            return false;
+        }
+
+        return $unitId !== null && $this->unit_id && (int) $this->unit_id === (int) $unitId;
+    }
 }

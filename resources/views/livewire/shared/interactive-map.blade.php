@@ -11,7 +11,7 @@
           <input wire:model.live.debounce.300ms="search" type="text" class="form-control"
             placeholder="{{ __('app.search_placeholder_map') }}" />
         </div>
-        @if ($isSuperadmin)
+        @if ($showUnitFilter ?? false)
           <div class="col-md-2">
             <label class="form-label small text-muted mb-1">{{ __('app.unit') }}</label>
             <select wire:model.live="filterUnit" class="form-select">
@@ -21,7 +21,7 @@
               @endforeach
             </select>
           </div>
-        @elseif ($lockedUnit)
+        @elseif ($lockedUnit ?? null)
           <div class="col-md-2">
             <label class="form-label small text-muted mb-1">{{ __('app.unit') }}</label>
             <input type="text" class="form-control" value="{{ $lockedUnit }}" readonly disabled>
@@ -52,7 +52,7 @@
             @endforeach
           </select>
         </div>
-        <div class="col-md-{{ $isSuperadmin || $lockedUnit ? '3' : '5' }}">
+        <div class="col-md-{{ ($showUnitFilter ?? false) || ($lockedUnit ?? null) ? '3' : '5' }}">
           <label class="form-label small text-muted mb-1">{{ __('app.map_view') }}</label>
           <div class="btn-group w-100" role="group">
             <button type="button" class="btn btn-outline-primary" data-map-view="markers"

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ReportAttachment;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class AttachmentController extends Controller
@@ -13,9 +13,12 @@ class AttachmentController extends Controller
      */
     public function download(ReportAttachment $attachment)
     {
+        $attachment->loadMissing('report');
+        Gate::authorize('view', $attachment->report);
+
         $path = $attachment->file_path;
-        
-        if (!Storage::disk('public')->exists($path)) {
+
+        if (! Storage::disk('public')->exists($path)) {
             abort(404, 'Fail tidak dijumpai.');
         }
 
@@ -27,18 +30,20 @@ class AttachmentController extends Controller
      */
     public function view(ReportAttachment $attachment)
     {
+        $attachment->loadMissing('report');
+        Gate::authorize('view', $attachment->report);
+
         $path = $attachment->file_path;
-        
-        if (!Storage::disk('public')->exists($path)) {
+
+        if (! Storage::disk('public')->exists($path)) {
             abort(404, 'Fail tidak dijumpai.');
         }
 
         $mimeType = Storage::disk('public')->mimeType($path);
 
-        // Serve the file inline so it opens in the browser instead of downloading immediately.
         return response()->make(Storage::disk('public')->get($path), 200, [
             'Content-Type' => $mimeType,
-            'Content-Disposition' => 'inline; filename="' . str_replace('"', '\"', $attachment->file_name) . '"'
+            'Content-Disposition' => 'inline; filename="'.str_replace('"', '\"', $attachment->file_name).'"',
         ]);
     }
 }

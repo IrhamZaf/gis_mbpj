@@ -53,7 +53,15 @@ class ReportEdit extends Component
     protected function rules(): array
     {
         return [
-            'category_id'   => ['required', Rule::exists('report_categories', 'id')],
+            'category_id'   => [
+                'required',
+                Rule::exists('report_categories', 'id')->where(function ($q) {
+                    $unitId = $this->report->unit_id ?? Auth::user()?->unit_id;
+                    if ($unitId) {
+                        $q->where('unit_id', $unitId);
+                    }
+                }),
+            ],
             'title'         => 'required|string|min:5|max:255',
             'description'   => 'required|string|min:10',
             'location_name' => 'nullable|string|max:255',
@@ -172,8 +180,14 @@ class ReportEdit extends Component
 
     public function render()
     {
+        $unitId = $this->report->unit_id ?? Auth::user()?->unit_id;
+
         return view('livewire.surveyor.report-edit', [
-            'categories'       => ReportCategory::orderBy('name')->get(),
+            'categories'       => ReportCategory::query()
+                ->active()
+                ->when($unitId, fn ($q) => $q->forUnit($unitId))
+                ->orderBy('name')
+                ->get(),
             'savedAttachments' => $this->report->attachments()->get(),
             'userUnit'         => $this->report->unit ?? Auth::user()->unit,
         ]);

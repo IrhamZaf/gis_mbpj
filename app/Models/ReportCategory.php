@@ -64,7 +64,8 @@ class ReportCategory extends Model
     {
         return match ($this->code) {
             'SINKHOLE' => __('app.sinkhole'),
-            'CERUN_RUNTUH' => __('app.cerun_runtuh'),
+            'CERUN', 'CERUN_RUNTUH' => __('app.cerun'),
+            'BOREHOLE' => __('app.borehole'),
             default => $this->name,
         };
     }
@@ -76,10 +77,44 @@ class ReportCategory extends Model
 
     public function casePrefix(): string
     {
-        return match ($this->code) {
-            'SINKHOLE' => 'SC',
-            'CERUN_RUNTUH' => 'CR',
+        $unitCode = $this->relationLoaded('unit')
+            ? ($this->unit?->code)
+            : ($this->unit_id ? $this->unit()->value('code') : null);
+
+        $catCode = $this->code === 'CERUN_RUNTUH' ? 'CERUN' : $this->code;
+
+        // Preserve legacy Saliran & Cerun case number prefixes
+        if ($unitCode === 'SAL-CERUN') {
+            return match ($catCode) {
+                'SINKHOLE' => 'SC',
+                'CERUN' => 'CR',
+                'BOREHOLE' => 'SB',
+                default => 'CS',
+            };
+        }
+
+        $unitPrefix = match ($unitCode) {
+            'JLN' => 'JL',
+            'STR' => 'ST',
+            'ME' => 'ME',
             default => 'CS',
         };
+
+        $catSuffix = match ($catCode) {
+            'SINKHOLE' => 'SH',
+            'CERUN' => 'CR',
+            'BOREHOLE' => 'BH',
+            default => '',
+        };
+
+        return $unitPrefix.$catSuffix;
+    }
+
+    /**
+     * Ensure category belongs to the given unit (for report validation).
+     */
+    public function belongsToUnit(int $unitId): bool
+    {
+        return (int) $this->unit_id === (int) $unitId;
     }
 }

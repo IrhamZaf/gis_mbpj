@@ -483,7 +483,7 @@ class WorkflowDemoSeeder extends Seeder
 
         // 9) Saliran & Cerun — unit isolation demo (use unit categories)
         $sinkholeUnitCat = ReportCategory::where('unit_id', $saliranCerun->id)->where('code', 'SINKHOLE')->first();
-        $cerunUnitCat = ReportCategory::where('unit_id', $saliranCerun->id)->where('code', 'CERUN_RUNTUH')->first();
+        $cerunUnitCat = ReportCategory::where('unit_id', $saliranCerun->id)->where('code', 'CERUN')->first();
 
         if ($saliranCerun && $surveyorSalCerun && $taSalCerun && $engSalCerun && $sinkholeUnitCat) {
             $saliranRpt = $this->makeReport([

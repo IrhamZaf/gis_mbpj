@@ -10,7 +10,7 @@
       </h4>
       <small class="text-muted">{{ __('app.unit_label', ['name' => $unit->name]) }} @if($report) · {{ $report->report_number }} @endif</small>
     </div>
-    <a href="{{ route('saliran-cerun.'.($category->code === 'CERUN_RUNTUH' ? 'cerun' : 'sinkhole')) }}" class="btn btn-outline-secondary">{{ __('app.back') }}</a>
+    <a href="{{ $listUrl }}" class="btn btn-outline-secondary">{{ __('app.back') }}</a>
   </div>
 
   <div class="card border-0 shadow-sm mb-4">

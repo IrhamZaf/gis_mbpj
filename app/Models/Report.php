@@ -66,6 +66,22 @@ class Report extends Model
                 $report->report_number = static::generateCaseNumber($report->category_id);
             }
         });
+
+        static::saving(function (Report $report) {
+            if (! $report->category_id || ! $report->unit_id) {
+                return;
+            }
+
+            $category = $report->relationLoaded('category')
+                ? $report->category
+                : ReportCategory::find($report->category_id);
+
+            if ($category && $category->unit_id !== null && (int) $category->unit_id !== (int) $report->unit_id) {
+                throw new \InvalidArgumentException(
+                    'Category unit_id must match report unit_id (category belongs to a different unit).'
+                );
+            }
+        });
     }
 
     public static function generateCaseNumber(?int $categoryId = null): string
@@ -242,6 +258,8 @@ class Report extends Model
             return $query->whereRaw('1 = 0');
         }
 
+        // Work queues (Engineer verification, etc.) remain unit-scoped.
+        // Cross-unit browsing uses UnitModule listings + forUnitListing().
         $query->where('unit_id', $user->unit_id);
 
         if ($user->isEngineer()) {
@@ -253,6 +271,34 @@ class Report extends Model
         }
 
         return $query;
+    }
+
+    /**
+     * Scope for a unit module listing page (own unit write vs other unit read).
+     */
+    public function scopeForUnitListing(Builder $query, User $user, int $unitId): Builder
+    {
+        $query->where('unit_id', $unitId);
+
+        if ($user->isSuperadmin() || $user->isDirector()) {
+            return $query;
+        }
+
+        $isOwnUnit = $user->unit_id && (int) $user->unit_id === (int) $unitId;
+
+        if ($user->isSurveyor()) {
+            if ($isOwnUnit) {
+                return $query->where('user_id', $user->id);
+            }
+
+            return $query->where('status', '!=', 'draft');
+        }
+
+        if ($user->isTa() || $user->isEngineer()) {
+            return $query->where('status', '!=', 'draft');
+        }
+
+        return $query->whereRaw('1 = 0');
     }
 
     public function getStatusLabelAttribute(): string

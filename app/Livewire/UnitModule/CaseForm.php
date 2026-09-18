@@ -9,6 +9,7 @@ use App\Models\Unit;
 use App\Services\Attachments\TechnicalAttachmentService;
 use App\Services\Workflow\ReportWorkflowService;
 use App\Support\SurveyVendor;
+use App\Support\UnitModule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -50,13 +51,26 @@ class CaseForm extends Component
 
     public function mount(?Report $report = null, ?string $categoryCode = null, ?string $unitCode = null): void
     {
-        $this->unitCode = $unitCode ?: 'SAL-CERUN';
+        $routeUnit = request()->route()?->parameter('unitCode')
+            ?? request()->route()?->defaults['unitCode']
+            ?? null;
+
+        $this->unitCode = $unitCode ?: (is_string($routeUnit) && $routeUnit !== '' ? $routeUnit : 'SAL-CERUN');
         $categoryCode = $categoryCode ?: '';
+
+        // Resolve unit from route name if still default and report not loaded
+        foreach (UnitModule::UNIT_SLUGS as $slug => $code) {
+            $routeName = request()->route()?->getName() ?? '';
+            if (str_starts_with($routeName, $slug.'.')) {
+                $this->unitCode = $code;
+                break;
+            }
+        }
 
         // Edit route: /cases/{report}/edit — Livewire injects Report
         if ($report && $report->exists) {
             $this->authorize('update', $report);
-            $report->loadMissing('category');
+            $report->loadMissing(['category', 'unit']);
             $this->reportId = $report->id;
             $this->title = $report->title;
             $this->description = $report->description ?? '';
@@ -67,12 +81,25 @@ class CaseForm extends Component
             $this->longitude = $report->longitude ? (float) $report->longitude : null;
             $this->gps_accuracy = $report->gps_accuracy ? (float) $report->gps_accuracy : null;
             $this->gis_data = $report->gis_data;
-            $this->categoryCode = $report->category?->code ?? $categoryCode;
+            $this->categoryCode = UnitModule::normalizeCategoryCode($report->category?->code) ?? ($categoryCode ?: '');
+            if ($report->unit?->code) {
+                $this->unitCode = $report->unit->code;
+            }
 
             return;
         }
 
-        $this->categoryCode = $categoryCode;
+        // Create for another unit is never allowed
+        if (! $report || ! $report->exists) {
+            $user = Auth::user();
+            if (! $user || (! $user->isSuperadmin() && ! $user->canWriteUnit(
+                Unit::where('code', $this->unitCode)->value('id')
+            ))) {
+                abort(403, __('app.surveyor_unit_only'));
+            }
+        }
+
+        $this->categoryCode = UnitModule::normalizeCategoryCode($categoryCode) ?? $categoryCode;
         $this->vendor_name = SurveyVendor::name();
     }
 
@@ -96,7 +123,7 @@ class CaseForm extends Component
     {
         $report = $this->persist(false);
         session()->flash('message', __('app.case_saved_draft'));
-        $this->redirect(route('saliran-cerun.cases.show', $report), navigate: false);
+        $this->redirect(UnitModule::caseShowRoute($this->unitCode, $report), navigate: false);
     }
 
     public function saveAndSubmit(): void
@@ -110,12 +137,12 @@ class CaseForm extends Component
             session()->flash('message', __('app.case_submitted'));
         } catch (\Throwable $e) {
             session()->flash('message', __('app.case_saved', ['message' => $e->getMessage()]));
-            $this->redirect(route('saliran-cerun.cases.show', $report), navigate: false);
+            $this->redirect(UnitModule::caseShowRoute($this->unitCode, $report), navigate: false);
 
             return;
         }
 
-        $this->redirect(route('saliran-cerun.cases.show', $report->fresh()), navigate: false);
+        $this->redirect(UnitModule::caseShowRoute($this->unitCode, $report->fresh()), navigate: false);
     }
 
     public function uploadType(int $typeId): void
@@ -137,7 +164,13 @@ class CaseForm extends Component
     protected function persist(bool $submit): Report
     {
         $unit = Unit::where('code', $this->unitCode)->firstOrFail();
-        $category = ReportCategory::active()->forUnit($unit->id)->where('code', $this->categoryCode)->firstOrFail();
+        $category = ReportCategory::active()
+            ->forUnit($unit->id)
+            ->whereIn('code', array_filter([
+                $this->categoryCode,
+                $this->categoryCode === 'CERUN' ? 'CERUN_RUNTUH' : null,
+            ]))
+            ->firstOrFail();
         $user = Auth::user();
 
         if (! $user->isSurveyor() && ! $user->isSuperadmin()) {
@@ -147,6 +180,8 @@ class CaseForm extends Component
         if ($user->isSurveyor() && (int) $user->unit_id !== (int) $unit->id) {
             abort(403, __('app.surveyor_unit_only'));
         }
+
+        $this->categoryCode = UnitModule::normalizeCategoryCode($category->code) ?? $category->code;
 
         $this->validate([
             'title' => 'required|string|min:5|max:255',
@@ -159,6 +194,10 @@ class CaseForm extends Component
             'categoryCode' => ['required', Rule::exists('report_categories', 'code')->where('unit_id', $unit->id)],
         ]);
 
+        // Enforce category ↔ unit integrity
+        if ((int) $category->unit_id !== (int) $unit->id) {
+            abort(422, __('app.category_unit_mismatch'));
+        }
         if ($this->reportId) {
             $report = Report::findOrFail($this->reportId);
             $this->authorize('update', $report);
@@ -222,7 +261,10 @@ class CaseForm extends Component
         $category = ReportCategory::with('attachmentTypes')
             ->active()
             ->forUnit($unit->id)
-            ->where('code', $this->categoryCode)
+            ->whereIn('code', array_filter([
+                $this->categoryCode,
+                $this->categoryCode === 'CERUN' ? 'CERUN_RUNTUH' : null,
+            ]))
             ->firstOrFail();
 
         $report = $this->reportId
@@ -246,6 +288,7 @@ class CaseForm extends Component
             'category' => $category,
             'report' => $report,
             'progress' => $progress,
+            'listUrl' => UnitModule::categoryRoute($unit->code, $category->code),
         ])->title(($report ? __('app.edit') : __('app.create')).' '.$category->display_name);
     }
 }

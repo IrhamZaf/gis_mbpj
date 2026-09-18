@@ -54,7 +54,7 @@ class SiteVisitForm extends Component
         $user = Auth::user();
         $this->authorize('view', $report);
 
-        // TA starts / resumes site visit when allowed
+        // TA of owning unit may start / resume; others only view an existing visit
         if ($user->can('startSiteVisit', $report)) {
             app(ReportWorkflowService::class)->startSiteVisit($report, $user);
             $report->refresh();
@@ -65,12 +65,6 @@ class SiteVisitForm extends Component
 
         if (! $visit) {
             abort(404, 'Borang lawatan tapak belum wujud.');
-        }
-
-        // Superadmin / Director: read-only view anytime they can view the report
-        // TA / others: must be unit staff (enforced by view policy) with an existing visit
-        if (! $user->isSuperadmin() && ! $user->isDirector() && ! $user->isTa() && ! $user->isEngineer()) {
-            abort(403);
         }
 
         $this->visit = $visit;

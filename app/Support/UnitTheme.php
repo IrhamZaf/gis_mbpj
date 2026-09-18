@@ -49,10 +49,12 @@ class UnitTheme
      */
     public static function forCategory(?string $categoryCode): array
     {
-        return match ($categoryCode) {
-            'CERUN_RUNTUH' => [
-                'code' => 'CERUN_RUNTUH',
-                'name' => 'Cerun Runtuh',
+        $code = $categoryCode === 'CERUN_RUNTUH' ? 'CERUN' : $categoryCode;
+
+        return match ($code) {
+            'CERUN' => [
+                'code' => 'CERUN',
+                'name' => 'Cerun',
                 'label' => 'danger',
                 'color' => '#dc3545',
                 'soft' => 'rgba(220,53,69,.12)',
@@ -64,7 +66,15 @@ class UnitTheme
                 'label' => 'info',
                 'color' => '#0dcaf0',
                 'soft' => 'rgba(13,202,240,.14)',
-                'icon' => 'tabler-circle-dotted',
+                'icon' => 'tabler-alert-triangle',
+            ],
+            'BOREHOLE' => [
+                'code' => 'BOREHOLE',
+                'name' => 'Borehole',
+                'label' => 'secondary',
+                'color' => '#6c757d',
+                'soft' => 'rgba(108,117,125,.14)',
+                'icon' => 'tabler-layers-intersect',
             ],
             default => [
                 'code' => $categoryCode ?? 'DEFAULT',

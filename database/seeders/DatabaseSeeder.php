@@ -89,7 +89,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(ReportSeeder::class);
         $this->call(WorkflowDemoSeeder::class);
-        $this->call(SaliranCerunCategorySeeder::class);
+        $this->call(UnitCategorySeeder::class);
         $this->call(SaliranCerunStaffSeeder::class);
         $this->call(SaliranCerunDemoSeeder::class);
 

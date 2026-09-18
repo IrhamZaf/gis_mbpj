@@ -7,27 +7,31 @@
 
   <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
     <div>
+      <div class="text-uppercase text-muted small fw-semibold mb-1 letter-spacing">{{ $unit->name }}</div>
       <div class="d-flex align-items-center gap-2 mb-1">
         <span class="rounded-circle d-inline-flex align-items-center justify-content-center"
           style="width:36px;height:36px;background:{{ $theme['soft'] }};color:{{ $theme['color'] }};">
           <i class="ti {{ $theme['icon'] }}"></i>
         </span>
         <h4 class="mb-0">{{ $category->display_name }}</h4>
-      </div>
-      <div class="text-muted small">
-        {{ __('app.unit_label', ['name' => $unit->name]) }}
-        ·
-        <a href="{{ route('saliran-cerun.dashboard') }}" class="text-decoration-none">{{ __('app.dashboard') }}</a>
-        ·
-        @if ($category->code === 'CERUN_RUNTUH')
-          <a href="{{ route('saliran-cerun.sinkhole') }}" class="text-decoration-none">{{ __('app.sinkhole') }}</a>
-        @else
-          <a href="{{ route('saliran-cerun.cerun') }}" class="text-decoration-none">{{ __('app.cerun_runtuh') }}</a>
+        @if ($isReadOnly ?? false)
+          <span class="badge bg-label-secondary"><i class="ti tabler-lock me-1"></i>{{ __('app.read_only_badge') }}</span>
         @endif
+      </div>
+      <div class="text-muted small d-flex flex-wrap align-items-center gap-1">
+        <a href="{{ $dashboardUrl }}" class="text-decoration-none">{{ __('app.dashboard') }}</a>
+        @foreach ($siblingCategories as $sib)
+          <span class="text-muted">·</span>
+          @if ($sib->id === $category->id)
+            <span class="fw-semibold text-body">{{ $sib->display_name }}</span>
+          @else
+            <a href="{{ \App\Support\UnitModule::categoryRoute($unit->code, $sib->code) }}" class="text-decoration-none">{{ $sib->display_name }}</a>
+          @endif
+        @endforeach
       </div>
     </div>
     @if ($canCreate)
-      <a href="{{ route('saliran-cerun.cases.create', ['categoryCode' => $category->code]) }}"
+      <a href="{{ $createUrl }}"
         class="btn btn-primary" style="background:{{ $theme['color'] }};border-color:{{ $theme['color'] }};">
         <i class="ti tabler-plus me-1"></i>{{ __('app.add_report') }}
       </a>
@@ -120,10 +124,10 @@
                 <td>{!! $r->status_badge !!}</td>
                 <td class="small">{{ $siteLabel }}</td>
                 <td class="text-end text-nowrap">
-                  <a href="{{ route('saliran-cerun.cases.show', $r) }}" class="btn btn-sm btn-outline-primary">{{ __('app.view') }}</a>
-                  @if ($r->status === 'draft' && (auth()->id() === $r->user_id || auth()->user()->isSuperadmin()))
-                    <a href="{{ route('saliran-cerun.cases.edit', $r) }}" class="btn btn-sm btn-outline-secondary">{{ __('app.edit') }}</a>
-                  @endif
+                  <a href="{{ \App\Support\UnitModule::caseShowRoute($unit->code, $r) }}" class="btn btn-sm btn-outline-primary">{{ __('app.view') }}</a>
+                  @can('update', $r)
+                    <a href="{{ \App\Support\UnitModule::caseEditRoute($unit->code, $r) }}" class="btn btn-sm btn-outline-secondary">{{ __('app.edit') }}</a>
+                  @endcan
                 </td>
               </tr>
             @empty
@@ -132,7 +136,7 @@
                   <div class="mb-2"><i class="ti {{ $theme['icon'] }} ti-lg" style="color:{{ $theme['color'] }};"></i></div>
                   <div class="mb-3">{{ __('app.no_records') }}</div>
                   @if ($canCreate)
-                    <a href="{{ route('saliran-cerun.cases.create', ['categoryCode' => $category->code]) }}" class="btn btn-sm btn-primary"
+                    <a href="{{ $createUrl }}" class="btn btn-sm btn-primary"
                       style="background:{{ $theme['color'] }};border-color:{{ $theme['color'] }};">
                       <i class="ti tabler-plus me-1"></i>{{ __('app.add_report') }}
                     </a>

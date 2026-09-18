@@ -2,9 +2,11 @@
 @php
   use Illuminate\Support\Facades\Route;
   use Illuminate\Support\Facades\Auth;
+  use App\Support\UnitModule;
   $configData = Helper::appClasses();
   $user = Auth::user();
   $currentRouteName = Route::currentRouteName() ?? '';
+  $navUnits = UnitModule::navUnits();
 @endphp
 
 <aside id="layout-menu" class="layout-menu menu-vertical menu" @foreach ($configData['menuAttributes'] as $attribute =>
@@ -40,23 +42,9 @@
           <div>{{ __("app.dashboard") }}</div>
         </a>
       </li>
-      <li class="menu-item {{ str_starts_with($currentRouteName, 'saliran-cerun.') ? 'active open' : '' }}">
-        <a href="javascript:void(0);" class="menu-link menu-toggle">
-          <i class="icon-base ti tabler-building-tunnel"></i>
-          <div>{{ __("app.saliran_cerun") }}</div>
-        </a>
-        <ul class="menu-sub">
-          <li class="menu-item {{ $currentRouteName === 'saliran-cerun.dashboard' ? 'active' : '' }}">
-            <a href="{{ route('saliran-cerun.dashboard') }}" class="menu-link"><div>{{ __("app.dashboard") }}</div></a>
-          </li>
-          <li class="menu-item {{ $currentRouteName === 'saliran-cerun.sinkhole' ? 'active' : '' }}">
-            <a href="{{ route('saliran-cerun.sinkhole') }}" class="menu-link"><div>{{ __("app.sinkhole") }}</div></a>
-          </li>
-          <li class="menu-item {{ $currentRouteName === 'saliran-cerun.cerun' ? 'active' : '' }}">
-            <a href="{{ route('saliran-cerun.cerun') }}" class="menu-link"><div>{{ __("app.cerun_runtuh") }}</div></a>
-          </li>
-        </ul>
-      </li>
+
+      @include('component.sidebar-unit-menus', compact('user', 'currentRouteName', 'navUnits'))
+
       <li class="menu-item {{ $currentRouteName === 'superadmin.map' ? 'active' : '' }}">
         <a href="{{ route('superadmin.map') }}" class="menu-link">
           <i class="icon-base ti tabler-map"></i>
@@ -64,7 +52,7 @@
         </a>
       </li>
 
-      <li class="menu-header small"><span class="menu-header-text">{{ __("app.management") }}</span></li>
+      <li class="menu-header small"><span class="menu-header-text">{{ __("app.administration") }}</span></li>
       <li class="menu-item {{ $currentRouteName === 'superadmin.units' ? 'active' : '' }}">
         <a href="{{ route('superadmin.units') }}" class="menu-link">
           <i class="icon-base ti tabler-building-community"></i>
@@ -109,23 +97,9 @@
           <div>{{ __("app.dashboard") }}</div>
         </a>
       </li>
-      <li class="menu-item {{ str_starts_with($currentRouteName, 'saliran-cerun.') ? 'active open' : '' }}">
-        <a href="javascript:void(0);" class="menu-link menu-toggle">
-          <i class="icon-base ti tabler-building-tunnel"></i>
-          <div>{{ __("app.saliran_cerun") }}</div>
-        </a>
-        <ul class="menu-sub">
-          <li class="menu-item {{ $currentRouteName === 'saliran-cerun.dashboard' ? 'active' : '' }}">
-            <a href="{{ route('saliran-cerun.dashboard') }}" class="menu-link"><div>{{ __("app.dashboard") }}</div></a>
-          </li>
-          <li class="menu-item {{ $currentRouteName === 'saliran-cerun.sinkhole' ? 'active' : '' }}">
-            <a href="{{ route('saliran-cerun.sinkhole') }}" class="menu-link"><div>{{ __("app.sinkhole") }}</div></a>
-          </li>
-          <li class="menu-item {{ $currentRouteName === 'saliran-cerun.cerun' ? 'active' : '' }}">
-            <a href="{{ route('saliran-cerun.cerun') }}" class="menu-link"><div>{{ __("app.cerun_runtuh") }}</div></a>
-          </li>
-        </ul>
-      </li>
+
+      @include('component.sidebar-unit-menus', compact('user', 'currentRouteName', 'navUnits'))
+
       <li class="menu-item {{ $currentRouteName === 'surveyor.map' ? 'active' : '' }}">
         <a href="{{ route('surveyor.map') }}" class="menu-link">
           <i class="icon-base ti tabler-map"></i>
@@ -158,23 +132,9 @@
           <div>{{ __("app.dashboard") }}</div>
         </a>
       </li>
-      <li class="menu-item {{ str_starts_with($currentRouteName, 'saliran-cerun.') ? 'active open' : '' }}">
-        <a href="javascript:void(0);" class="menu-link menu-toggle">
-          <i class="icon-base ti tabler-building-tunnel"></i>
-          <div>{{ __("app.saliran_cerun") }}</div>
-        </a>
-        <ul class="menu-sub">
-          <li class="menu-item {{ $currentRouteName === 'saliran-cerun.dashboard' ? 'active' : '' }}">
-            <a href="{{ route('saliran-cerun.dashboard') }}" class="menu-link"><div>{{ __("app.dashboard") }}</div></a>
-          </li>
-          <li class="menu-item {{ $currentRouteName === 'saliran-cerun.sinkhole' ? 'active' : '' }}">
-            <a href="{{ route('saliran-cerun.sinkhole') }}" class="menu-link"><div>{{ __("app.sinkhole") }}</div></a>
-          </li>
-          <li class="menu-item {{ $currentRouteName === 'saliran-cerun.cerun' ? 'active' : '' }}">
-            <a href="{{ route('saliran-cerun.cerun') }}" class="menu-link"><div>{{ __("app.cerun_runtuh") }}</div></a>
-          </li>
-        </ul>
-      </li>
+
+      @include('component.sidebar-unit-menus', compact('user', 'currentRouteName', 'navUnits'))
+
       <li class="menu-item {{ $currentRouteName === 'engineer.map' ? 'active' : '' }}">
         <a href="{{ route('engineer.map') }}" class="menu-link">
           <i class="icon-base ti tabler-map"></i>
@@ -201,23 +161,9 @@
           <div>{{ __("app.dashboard") }}</div>
         </a>
       </li>
-      <li class="menu-item {{ str_starts_with($currentRouteName, 'saliran-cerun.') ? 'active open' : '' }}">
-        <a href="javascript:void(0);" class="menu-link menu-toggle">
-          <i class="icon-base ti tabler-building-tunnel"></i>
-          <div>{{ __("app.saliran_cerun") }}</div>
-        </a>
-        <ul class="menu-sub">
-          <li class="menu-item {{ $currentRouteName === 'saliran-cerun.dashboard' ? 'active' : '' }}">
-            <a href="{{ route('saliran-cerun.dashboard') }}" class="menu-link"><div>{{ __("app.dashboard") }}</div></a>
-          </li>
-          <li class="menu-item {{ $currentRouteName === 'saliran-cerun.sinkhole' ? 'active' : '' }}">
-            <a href="{{ route('saliran-cerun.sinkhole') }}" class="menu-link"><div>{{ __("app.sinkhole") }}</div></a>
-          </li>
-          <li class="menu-item {{ $currentRouteName === 'saliran-cerun.cerun' ? 'active' : '' }}">
-            <a href="{{ route('saliran-cerun.cerun') }}" class="menu-link"><div>{{ __("app.cerun_runtuh") }}</div></a>
-          </li>
-        </ul>
-      </li>
+
+      @include('component.sidebar-unit-menus', compact('user', 'currentRouteName', 'navUnits'))
+
       <li class="menu-item {{ $currentRouteName === 'ta.map' ? 'active' : '' }}">
         <a href="{{ route('ta.map') }}" class="menu-link">
           <i class="icon-base ti tabler-map"></i>
@@ -243,23 +189,9 @@
           <div>{{ __("app.dashboard") }}</div>
         </a>
       </li>
-      <li class="menu-item {{ str_starts_with($currentRouteName, 'saliran-cerun.') ? 'active open' : '' }}">
-        <a href="javascript:void(0);" class="menu-link menu-toggle">
-          <i class="icon-base ti tabler-building-tunnel"></i>
-          <div>{{ __("app.saliran_cerun") }}</div>
-        </a>
-        <ul class="menu-sub">
-          <li class="menu-item {{ $currentRouteName === 'saliran-cerun.dashboard' ? 'active' : '' }}">
-            <a href="{{ route('saliran-cerun.dashboard') }}" class="menu-link"><div>{{ __("app.dashboard") }}</div></a>
-          </li>
-          <li class="menu-item {{ $currentRouteName === 'saliran-cerun.sinkhole' ? 'active' : '' }}">
-            <a href="{{ route('saliran-cerun.sinkhole') }}" class="menu-link"><div>{{ __("app.sinkhole") }}</div></a>
-          </li>
-          <li class="menu-item {{ $currentRouteName === 'saliran-cerun.cerun' ? 'active' : '' }}">
-            <a href="{{ route('saliran-cerun.cerun') }}" class="menu-link"><div>{{ __("app.cerun_runtuh") }}</div></a>
-          </li>
-        </ul>
-      </li>
+
+      @include('component.sidebar-unit-menus', compact('user', 'currentRouteName', 'navUnits'))
+
       <li class="menu-item {{ str_starts_with($currentRouteName, 'engineering.') ? 'active' : '' }}">
         <a href="{{ route('engineering.hub') }}" class="menu-link">
           <i class="icon-base ti tabler-building-community"></i>

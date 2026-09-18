@@ -16,7 +16,9 @@ class TechnicalAttachmentService
 {
     public function upload(Report $report, AttachmentType $type, UploadedFile $file, User $user): ReportAttachment
     {
-        $ext = strtolower($file->getClientOriginalExtension());
+        if (! $user->can('uploadAttachment', $report) && ! $user->can('update', $report)) {
+            abort(403);
+        }        $ext = strtolower($file->getClientOriginalExtension());
         $allowed = array_map('strtolower', $type->allowed_extensions ?? []);
         if ($allowed && ! in_array($ext, $allowed, true)) {
             throw ValidationException::withMessages([

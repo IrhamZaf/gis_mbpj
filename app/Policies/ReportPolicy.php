@@ -5,32 +5,37 @@ namespace App\Policies;
 use App\Models\Report;
 use App\Models\User;
 
+/**
+ * Cross-unit access: READ ALL, WRITE OWN UNIT.
+ *
+ * - view / download: any active staff role across units (drafts remain private to owner)
+ * - update / delete / upload / site visit / verify: own unit + role rules
+ * - approve: director / superadmin (global)
+ */
 class ReportPolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->canBrowseAllUnits();
     }
 
     public function view(User $user, Report $report): bool
     {
+        if (! $user->canBrowseAllUnits()) {
+            return false;
+        }
+
         if ($user->isSuperadmin() || $user->isDirector()) {
             return true;
         }
 
-        if (! $user->unit_id || $report->unit_id !== $user->unit_id) {
-            return false;
+        // Drafts are private to the owning surveyor (not visible cross-unit)
+        if ($report->status === 'draft') {
+            return $user->isSurveyor() && (int) $report->user_id === (int) $user->id;
         }
 
-        if ($user->isSurveyor()) {
-            return $report->user_id === $user->id;
-        }
-
-        if ($user->isTa() || $user->isEngineer()) {
-            return $report->status !== 'draft';
-        }
-
-        return false;
+        // Non-draft reports: readable by all staff roles (including other units)
+        return $user->isSurveyor() || $user->isTa() || $user->isEngineer();
     }
 
     public function create(User $user): bool
@@ -40,26 +45,60 @@ class ReportPolicy
 
     public function update(User $user, Report $report): bool
     {
-        if ($user->isSuperadmin() && $user->isActive()) {
-            return $report->status === 'draft';
-        }
-
-        if (! $user->isSurveyor() || ! $user->isActive()) {
+        if (! $user->isActive()) {
             return false;
         }
 
-        if ($report->user_id !== $user->id) {
+        if ($user->isSuperadmin()) {
+            return $report->status === 'draft';
+        }
+
+        // Cross-unit write is never allowed
+        if (! $user->belongsToSameUnit($report)) {
+            return false;
+        }
+
+        if (! $user->isSurveyor()) {
+            return false;
+        }
+
+        if ((int) $report->user_id !== (int) $user->id) {
             return false;
         }
 
         return $report->status === 'draft' && $report->workflow_status === null;
     }
 
+    public function delete(User $user, Report $report): bool
+    {
+        if (! $user->isActive()) {
+            return false;
+        }
+
+        if ($user->isSuperadmin()) {
+            return $report->status === 'draft';
+        }
+
+        if (! $user->belongsToSameUnit($report)) {
+            return false;
+        }
+
+        return $user->isSurveyor()
+            && (int) $report->user_id === (int) $user->id
+            && $report->status === 'draft'
+            && $report->workflow_status === null;
+    }
+
+    public function uploadAttachment(User $user, Report $report): bool
+    {
+        return $this->update($user, $report);
+    }
+
     public function startSiteVisit(User $user, Report $report): bool
     {
         return $user->isTa()
             && $user->isActive()
-            && $user->unit_id === $report->unit_id
+            && $user->belongsToSameUnit($report)
             && in_array($report->workflow_status, ['pending_site_visit', 'engineer_returned'], true);
     }
 
@@ -67,7 +106,7 @@ class ReportPolicy
     {
         return $user->isTa()
             && $user->isActive()
-            && $user->unit_id === $report->unit_id
+            && $user->belongsToSameUnit($report)
             && in_array($report->workflow_status, ['site_visit_in_progress', 'engineer_returned'], true);
     }
 
@@ -75,7 +114,7 @@ class ReportPolicy
     {
         return $user->isEngineer()
             && $user->isActive()
-            && $user->unit_id === $report->unit_id
+            && $user->belongsToSameUnit($report)
             && in_array($report->workflow_status, ['pending_engineer_verification', 'director_rejected'], true);
     }
 
@@ -92,25 +131,35 @@ class ReportPolicy
             return false;
         }
 
-        // Superadmin / Pengarah — boleh jana/lihat PDF untuk sebarang laporan yang boleh dilihat
         if ($user->isSuperadmin() || $user->isDirector()) {
             return true;
         }
 
-        // TA boleh cetak selepas lawatan dimulakan (ada rekod site visit / status berkaitan)
         if ($user->isTa()) {
-            return in_array($report->workflow_status, [
-                'site_visit_in_progress',
-                'engineer_returned',
+            // Own-unit TA: print when visit is underway / done
+            // Other-unit TA: still may download when a visit record exists (read-only monitoring)
+            if ($user->belongsToSameUnit($report)) {
+                return in_array($report->workflow_status, [
+                    'site_visit_in_progress',
+                    'engineer_returned',
+                    'pending_engineer_verification',
+                    'engineer_verified',
+                    'pending_director_approval',
+                    'approved',
+                    'director_rejected',
+                ], true) || $report->siteVisit !== null;
+            }
+
+            return $report->siteVisit !== null || in_array($report->workflow_status, [
                 'pending_engineer_verification',
                 'engineer_verified',
                 'pending_director_approval',
                 'approved',
                 'director_rejected',
-            ], true) || $report->siteVisit !== null;
+            ], true);
         }
 
-        // Engineer — selepas lawatan dihantar atau selesai
+        // Surveyor / Engineer — download when past site visit or completed
         if ($report->status === 'completed' || $report->workflow_status === 'approved') {
             return true;
         }

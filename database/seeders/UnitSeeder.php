@@ -12,10 +12,10 @@ class UnitSeeder extends Seeder
     public function run(): void
     {
         $active = [
-            ['name' => 'Saliran & Cerun', 'code' => 'SAL-CERUN', 'sort_order' => 1, 'description' => 'Unit Saliran & Cerun — Sinkhole dan Cerun Runtuh'],
-            ['name' => 'Jalan', 'code' => 'JLN', 'sort_order' => 2, 'description' => 'Unit Jalan — Engineering'],
-            ['name' => 'Structure', 'code' => 'STR', 'sort_order' => 3, 'description' => 'Unit Structure — Engineering'],
-            ['name' => 'M&E', 'code' => 'ME', 'sort_order' => 4, 'description' => 'Unit M&E (Mekanikal & Elektrik) — Engineering'],
+            ['name' => 'Saliran & Cerun', 'code' => 'SAL-CERUN', 'sort_order' => 1, 'description' => 'Unit Saliran & Cerun — Sinkhole, Cerun dan Borehole'],
+            ['name' => 'Jalan', 'code' => 'JLN', 'sort_order' => 2, 'description' => 'Unit Jalan — Sinkhole, Cerun dan Borehole'],
+            ['name' => 'Structure', 'code' => 'STR', 'sort_order' => 3, 'description' => 'Unit Structure — Sinkhole, Cerun dan Borehole'],
+            ['name' => 'M&E', 'code' => 'ME', 'sort_order' => 4, 'description' => 'Unit M&E — Sinkhole, Cerun dan Borehole'],
         ];
 
         foreach ($active as $unit) {

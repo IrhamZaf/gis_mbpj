@@ -62,8 +62,9 @@
               <td>{{ $r->created_at->format('d/m/Y') }}</td>
               <td class="text-end text-nowrap">
                 @php
-                  $showUrl = ($r->unit?->code === 'SAL-CERUN')
-                    ? route('saliran-cerun.cases.show', $r)
+                  $unitCode = $r->unit?->code;
+                  $showUrl = ($unitCode && \App\Support\UnitModule::unitSlugFromCode($unitCode))
+                    ? \App\Support\UnitModule::caseShowRoute($unitCode, $r)
                     : route('superadmin.reports.show', $r);
                 @endphp
                 <a href="{{ $showUrl }}" class="btn btn-sm btn-outline-primary">{{ __('app.view') }}</a>

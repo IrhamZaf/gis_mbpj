@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Ta;
 
+use App\Livewire\Concerns\BuildsUnitOverviewCards;
 use App\Models\Report;
 use App\Support\UnitTheme;
 use Illuminate\Support\Facades\Auth;
@@ -11,18 +12,21 @@ use Livewire\Component;
 #[Layout('layouts.master')]
 class Dashboard extends Component
 {
+    use BuildsUnitOverviewCards;
+
     public function render()
     {
         $user = Auth::user();
         $unit = $user->unit;
         $theme = UnitTheme::for($unit);
         $base = Report::query()->where('unit_id', $user->unit_id);
+        $unitCards = $this->buildUnitOverviewCards($user);
 
         return view('livewire.ta.dashboard', [
-            'user'     => $user,
+            'user' => $user,
             'unitName' => $theme['name'],
-            'unitTheme'=> $theme,
-            'pending'  => (clone $base)->where('workflow_status', 'pending_site_visit')->count(),
+            'unitTheme' => $theme,
+            'pending' => (clone $base)->where('workflow_status', 'pending_site_visit')->count(),
             'inProgress' => (clone $base)->whereIn('workflow_status', ['site_visit_in_progress', 'engineer_returned'])->count(),
             'awaitingEngineer' => (clone $base)->where('workflow_status', 'pending_engineer_verification')->count(),
             'completed' => (clone $base)->whereIn('workflow_status', ['approved'])->count(),
@@ -32,6 +36,8 @@ class Dashboard extends Component
                 ->latest('submitted_at')
                 ->take(8)
                 ->get(),
+            'unitCards' => $unitCards,
+            'grandTotal' => $this->unitOverviewGrandTotal($unitCards),
         ])->title('Dashboard TA — Unit '.$theme['name']);
     }
 }

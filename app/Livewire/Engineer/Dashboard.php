@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Engineer;
 
+use App\Livewire\Concerns\BuildsUnitOverviewCards;
 use App\Models\Report;
 use App\Models\ReportCategory;
 use App\Support\UnitTheme;
@@ -13,6 +14,8 @@ use Livewire\Component;
 #[Layout('layouts.master')]
 class Dashboard extends Component
 {
+    use BuildsUnitOverviewCards;
+
     public function render()
     {
         $user = Auth::user();
@@ -43,30 +46,34 @@ class Dashboard extends Component
             ->orderByDesc('reports_count')
             ->get();
 
+        $unitCards = $this->buildUnitOverviewCards($user);
+
         return view('livewire.engineer.dashboard', [
-            'user'              => $user,
-            'unitName'          => $theme['name'],
-            'unitTheme'         => $theme,
-            'totalSubmitted'    => (clone $base)->where('status', '!=', 'draft')->count(),
-            'pendingVerify'     => (clone $base)->where('workflow_status', 'pending_engineer_verification')->count(),
-            'verified'          => (clone $base)->whereIn('workflow_status', ['pending_director_approval', 'approved', 'engineer_verified'])->count(),
-            'returnedReports'   => (clone $base)->where('workflow_status', 'engineer_returned')->count(),
-            'approvedReports'   => (clone $base)->where('workflow_status', 'approved')->count(),
+            'user' => $user,
+            'unitName' => $theme['name'],
+            'unitTheme' => $theme,
+            'totalSubmitted' => (clone $base)->where('status', '!=', 'draft')->count(),
+            'pendingVerify' => (clone $base)->where('workflow_status', 'pending_engineer_verification')->count(),
+            'verified' => (clone $base)->whereIn('workflow_status', ['pending_director_approval', 'approved', 'engineer_verified'])->count(),
+            'returnedReports' => (clone $base)->where('workflow_status', 'engineer_returned')->count(),
+            'approvedReports' => (clone $base)->where('workflow_status', 'approved')->count(),
             'submittedThisWeek' => (clone $base)->where('submitted_at', '>=', now()->startOfWeek())->count(),
-            'submittedToday'    => (clone $base)->whereDate('submitted_at', today())->count(),
-            'underReview'       => (clone $base)->where('workflow_status', 'pending_engineer_verification')->count(),
-            'completedReports'  => (clone $base)->where('workflow_status', 'approved')->count(),
-            'mappedReports'     => (clone $base)->whereNotNull('latitude')->whereNotNull('longitude')->where('status', '!=', 'draft')->count(),
+            'submittedToday' => (clone $base)->whereDate('submitted_at', today())->count(),
+            'underReview' => (clone $base)->where('workflow_status', 'pending_engineer_verification')->count(),
+            'completedReports' => (clone $base)->where('workflow_status', 'approved')->count(),
+            'mappedReports' => (clone $base)->whereNotNull('latitude')->whereNotNull('longitude')->where('status', '!=', 'draft')->count(),
             'reportsByCategory' => $reportsByCategory,
-            'totalCategories'   => ReportCategory::count(),
-            'recentReports'     => Report::with(['category', 'user'])
+            'totalCategories' => ReportCategory::count(),
+            'recentReports' => Report::with(['category', 'user'])
                 ->where('unit_id', $unitId)
                 ->whereIn('workflow_status', ['pending_engineer_verification', 'director_rejected', 'pending_director_approval', 'approved', 'engineer_returned'])
                 ->latest('updated_at')
                 ->take(8)
                 ->get(),
-            'trendDays'         => $trendDays,
-            'trendMax'          => max(1, $trendDays->max('total')),
+            'trendDays' => $trendDays,
+            'trendMax' => max(1, $trendDays->max('total')),
+            'unitCards' => $unitCards,
+            'grandTotal' => $this->unitOverviewGrandTotal($unitCards),
         ])->title('Dashboard Engineer — Unit '.$theme['name']);
     }
 }

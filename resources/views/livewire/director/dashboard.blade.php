@@ -10,6 +10,11 @@
     ],
   ])
 
+  @include('livewire.partials.units-overview', [
+    'unitCards' => $unitCards,
+    'grandTotal' => $grandTotal,
+  ])
+
   <div class="row g-4 mb-4">
     <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body"><h3>{{ $pending }}</h3><p class="mb-0 text-muted">Menunggu Kelulusan</p></div></div></div>
     <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body"><h3>{{ $approved }}</h3><p class="mb-0 text-muted">Diluluskan</p></div></div></div>

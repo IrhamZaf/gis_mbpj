@@ -11,6 +11,11 @@
     ],
   ])
 
+  @include('livewire.partials.units-overview', [
+    'unitCards' => $unitCards,
+    'grandTotal' => $grandTotal,
+  ])
+
   {{-- Stat Cards --}}
   <div class="row g-4 mb-4">
     <div class="col-sm-6 col-xl-3">

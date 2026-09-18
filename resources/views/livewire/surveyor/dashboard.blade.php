@@ -1,13 +1,14 @@
 <div>
   @include('livewire.partials.dashboard-welcome', [
     'user' => $user,
-    'roleLabel' => 'Admin Surveyor · Unit ' . $unitName,
-    'subtitle' => 'Urus laporan lapangan Unit ' . $unitName . ' — lampiran survei dan lokasi GIS.',
+    'roleLabel' => 'Surveyor · Unit ' . $unitName,
+    'subtitle' => __('app.surveyor_dashboard_subtitle'),
     'heroIcon' => 'tabler-clipboard-list',
+    'unitTheme' => $unitTheme,
     'actions' => [
-      ['label' => 'Cipta Laporan', 'url' => route('surveyor.reports.create'), 'icon' => 'tabler-plus', 'class' => 'btn-primary'],
-      ['label' => 'Senarai Laporan', 'url' => route('surveyor.reports'), 'icon' => 'tabler-list', 'class' => 'btn-outline-primary'],
-      ['label' => 'Peta', 'url' => route('surveyor.map'), 'icon' => 'tabler-map', 'class' => 'btn-outline-secondary'],
+      ['label' => __('app.add_report'), 'url' => route('surveyor.reports.create'), 'icon' => 'tabler-plus', 'class' => 'btn-primary'],
+      ['label' => __('app.my_reports'), 'url' => route('surveyor.reports'), 'icon' => 'tabler-list', 'class' => 'btn-outline-primary'],
+      ['label' => __('app.interactive_map'), 'url' => route('surveyor.map'), 'icon' => 'tabler-map', 'class' => 'btn-outline-secondary'],
     ],
   ])
 
@@ -16,166 +17,173 @@
       <div class="d-flex align-items-center gap-2">
         <i class="ti tabler-arrow-back-up fs-5"></i>
         <div>
-          <strong>{{ $returnedReports }} laporan dikembalikan.</strong>
-          Sila kemaskini dan hantar semula.
+          <strong>{{ __('app.returned_reports_alert', ['count' => $returnedReports]) }}</strong>
+          {{ __('app.please_update_resubmit') }}
         </div>
       </div>
-      <a href="{{ route('surveyor.reports') }}" class="btn btn-sm btn-danger">Semak laporan</a>
+      <a href="{{ route('surveyor.reports') }}" class="btn btn-sm btn-danger">{{ __('app.review_reports') }}</a>
     </div>
   @elseif ($draftReports > 0)
     <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4" role="alert">
       <div class="d-flex align-items-center gap-2">
         <i class="ti tabler-alert-triangle fs-5 text-warning"></i>
         <div>
-          <strong>{{ $draftReports }} draf belum dihantar.</strong>
-          Lengkapkan dan hantar supaya engineer boleh semak.
+          <strong>{{ __('app.draft_reports_alert', ['count' => $draftReports]) }}</strong>
+          {{ __('app.complete_and_submit') }}
         </div>
       </div>
       <a href="{{ route('surveyor.reports') }}" class="btn btn-sm btn-warning">
-        <i class="ti tabler-pencil me-1"></i>Semak draf
+        <i class="ti tabler-pencil me-1"></i>{{ __('app.review_drafts') }}
       </a>
     </div>
   @endif
 
-  {{-- Stat Cards --}}
-  <div class="row g-4 mb-4">
-    <div class="col-sm-6 col-xl-3">
-      <div class="card h-100 border-0 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div class="avatar">
-              <span class="avatar-initial rounded bg-label-primary">
-                <i class="ti tabler-report icon-26px"></i>
+  {{-- My personal KPIs --}}
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h6 class="mb-0 fw-semibold">{{ __('app.my_reports_summary') }}</h6>
+    <span class="badge bg-label-primary">{{ $unitName }}</span>
+  </div>
+  <div class="row g-3 mb-4">
+    @foreach ([
+      ['value' => $totalReports, 'label' => __('app.total_reports'), 'hint' => '+'.$reportsThisWeek.' '.__('app.this_week'), 'icon' => 'tabler-report', 'color' => '#0d6efd'],
+      ['value' => $draftReports, 'label' => __('app.draft'), 'hint' => __('app.awaiting_submit'), 'icon' => 'tabler-file-text', 'color' => '#ffc107'],
+      ['value' => $submittedReports, 'label' => __('app.status_submitted'), 'hint' => __('app.in_review'), 'icon' => 'tabler-send', 'color' => '#198754'],
+      ['value' => $returnedReports, 'label' => __('app.returned'), 'hint' => $completedReports.' '.__('app.completed'), 'icon' => 'tabler-arrow-back-up', 'color' => '#dc3545'],
+    ] as $card)
+      <div class="col-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100" style="border-bottom:3px solid {{ $card['color'] }} !important;">
+          <div class="card-body py-3">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                style="width:32px;height:32px;background:{{ $card['color'] }}22;color:{{ $card['color'] }};">
+                <i class="ti {{ $card['icon'] }}"></i>
               </span>
             </div>
-            <span class="badge bg-label-primary">+{{ $reportsThisWeek }} minggu ini</span>
-          </div>
-          <h3 class="mb-1 fw-bold">{{ $totalReports }}</h3>
-          <p class="mb-2 text-muted fw-medium">Jumlah laporan saya</p>
-          <hr class="my-2">
-          <div class="d-flex justify-content-between small text-muted">
-            <span><i class="ti tabler-send me-1 text-success"></i>{{ $submittedReports }} dihantar</span>
-            <span><i class="ti tabler-file me-1 text-warning"></i>{{ $draftReports }} draf</span>
+            <div class="fw-bold fs-4 lh-1">{{ number_format($card['value']) }}</div>
+            <div class="small fw-semibold mt-1">{{ $card['label'] }}</div>
+            <div class="small text-muted">{{ $card['hint'] }}</div>
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="col-sm-6 col-xl-3">
-      <div class="card h-100 border-0 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div class="avatar">
-              <span class="avatar-initial rounded bg-label-warning">
-                <i class="ti tabler-file-text icon-26px"></i>
-              </span>
-            </div>
-            @if ($draftReports > 0)
-              <span class="badge bg-label-warning">Perlu tindakan</span>
-            @else
-              <span class="badge bg-label-success">Kemas kini</span>
-            @endif
-          </div>
-          <h3 class="mb-1 fw-bold">{{ $draftReports }}</h3>
-          <p class="mb-2 text-muted fw-medium">Draf belum dihantar</p>
-          <hr class="my-2">
-          <div class="small text-muted">
-            @if ($draftReports > 0)
-              <i class="ti tabler-clock me-1 text-warning"></i>Menunggu untuk dihantar
-            @else
-              <i class="ti tabler-circle-check me-1 text-success"></i>Tiada draf tertangguh
-            @endif
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-sm-6 col-xl-3">
-      <div class="card h-100 border-0 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div class="avatar">
-              <span class="avatar-initial rounded bg-label-success">
-                <i class="ti tabler-send icon-26px"></i>
-              </span>
-            </div>
-            <span class="badge bg-label-success">Dihantar</span>
-          </div>
-          <h3 class="mb-1 fw-bold">{{ $submittedReports }}</h3>
-          <p class="mb-2 text-muted fw-medium">Sudah dihantar</p>
-          <hr class="my-2">
-          <div class="small text-muted">
-            <i class="ti tabler-checks me-1 text-success"></i>Dalam semakan engineer
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-sm-6 col-xl-3">
-      <div class="card h-100 border-0 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div class="avatar">
-              <span class="avatar-initial rounded bg-label-danger">
-                <i class="ti tabler-arrow-back-up icon-26px"></i>
-              </span>
-            </div>
-            @if ($returnedReports > 0)
-              <span class="badge bg-label-danger">Perlu tindakan</span>
-            @endif
-          </div>
-          <h3 class="mb-1 fw-bold">{{ $returnedReports }}</h3>
-          <p class="mb-2 text-muted fw-medium">Dikembalikan</p>
-          <hr class="my-2">
-          <div class="small text-muted">
-            <i class="ti tabler-circle-check me-1 text-success"></i>{{ $completedReports }} diluluskan/selesai
-          </div>
-        </div>
-      </div>
-    </div>
+    @endforeach
   </div>
 
-  {{-- Laporan Terkini + Tindakan Pantas --}}
+  {{-- All Units overview --}}
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div>
+      <h6 class="mb-0 fw-semibold">{{ __('app.units_overview') }}</h6>
+      <div class="small text-muted">{{ __('app.units_overview_hint') }}</div>
+    </div>
+    <span class="badge bg-label-secondary">{{ number_format($grandTotal) }} {{ __('app.total_reports') }}</span>
+  </div>
+
+  <div class="row g-4 mb-4">
+    @foreach ($unitCards as $card)
+      @php
+        $u = $card['unit'];
+        $t = $card['theme'];
+      @endphp
+      <div class="col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100" style="border-top:4px solid {{ $t['color'] }} !important;">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="d-flex align-items-center gap-2">
+                <span class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                  style="width:40px;height:40px;background:{{ $t['soft'] }};color:{{ $t['color'] }};">
+                  <i class="ti {{ $card['icon'] }}"></i>
+                </span>
+                <div>
+                  <div class="fw-semibold">{{ $u->name }}</div>
+                  <div class="small text-muted">{{ $u->code }}</div>
+                </div>
+              </div>
+              @if ($card['isOwn'])
+                <span class="badge text-white" style="background:{{ $t['color'] }};">{{ __('app.my_unit') }}</span>
+              @else
+                <span class="badge bg-label-secondary"><i class="ti tabler-lock me-1"></i>{{ __('app.read_only_badge') }}</span>
+              @endif
+            </div>
+
+            <div class="fw-bold fs-3 lh-1 mb-1" style="color:{{ $t['color'] }};">{{ number_format($card['total']) }}</div>
+            <div class="small text-muted mb-3">{{ __('app.total_reports') }}</div>
+
+            <div class="d-flex flex-column gap-2 mb-3">
+              <a href="{{ $card['sinkholeUrl'] }}" class="d-flex justify-content-between small text-decoration-none text-body">
+                <span><i class="ti tabler-alert-triangle me-1 text-info"></i>{{ __('app.sinkhole') }}</span>
+                <strong>{{ $card['sinkhole'] }}</strong>
+              </a>
+              <a href="{{ $card['cerunUrl'] }}" class="d-flex justify-content-between small text-decoration-none text-body">
+                <span><i class="ti tabler-mountain me-1 text-danger"></i>{{ __('app.cerun') }}</span>
+                <strong>{{ $card['cerun'] }}</strong>
+              </a>
+              <a href="{{ $card['boreholeUrl'] }}" class="d-flex justify-content-between small text-decoration-none text-body">
+                <span><i class="ti tabler-layers-intersect me-1 text-secondary"></i>{{ __('app.borehole') }}</span>
+                <strong>{{ $card['borehole'] }}</strong>
+              </a>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <div class="rounded p-2 text-center" style="background:rgba(255,193,7,.12);">
+                  <div class="fw-bold">{{ $card['pending'] }}</div>
+                  <div class="small text-muted" style="font-size:11px;">{{ __('app.pending') }}</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="rounded p-2 text-center" style="background:rgba(25,135,84,.12);">
+                  <div class="fw-bold">{{ $card['completed'] }}</div>
+                  <div class="small text-muted" style="font-size:11px;">{{ __('app.completed') }}</div>
+                </div>
+              </div>
+            </div>
+
+            <a href="{{ $card['dashboardUrl'] }}" class="btn btn-sm w-100"
+              style="background:{{ $t['color'] }};border-color:{{ $t['color'] }};color:#fff;">
+              <i class="ti tabler-smart-home me-1"></i>{{ __('app.open_dashboard') }}
+            </a>
+          </div>
+        </div>
+      </div>
+    @endforeach
+  </div>
+
+  {{-- Recent + Quick actions --}}
   <div class="row g-4">
     <div class="col-xl-8">
       <div class="card h-100 border-0 shadow-sm">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom">
           <h6 class="mb-0 fw-semibold">
-            <i class="ti tabler-clock me-2 text-primary"></i>Laporan Terkini Saya
+            <i class="ti tabler-clock me-2 text-primary"></i>{{ __('app.my_recent_reports') }}
           </h6>
           <a href="{{ route('surveyor.reports.create') }}" class="btn btn-primary btn-sm">
-            <i class="ti tabler-plus me-1"></i>Cipta Laporan
+            <i class="ti tabler-plus me-1"></i>{{ __('app.add_report') }}
           </a>
         </div>
         <div class="table-responsive">
           <table class="table table-hover mb-0 align-middle">
             <thead class="table-light">
               <tr>
-                <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">No. Laporan</th>
-                <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">Tajuk / Lokasi</th>
-                <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">Kategori</th>
-                <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">Status</th>
-                <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">Tarikh</th>
+                <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">{{ __('app.report_no') }}</th>
+                <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">{{ __('app.title') }}</th>
+                <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">{{ __('app.category') }}</th>
+                <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">{{ __('app.status') }}</th>
+                <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">{{ __('app.date') }}</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               @forelse ($recentReports as $r)
                 <tr>
-                  <td>
-                    <code class="bg-light px-2 py-1 rounded small">{{ $r->report_number }}</code>
-                  </td>
+                  <td><code class="bg-light px-2 py-1 rounded small">{{ $r->report_number }}</code></td>
                   <td>
                     <div class="fw-medium">{{ $r->title }}</div>
                     @if ($r->location_name)
-                      <div class="small text-muted d-flex align-items-center gap-1" style="font-size:12px;">
-                        <i class="ti tabler-map-pin" style="font-size:11px;"></i>{{ Str::limit($r->location_name, 30) }}
-                      </div>
+                      <div class="small text-muted"><i class="ti tabler-map-pin me-1"></i>{{ Str::limit($r->location_name, 30) }}</div>
                     @endif
                   </td>
                   <td>
                     @if ($r->category)
-                      <span class="badge bg-label-secondary">{{ $r->category->name }}</span>
+                      <span class="badge bg-label-secondary">{{ $r->category->display_name }}</span>
                     @else
                       <span class="text-muted">-</span>
                     @endif
@@ -183,21 +191,18 @@
                   <td>{!! $r->status_badge !!}</td>
                   <td class="text-nowrap small text-muted">{{ $r->created_at->format('d/m/Y') }}</td>
                   <td class="text-end text-nowrap">
-                    <a href="{{ route('surveyor.reports.view', $r) }}" class="btn btn-sm btn-icon btn-text-secondary" title="Lihat">
-                      <i class="ti tabler-eye"></i>
-                    </a>
-                    @if ($r->status === 'draft')
-                      <a href="{{ route('surveyor.reports.edit', $r) }}" class="btn btn-sm btn-icon btn-text-primary" title="Edit">
-                        <i class="ti tabler-pencil"></i>
-                      </a>
-                    @endif
+                    <a href="{{ route('surveyor.reports.view', $r) }}" class="btn btn-sm btn-outline-primary">{{ __('app.view') }}</a>
+                    @can('update', $r)
+                      <a href="{{ route('surveyor.reports.edit', $r) }}" class="btn btn-sm btn-outline-secondary">{{ __('app.edit') }}</a>
+                    @endcan
                   </td>
                 </tr>
               @empty
                 <tr>
                   <td colspan="6" class="text-center py-5 text-muted">
-                    <i class="ti tabler-inbox icon-32px d-block mb-2 text-muted"></i>
-                    Belum ada laporan. <a href="{{ route('surveyor.reports.create') }}">Cipta sekarang</a>
+                    <i class="ti tabler-inbox icon-32px d-block mb-2"></i>
+                    {{ __('app.no_reports_found') }}
+                    <a href="{{ route('surveyor.reports.create') }}">{{ __('app.add_report') }}</a>
                   </td>
                 </tr>
               @endforelse
@@ -211,71 +216,47 @@
       <div class="card h-100 border-0 shadow-sm">
         <div class="card-header border-bottom">
           <h6 class="mb-0 fw-semibold">
-            <i class="ti tabler-bolt me-2 text-warning"></i>Tindakan Pantas
+            <i class="ti tabler-bolt me-2 text-warning"></i>{{ __('app.quick_actions') }}
           </h6>
         </div>
         <div class="card-body d-flex flex-column gap-3">
           <a href="{{ route('surveyor.reports.create') }}"
-            class="d-flex align-items-center gap-3 p-3 rounded border border-primary border-opacity-25 text-decoration-none text-body"
-            style="transition:.2s;background:rgba(13,110,253,.03);">
-            <span class="avatar flex-shrink-0">
-              <span class="avatar-initial rounded bg-label-primary">
-                <i class="ti tabler-plus"></i>
-              </span>
-            </span>
+            class="d-flex align-items-center gap-3 p-3 rounded border text-decoration-none text-body"
+            style="background:rgba(13,110,253,.04);">
+            <span class="avatar flex-shrink-0"><span class="avatar-initial rounded bg-label-primary"><i class="ti tabler-plus"></i></span></span>
             <div>
-              <div class="fw-semibold">Laporan baharu</div>
-              <div class="small text-muted">Rekod tapak & lampiran survei</div>
+              <div class="fw-semibold">{{ __('app.add_report') }}</div>
+              <div class="small text-muted">{{ $unitName }}</div>
             </div>
             <i class="ti tabler-chevron-right ms-auto text-muted"></i>
           </a>
 
           <a href="{{ route('surveyor.map') }}"
-            class="d-flex align-items-center gap-3 p-3 rounded border border-success border-opacity-25 text-decoration-none text-body"
-            style="transition:.2s;background:rgba(25,135,84,.03);">
-            <span class="avatar flex-shrink-0">
-              <span class="avatar-initial rounded bg-label-success">
-                <i class="ti tabler-map"></i>
-              </span>
-            </span>
+            class="d-flex align-items-center gap-3 p-3 rounded border text-decoration-none text-body"
+            style="background:rgba(25,135,84,.04);">
+            <span class="avatar flex-shrink-0"><span class="avatar-initial rounded bg-label-success"><i class="ti tabler-map"></i></span></span>
             <div>
-              <div class="fw-semibold">Buka peta</div>
-              <div class="small text-muted">Lihat semua lokasi laporan</div>
+              <div class="fw-semibold">{{ __('app.interactive_map') }}</div>
+              <div class="small text-muted">{{ __('app.all_units') }}</div>
             </div>
             <i class="ti tabler-chevron-right ms-auto text-muted"></i>
           </a>
 
-          <a href="{{ route('surveyor.reports') }}"
-            class="d-flex align-items-center gap-3 p-3 rounded border border-info border-opacity-25 text-decoration-none text-body"
-            style="transition:.2s;background:rgba(13,202,240,.03);">
-            <span class="avatar flex-shrink-0">
-              <span class="avatar-initial rounded bg-label-info">
-                <i class="ti tabler-folder"></i>
-              </span>
-            </span>
-            <div>
-              <div class="fw-semibold">Semua laporan</div>
-              <div class="small text-muted">Tapis, cari dan kemaskini</div>
-            </div>
-            <i class="ti tabler-chevron-right ms-auto text-muted"></i>
-          </a>
-
-          @if ($draftReports > 0)
-            <a href="{{ route('surveyor.reports') }}"
-              class="d-flex align-items-center gap-3 p-3 rounded border border-warning border-opacity-50 text-decoration-none text-body"
-              style="transition:.2s;background:rgba(255,193,7,.06);">
+          @foreach ($unitCards as $card)
+            <a href="{{ $card['dashboardUrl'] }}"
+              class="d-flex align-items-center gap-3 p-3 rounded border text-decoration-none text-body">
               <span class="avatar flex-shrink-0">
-                <span class="avatar-initial rounded bg-label-warning">
-                  <i class="ti tabler-file-alert"></i>
+                <span class="avatar-initial rounded" style="background:{{ $card['theme']['soft'] }};color:{{ $card['theme']['color'] }};">
+                  <i class="ti {{ $card['icon'] }}"></i>
                 </span>
               </span>
               <div>
-                <div class="fw-semibold">Draf tertangguh</div>
-                <div class="small text-warning fw-semibold">{{ $draftReports }} laporan perlu dihantar</div>
+                <div class="fw-semibold">{{ $card['unit']->name }}</div>
+                <div class="small text-muted">{{ number_format($card['total']) }} {{ __('app.reports') }}</div>
               </div>
-              <i class="ti tabler-chevron-right ms-auto text-warning"></i>
+              <i class="ti tabler-chevron-right ms-auto text-muted"></i>
             </a>
-          @endif
+          @endforeach
         </div>
       </div>
     </div>

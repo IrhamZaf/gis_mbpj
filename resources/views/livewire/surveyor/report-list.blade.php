@@ -5,17 +5,29 @@
 
   <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-0">Senarai Laporan Saya</h5>
-      <a href="{{ route('surveyor.reports.create') }}" class="btn btn-primary btn-sm"><i class="ti tabler-plus me-1"></i>Cipta Laporan</a>
+      <h5 class="mb-0">{{ __('app.my_report_list') }}</h5>
+      <a href="{{ route('surveyor.reports.create') }}" class="btn btn-primary btn-sm"><i class="ti tabler-plus me-1"></i>{{ __('app.create_report_btn') }}</a>
     </div>
     <div class="card-body">
       <div class="row mb-4">
-        <div class="col-md-6"><input wire:model.live.debounce.300ms="search" type="text" class="form-control" placeholder="Cari tajuk / no. laporan..." /></div>
-        <div class="col-md-3"><select wire:model.live="filterStatus" class="form-select"><option value="">Semua Status</option><option value="draft">Draf</option><option value="submitted">Dihantar</option><option value="pending_site_visit">Menunggu Lawatan</option><option value="pending_engineer_verification">Menunggu Engineer</option><option value="engineer_returned">Dikembalikan</option><option value="pending_director_approval">Menunggu Pengarah</option><option value="approved">Diluluskan</option><option value="completed">Selesai</option></select></div>
+        <div class="col-md-6"><input wire:model.live.debounce.300ms="search" type="text" class="form-control" placeholder="{{ __('app.search_reports') }}" /></div>
+        <div class="col-md-3">
+          <select wire:model.live="filterStatus" class="form-select">
+            <option value="">{{ __('app.all_statuses') }}</option>
+            <option value="draft">{{ __('app.status_draft') }}</option>
+            <option value="submitted">{{ __('app.status_submitted') }}</option>
+            <option value="pending_site_visit">{{ __('app.wf_pending_site_visit') }}</option>
+            <option value="pending_engineer_verification">{{ __('app.pending_engineer') }}</option>
+            <option value="engineer_returned">{{ __('app.returned') }}</option>
+            <option value="pending_director_approval">{{ __('app.wf_pending_director_approval') }}</option>
+            <option value="approved">{{ __('app.approved') }}</option>
+            <option value="completed">{{ __('app.status_completed') }}</option>
+          </select>
+        </div>
       </div>
       <div class="table-responsive">
         <table class="table table-hover">
-          <thead><tr><th>No. Laporan</th><th>Tajuk</th><th>Kategori</th><th>Status</th><th>Tarikh</th><th>Tindakan</th></tr></thead>
+          <thead><tr><th>{{ __('app.report_no') }}</th><th>{{ __('app.title') }}</th><th>{{ __('app.category') }}</th><th>{{ __('app.status') }}</th><th>{{ __('app.date') }}</th><th>{{ __('app.action') }}</th></tr></thead>
           <tbody>
             @forelse ($reports as $r)
             <tr>
@@ -26,15 +38,15 @@
               <td>{{ $r->created_at->format('d/m/Y') }}</td>
               <td>
                 <div class="d-flex gap-1">
-                  <a href="{{ route('surveyor.reports.view', $r) }}" class="btn btn-sm btn-icon btn-text-info" title="Lihat"><i class="ti tabler-eye"></i></a>
+                  <a href="{{ route('surveyor.reports.view', $r) }}" class="btn btn-sm btn-icon btn-text-info" title="{{ __('app.view') }}"><i class="ti tabler-eye"></i></a>
                   @if ($r->status === 'draft')
-                    <a href="{{ route('surveyor.reports.edit', $r) }}" class="btn btn-sm btn-icon btn-text-secondary" title="Kemaskini"><i class="ti tabler-pencil"></i></a>
+                    <a href="{{ route('surveyor.reports.edit', $r) }}" class="btn btn-sm btn-icon btn-text-secondary" title="{{ __('app.update') }}"><i class="ti tabler-pencil"></i></a>
                   @endif
                 </div>
               </td>
             </tr>
             @empty
-            <tr><td colspan="6" class="text-center py-4">Tiada laporan.</td></tr>
+            <tr><td colspan="6" class="text-center py-4">{{ __('app.no_reports') }}</td></tr>
             @endforelse
           </tbody>
         </table>

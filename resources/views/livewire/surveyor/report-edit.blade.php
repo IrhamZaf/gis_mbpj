@@ -1,9 +1,9 @@
 <div>
   <div class="card mb-6">
     <div class="card-header d-flex align-items-center justify-content-between">
-      <h5 class="mb-0"><i class="ti tabler-edit me-2"></i>Kemaskini Laporan: {{ $report->report_number }}</h5>
+      <h5 class="mb-0"><i class="ti tabler-edit me-2"></i>{{ __('app.update_report_title', ['number' => $report->report_number]) }}</h5>
       <a href="{{ route('surveyor.reports') }}" class="btn btn-sm btn-label-secondary">
-        <i class="ti tabler-arrow-left me-1"></i>Kembali
+        <i class="ti tabler-arrow-left me-1"></i>{{ __('app.back') }}
       </a>
     </div>
 
@@ -11,13 +11,13 @@
       {{-- Error summary --}}
       @if ($errors->any())
         <div class="alert alert-danger alert-dismissible mb-4" role="alert">
-          <strong>Sila betulkan ralat berikut:</strong>
+          <strong>{{ __('app.fix_errors_below') }}</strong>
           <ul class="mb-0 mt-2">
             @foreach ($errors->all() as $error)
               <li>{{ $error }}</li>
             @endforeach
           </ul>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('app.close') }}"></button>
         </div>
       @endif
 
@@ -28,18 +28,18 @@
 
             {{-- Unit (read-only) --}}
             <div class="mb-4">
-              <label class="form-label">Unit</label>
+              <label class="form-label">{{ __('app.unit') }}</label>
               <input type="text" class="form-control" value="{{ $userUnit->name ?? '—' }}" readonly disabled>
             </div>
 
             {{-- Kategori --}}
             <div class="mb-4">
               <label for="rpt-category" class="form-label">
-                Kategori Laporan <span class="text-danger">*</span>
+                {{ __('app.report_category') }} <span class="text-danger">*</span>
               </label>
               <select wire:model.change="category_id" id="rpt-category"
                       class="form-select @error('category_id') is-invalid @enderror">
-                <option value="">-- Pilih Kategori --</option>
+                <option value="">{{ __('app.select_category') }}</option>
                 @foreach ($categories as $cat)
                   <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                 @endforeach
@@ -52,7 +52,7 @@
             {{-- Tajuk --}}
             <div class="mb-4">
               <label for="rpt-title" class="form-label">
-                Tajuk Laporan <span class="text-danger">*</span>
+                {{ __('app.report_title_label') }} <span class="text-danger">*</span>
               </label>
               <input wire:model="title" type="text" id="rpt-title"
                      class="form-control @error('title') is-invalid @enderror"
@@ -65,11 +65,11 @@
             {{-- Keterangan --}}
             <div class="mb-4">
               <label for="rpt-desc" class="form-label">
-                Keterangan <span class="text-danger">*</span>
+                {{ __('app.description') }} <span class="text-danger">*</span>
               </label>
               <textarea wire:model="description" id="rpt-desc" rows="4"
                         class="form-control @error('description') is-invalid @enderror"
-                        placeholder="Keterangan ringkas tentang isu yang dilaporkan..."></textarea>
+                        placeholder="{{ __('app.description_placeholder') }}"></textarea>
               @error('description')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
@@ -191,7 +191,7 @@
                       class="btn btn-primary"
                       wire:loading.attr="disabled" wire:target="saveDraft,submit,attachments">
                 <span wire:loading.remove wire:target="submit">
-                  <i class="ti tabler-send me-1"></i>Kemaskini Laporan
+                  <i class="ti tabler-send me-1"></i>{{ __('app.update_report') }}
                 </span>
                 <span wire:loading wire:target="submit">
                   <span class="spinner-border spinner-border-sm me-1"></span>Mengemaskini...

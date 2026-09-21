@@ -1,25 +1,25 @@
 <div>
   @include('livewire.partials.dashboard-welcome', [
     'user' => $user,
-    'roleLabel' => 'Unit ' . $unit->name,
-    'subtitle' => 'Dashboard Unit ' . $unit->name . ' (' . $unit->code . ') — ringkasan workflow, staf dan laporan.',
+    'roleLabel' => __('app.role_unit', ['unit' => $unit->name]),
+    'subtitle' => __('app.unit_dashboard_subtitle', ['unit' => $unit->name, 'code' => $unit->code]),
     'heroIcon' => 'tabler-building',
     'unitTheme' => $theme,
     'actions' => [
-      ['label' => 'Semua Unit', 'url' => route('engineering.hub'), 'icon' => 'tabler-arrow-left', 'class' => 'btn-outline-secondary'],
-      ['label' => 'Peta', 'url' => auth()->user()->isSuperadmin() ? route('superadmin.map') : route('director.map'), 'icon' => 'tabler-map', 'class' => 'btn-outline-primary'],
+      ['label' => __('app.all_units'), 'url' => route('engineering.hub'), 'icon' => 'tabler-arrow-left', 'class' => 'btn-outline-secondary'],
+      ['label' => __('app.map'), 'url' => auth()->user()->isSuperadmin() ? route('superadmin.map') : route('director.map'), 'icon' => 'tabler-map', 'class' => 'btn-outline-primary'],
     ],
   ])
 
   <div class="row g-3 mb-4">
     @foreach ([
-      ['draft', 'Draf', 'secondary'],
-      ['pending_visit', 'Menunggu TA', 'warning'],
-      ['visit_progress', 'Lawatan', 'info'],
+      ['draft', __('app.status_draft'), 'secondary'],
+      ['pending_visit', __('app.pending_ta'), 'warning'],
+      ['visit_progress', __('app.visit_in_progress'), 'info'],
       ['pending_engineer', 'Engineer', 'primary'],
-      ['pending_director', 'Pengarah', 'dark'],
-      ['approved', 'Lulus', 'success'],
-      ['rejected', 'Ditolak', 'danger'],
+      ['pending_director', __('app.role_director'), 'dark'],
+      ['approved', __('app.approved'), 'success'],
+      ['rejected', __('app.rejected'), 'danger'],
     ] as [$key, $label, $badge])
       <div class="col-6 col-md-4 col-xl">
         <div class="card border-0 shadow-sm h-100" style="border-bottom:3px solid {{ $theme['color'] }} !important;">
@@ -36,7 +36,7 @@
     <div class="col-lg-4">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-header border-bottom">
-          <h6 class="mb-0">Staf Unit {{ $unit->name }}</h6>
+          <h6 class="mb-0">{{ __('app.staff_unit', ['unit' => $unit->name]) }}</h6>
         </div>
         <div class="card-body p-0">
           <ul class="list-group list-group-flush">
@@ -49,7 +49,7 @@
                 <span class="badge bg-label-{{ $theme['label'] }} text-uppercase">{{ $s->role }}</span>
               </li>
             @empty
-              <li class="list-group-item text-muted text-center py-4">Tiada staf.</li>
+              <li class="list-group-item text-muted text-center py-4">{{ __('app.no_staff') }}</li>
             @endforelse
           </ul>
         </div>
@@ -59,17 +59,17 @@
     <div class="col-lg-8">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-header border-bottom d-flex justify-content-between">
-          <h6 class="mb-0">Laporan Terkini</h6>
-          <span class="badge bg-label-{{ $theme['label'] }}">{{ $kpis['total'] }} jumlah</span>
+          <h6 class="mb-0">{{ __('app.recent_reports_title') }}</h6>
+          <span class="badge bg-label-{{ $theme['label'] }}">{{ __('app.total_count', ['count' => $kpis['total']]) }}</span>
         </div>
         <div class="table-responsive">
           <table class="table table-hover mb-0 align-middle">
             <thead class="table-light">
               <tr>
-                <th>No.</th>
-                <th>Tajuk</th>
-                <th>Status</th>
-                <th>Surveyor</th>
+                <th>{{ __('app.no') }}</th>
+                <th>{{ __('app.title') }}</th>
+                <th>{{ __('app.status') }}</th>
+                <th>{{ __('app.surveyor') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -81,7 +81,7 @@
                   <td class="small">{{ $r->user->name ?? '—' }}</td>
                 </tr>
               @empty
-                <tr><td colspan="4" class="text-center text-muted py-4">Tiada laporan untuk unit ini.</td></tr>
+                <tr><td colspan="4" class="text-center text-muted py-4">{{ __('app.no_reports_for_this_unit') }}</td></tr>
               @endforelse
             </tbody>
           </table>

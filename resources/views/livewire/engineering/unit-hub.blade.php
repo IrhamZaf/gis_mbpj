@@ -1,11 +1,11 @@
 <div>
   @include('livewire.partials.dashboard-welcome', [
     'user' => $user,
-    'roleLabel' => 'Engineering',
-    'subtitle' => 'Pilih unit untuk melihat dashboard, staf dan laporan khusus unit tersebut.',
+    'roleLabel' => __('app.role_engineering'),
+    'subtitle' => __('app.engineering_hub_subtitle'),
     'heroIcon' => 'tabler-building-community',
     'actions' => [
-      ['label' => 'Semua Laporan', 'url' => auth()->user()->isSuperadmin() ? route('superadmin.reports') : route('director.reports'), 'icon' => 'tabler-list', 'class' => 'btn-primary'],
+      ['label' => __('app.all_reports_label'), 'url' => auth()->user()->isSuperadmin() ? route('superadmin.reports') : route('director.reports'), 'icon' => 'tabler-list', 'class' => 'btn-primary'],
     ],
   ])
 
@@ -22,7 +22,7 @@
               <div class="d-flex justify-content-between align-items-start mb-3">
                 <div>
                   <span class="badge bg-label-{{ $theme['label'] }} mb-2">{{ $theme['code'] }}</span>
-                  <h5 class="mb-0 fw-bold text-body">Unit {{ $u->name }}</h5>
+                  <h5 class="mb-0 fw-bold text-body">{{ __('app.role_unit', ['unit' => $u->name]) }}</h5>
                   <p class="small text-muted mb-0 mt-1">{{ $u->description }}</p>
                 </div>
                 <span class="avatar">
@@ -34,20 +34,20 @@
               <div class="row g-2 text-center">
                 <div class="col-4">
                   <div class="fw-bold">{{ $row['reports'] }}</div>
-                  <div class="small text-muted">Laporan</div>
+                  <div class="small text-muted">{{ __('app.reports_label') }}</div>
                 </div>
                 <div class="col-4">
                   <div class="fw-bold">{{ $row['pending'] }}</div>
-                  <div class="small text-muted">Aktif</div>
+                  <div class="small text-muted">{{ __('app.active') }}</div>
                 </div>
                 <div class="col-4">
                   <div class="fw-bold">{{ $row['staff'] }}</div>
-                  <div class="small text-muted">Staf</div>
+                  <div class="small text-muted">{{ __('app.staff') }}</div>
                 </div>
               </div>
               <div class="mt-3 pt-2 border-top d-flex justify-content-between small text-muted">
-                <span>{{ $row['approved'] }} diluluskan</span>
-                <span class="fw-medium" style="color:{{ $theme['color'] }};">Buka dashboard →</span>
+                <span>{{ __('app.approved_count', ['count' => $row['approved']]) }}</span>
+                <span class="fw-medium" style="color:{{ $theme['color'] }};">{{ __('app.open_dashboard_arrow') }}</span>
               </div>
             </div>
           </div>

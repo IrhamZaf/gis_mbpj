@@ -1,13 +1,13 @@
 <div>
   @include('livewire.partials.dashboard-welcome', [
     'user' => $user,
-    'roleLabel' => 'Superadmin',
-    'subtitle' => 'Pantau pengguna, unit, kategori dan laporan GIS MBSJ dari satu skrin.',
+    'roleLabel' => __('app.role_superadmin'),
+    'subtitle' => __('app.superadmin_dashboard_subtitle'),
     'heroIcon' => 'tabler-shield-check',
     'actions' => [
-      ['label' => 'Peta Interaktif', 'url' => route('superadmin.map'), 'icon' => 'tabler-map', 'class' => 'btn-primary'],
-      ['label' => 'Pemantauan Laporan', 'url' => route('superadmin.reports'), 'icon' => 'tabler-report-analytics', 'class' => 'btn-outline-primary'],
-      ['label' => 'Unit', 'url' => route('superadmin.units'), 'icon' => 'tabler-building-community', 'class' => 'btn-outline-secondary'],
+      ['label' => __('app.interactive_map'), 'url' => route('superadmin.map'), 'icon' => 'tabler-map', 'class' => 'btn-primary'],
+      ['label' => __('app.report_monitoring'), 'url' => route('superadmin.reports'), 'icon' => 'tabler-report-analytics', 'class' => 'btn-outline-primary'],
+      ['label' => __('app.units'), 'url' => route('superadmin.units'), 'icon' => 'tabler-building-community', 'class' => 'btn-outline-secondary'],
     ],
   ])
 
@@ -15,41 +15,41 @@
     <div class="card-body">
       <div class="row g-3 align-items-end">
         <div class="col-md-3">
-          <label class="form-label small text-muted mb-1">Unit</label>
+          <label class="form-label small text-muted mb-1">{{ __('app.unit') }}</label>
           <select wire:model.live="filterUnit" class="form-select">
-            <option value="">Semua Unit</option>
+            <option value="">{{ __('app.all_units') }}</option>
             @foreach ($units as $unit)
               <option value="{{ $unit->id }}">{{ $unit->name }}</option>
             @endforeach
           </select>
         </div>
         <div class="col-md-3">
-          <label class="form-label small text-muted mb-1">Status</label>
+          <label class="form-label small text-muted mb-1">{{ __('app.status') }}</label>
           <select wire:model.live="filterStatus" class="form-select">
-            <option value="">Semua Status</option>
-            <option value="draft">Draf</option>
-            <option value="submitted">Dihantar</option>
-            <option value="pending_site_visit">Menunggu Lawatan</option>
-            <option value="site_visit_in_progress">Lawatan Berjalan</option>
-            <option value="pending_engineer_verification">Menunggu Engineer</option>
-            <option value="engineer_returned">Dikembalikan Engineer</option>
-            <option value="pending_director_approval">Menunggu Pengarah</option>
-            <option value="approved">Diluluskan</option>
-            <option value="director_rejected">Ditolak Pengarah</option>
-            <option value="completed">Selesai</option>
+            <option value="">{{ __('app.all_statuses') }}</option>
+            <option value="draft">{{ __('app.status_draft') }}</option>
+            <option value="submitted">{{ __('app.status_submitted') }}</option>
+            <option value="pending_site_visit">{{ __('app.wf_pending_site_visit') }}</option>
+            <option value="site_visit_in_progress">{{ __('app.wf_site_visit_in_progress') }}</option>
+            <option value="pending_engineer_verification">{{ __('app.wf_pending_engineer_verification') }}</option>
+            <option value="engineer_returned">{{ __('app.wf_engineer_returned') }}</option>
+            <option value="pending_director_approval">{{ __('app.wf_pending_director_approval') }}</option>
+            <option value="approved">{{ __('app.wf_approved') }}</option>
+            <option value="director_rejected">{{ __('app.wf_director_rejected') }}</option>
+            <option value="completed">{{ __('app.status_completed') }}</option>
           </select>
         </div>
         <div class="col-md-3">
-          <label class="form-label small text-muted mb-1">Kategori</label>
+          <label class="form-label small text-muted mb-1">{{ __('app.category') }}</label>
           <select wire:model.live="filterCategory" class="form-select">
-            <option value="">Semua Kategori</option>
+            <option value="">{{ __('app.all_categories') }}</option>
             @foreach ($categories as $cat)
               <option value="{{ $cat->id }}">{{ $cat->name }}</option>
             @endforeach
           </select>
         </div>
         <div class="col-md-3 text-muted small">
-          <i class="ti tabler-filter me-1"></i>{{ $totalUnits }} unit · {{ $totalReports }} laporan (ditapis)
+          <i class="ti tabler-filter me-1"></i>{{ __('app.filtered_summary', ['units' => $totalUnits, 'reports' => $totalReports]) }}
         </div>
       </div>
     </div>
@@ -67,18 +67,18 @@
               </span>
             </div>
             <div class="text-end">
-              <span class="badge bg-label-primary">Sistem</span>
+              <span class="badge bg-label-primary">{{ __('app.system') }}</span>
             </div>
           </div>
           <h3 class="mb-1 fw-bold">{{ $totalUsers }}</h3>
-          <p class="mb-2 text-muted fw-medium">Jumlah pengguna</p>
+          <p class="mb-2 text-muted fw-medium">{{ __('app.total_users') }}</p>
           <hr class="my-2">
           <div class="d-flex justify-content-between small text-muted">
             <span><i class="ti tabler-user-search me-1 text-primary"></i>{{ $totalSurveyors }} surveyor</span>
             <span><i class="ti tabler-tools me-1 text-success"></i>{{ $totalEngineers }} engineer</span>
           </div>
           <div class="small text-muted mt-1">
-            <i class="ti tabler-building-community me-1"></i>{{ $totalUnits }} unit
+            <i class="ti tabler-building-community me-1"></i>{{ $totalUnits }} {{ __('app.unit') }}
             · {{ $totalTa ?? 0 }} TA
           </div>
         </div>
@@ -95,19 +95,19 @@
               </span>
             </div>
             <div class="text-end">
-              <span class="badge bg-label-success">+{{ $reportsThisWeek }} minggu ini</span>
+              <span class="badge bg-label-success">{{ __('app.this_week_badge', ['count' => $reportsThisWeek]) }}</span>
             </div>
           </div>
           <h3 class="mb-1 fw-bold">{{ $totalReports }}</h3>
-          <p class="mb-2 text-muted fw-medium">Jumlah laporan</p>
+          <p class="mb-2 text-muted fw-medium">{{ __('app.total_reports') }}</p>
           <hr class="my-2">
           <div class="d-flex justify-content-between small text-muted">
-            <span><i class="ti tabler-send me-1 text-info"></i>{{ $submittedReports }} dihantar+</span>
-            <span><i class="ti tabler-file me-1 text-warning"></i>{{ $draftReports }} draf</span>
+            <span><i class="ti tabler-send me-1 text-info"></i>{{ $submittedReports }} {{ __('app.submitted_plus') }}</span>
+            <span><i class="ti tabler-file me-1 text-warning"></i>{{ $draftReports }} {{ __('app.drafts_label') }}</span>
           </div>
-          <div class="small text-muted mt-1"><i class="ti tabler-circle-check me-1 text-success"></i>{{ $completedReports }} selesai</div>
+          <div class="small text-muted mt-1"><i class="ti tabler-circle-check me-1 text-success"></i>{{ $completedReports }} {{ __('app.completed_label') }}</div>
           <div class="small text-muted mt-1">
-            Lawatan {{ $pendingSiteVisit ?? 0 }} · Engineer {{ $pendingEngineer ?? 0 }} · Pengarah {{ $pendingDirector ?? 0 }}
+            {{ __('app.pipeline_summary', ['visit' => $pendingSiteVisit ?? 0, 'engineer' => $pendingEngineer ?? 0, 'director' => $pendingDirector ?? 0]) }}
           </div>
         </div>
       </div>
@@ -123,14 +123,14 @@
               </span>
             </div>
             <div class="text-end">
-              <span class="badge bg-label-info">+{{ $submittedThisWeek }} minggu ini</span>
+              <span class="badge bg-label-info">{{ __('app.this_week_badge', ['count' => $submittedThisWeek]) }}</span>
             </div>
           </div>
           <h3 class="mb-1 fw-bold">{{ $submittedReports }}</h3>
-          <p class="mb-2 text-muted fw-medium">Laporan dihantar</p>
+          <p class="mb-2 text-muted fw-medium">{{ __('app.submitted_reports_label') }}</p>
           <hr class="my-2">
           <div class="small text-muted">
-            <i class="ti tabler-checks me-1 text-success"></i>Sedia untuk semakan engineer
+            <i class="ti tabler-checks me-1 text-success"></i>{{ __('app.ready_for_engineer') }}
           </div>
         </div>
       </div>
@@ -146,14 +146,14 @@
               </span>
             </div>
             <div class="text-end">
-              <span class="badge bg-label-warning">{{ $totalCategories }} kategori</span>
+              <span class="badge bg-label-warning">{{ __('app.categories_count', ['count' => $totalCategories]) }}</span>
             </div>
           </div>
           <h3 class="mb-1 fw-bold">{{ $mappedReports }}</h3>
-          <p class="mb-2 text-muted fw-medium">Berkoordinat GIS</p>
+          <p class="mb-2 text-muted fw-medium">{{ __('app.geolocated_gis') }}</p>
           <hr class="my-2">
           <div class="small text-muted">
-            <i class="ti tabler-map-2 me-1 text-warning"></i>Boleh dipaparkan pada peta
+            <i class="ti tabler-map-2 me-1 text-warning"></i>{{ __('app.can_show_on_map') }}
           </div>
         </div>
       </div>
@@ -166,7 +166,7 @@
       <div class="card h-100 border-0 shadow-sm">
         <div class="card-header border-bottom d-flex justify-content-between align-items-center">
           <h6 class="mb-0 fw-semibold">
-            <i class="ti tabler-building-community me-2 text-primary"></i>Laporan Mengikut Unit
+            <i class="ti tabler-building-community me-2 text-primary"></i>{{ __('app.reports_by_unit') }}
           </h6>
         </div>
         <div class="card-body">
@@ -176,7 +176,7 @@
               <span class="badge bg-label-primary">{{ $unit->reports_count }}</span>
             </div>
           @empty
-            <div class="text-muted text-center py-4">Tiada unit.</div>
+            <div class="text-muted text-center py-4">{{ __('app.no_units') }}</div>
           @endforelse
         </div>
       </div>
@@ -186,10 +186,10 @@
       <div class="card h-100 border-0 shadow-sm">
         <div class="card-header border-bottom d-flex justify-content-between align-items-center">
           <h6 class="mb-0 fw-semibold">
-            <i class="ti tabler-chart-bar me-2 text-primary"></i>Aktiviti 7 Hari
+            <i class="ti tabler-chart-bar me-2 text-primary"></i>{{ __('app.activity_7_days') }}
           </h6>
           @php $weekTotal = $trendDays->sum('total'); @endphp
-          <span class="badge bg-label-primary">{{ $weekTotal }} jumlah</span>
+          <span class="badge bg-label-primary">{{ __('app.total_count', ['count' => $weekTotal]) }}</span>
         </div>
         <div class="card-body">
           <div class="d-flex align-items-end gap-2" style="height:120px;">
@@ -201,14 +201,14 @@
                 </div>
                 <div class="w-100 mx-1 rounded-top"
                   style="height:{{ $pct }}%;min-height:6px;background:{{ $day['total'] ? 'var(--bs-primary)' : '#e0e0e0' }};transition:height .3s;cursor:default;"
-                  title="{{ $day['total'] }} laporan pada {{ $day['label'] }}"></div>
+                  title="{{ __('app.reports_on_day', ['count' => $day['total'], 'day' => $day['label']]) }}"></div>
                 <div class="small text-muted mt-2" style="font-size:11px;">{{ $day['label'] }}</div>
               </div>
             @endforeach
           </div>
           <div class="mt-3 pt-2 border-top d-flex justify-content-between small text-muted">
-            <span>Purata: <strong class="text-body">{{ $weekTotal > 0 ? round($weekTotal / 7, 1) : 0 }}/hari</strong></span>
-            <span>Tertinggi: <strong class="text-body">{{ $trendMax }}</strong></span>
+            <span>{{ __('app.average') }}: <strong class="text-body">{{ $weekTotal > 0 ? round($weekTotal / 7, 1) : 0 }}{{ __('app.per_day') }}</strong></span>
+            <span>{{ __('app.highest') }}: <strong class="text-body">{{ $trendMax }}</strong></span>
           </div>
         </div>
       </div>
@@ -218,10 +218,10 @@
       <div class="card h-100 border-0 shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center border-bottom">
           <h6 class="mb-0 fw-semibold">
-            <i class="ti tabler-category me-2 text-success"></i>Mengikut Kategori
+            <i class="ti tabler-category me-2 text-success"></i>{{ __('app.by_category') }}
           </h6>
           <a href="{{ route('superadmin.categories') }}" class="btn btn-sm btn-outline-primary">
-            <i class="ti tabler-settings me-1"></i>Urus
+            <i class="ti tabler-settings me-1"></i>{{ __('app.manage') }}
           </a>
         </div>
         <div class="card-body">
@@ -253,7 +253,7 @@
           @empty
             <div class="text-center text-muted py-5">
               <i class="ti tabler-folder-off icon-40px d-block mb-2 text-muted"></i>
-              <p class="mb-0">Tiada kategori lagi.</p>
+              <p class="mb-0">{{ __('app.no_categories_yet') }}</p>
             </div>
           @endforelse
         </div>
@@ -265,23 +265,23 @@
   <div class="card border-0 shadow-sm">
     <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom">
       <h6 class="mb-0 fw-semibold">
-        <i class="ti tabler-clock me-2 text-primary"></i>Laporan Terkini
+        <i class="ti tabler-clock me-2 text-primary"></i>{{ __('app.recent_reports_title') }}
       </h6>
       <a href="{{ route('superadmin.reports') }}" class="btn btn-sm btn-outline-primary">
-        <i class="ti tabler-list me-1"></i>Lihat semua
+        <i class="ti tabler-list me-1"></i>{{ __('app.view_all') }}
       </a>
     </div>
     <div class="table-responsive">
       <table class="table table-hover mb-0 align-middle">
         <thead class="table-light">
           <tr>
-            <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">No. Laporan</th>
-            <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">Tajuk / Lokasi</th>
-            <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">Unit</th>
-            <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">Kategori</th>
-            <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">Surveyor</th>
-            <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">Status</th>
-            <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">Tarikh</th>
+            <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">{{ __('app.report_no') }}</th>
+            <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">{{ __('app.title_location') }}</th>
+            <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">{{ __('app.unit') }}</th>
+            <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">{{ __('app.category') }}</th>
+            <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">{{ __('app.surveyor') }}</th>
+            <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">{{ __('app.status') }}</th>
+            <th class="fw-semibold small text-uppercase text-muted" style="font-size:11px;">{{ __('app.date') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -323,7 +323,7 @@
             <tr>
               <td colspan="7" class="text-center text-muted py-5">
                 <i class="ti tabler-inbox icon-32px d-block mb-2 text-muted"></i>
-                Belum ada laporan dalam sistem.
+                {{ __('app.no_reports_in_system') }}
               </td>
             </tr>
           @endforelse

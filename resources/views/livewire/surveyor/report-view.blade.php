@@ -10,18 +10,18 @@
         </div>
         <div class="card-body">
           <table class="table table-borderless">
-            <tr><td class="fw-semibold" width="40%">No. Laporan</td><td><code>{{ $report->report_number }}</code></td></tr>
+            <tr><td class="fw-semibold" width="40%">{{ __('app.report_no') }}</td><td><code>{{ $report->report_number }}</code></td></tr>
             <tr><td class="fw-semibold">No. Fail</td><td><code>{{ $report->file_number ?? '—' }}</code></td></tr>
             <tr><td class="fw-semibold">Unit</td><td>{{ $report->unit->name ?? '-' }}</td></tr>
             <tr><td class="fw-semibold">Kategori</td><td>{{ $report->category->name ?? '-' }}</td></tr>
             <tr><td class="fw-semibold">Surveyor</td><td>{{ $report->user->name ?? '-' }}</td></tr>
             <tr><td class="fw-semibold">Lokasi</td><td>{{ $report->location_name ?? '-' }}</td></tr>
             <tr><td class="fw-semibold">Koordinat</td><td>{{ $report->latitude ?? '-' }}, {{ $report->longitude ?? '-' }}</td></tr>
-            <tr><td class="fw-semibold">Tarikh Hantar</td><td>{{ $report->submitted_at?->format('d/m/Y H:i') ?? '-' }}</td></tr>
+            <tr><td class="fw-semibold">{{ __('app.submitted_date') }}</td><td>{{ $report->submitted_at?->format('d/m/Y H:i') ?? '-' }}</td></tr>
           </table>
           <hr>
           <h6 class="fw-semibold">Keterangan</h6>
-          <p class="text-body">{{ $report->description ?? 'Tiada keterangan.' }}</p>
+          <p class="text-body">{{ $report->description ?? __('app.no_description') }}</p>
         </div>
       </div>
     </div>
@@ -70,7 +70,7 @@
         </table>
       </div>
       @else
-      <p class="text-center text-muted py-4">Tiada lampiran.</p>
+      <p class="text-center text-muted py-4">{{ __('app.no_attachments') }}</p>
       @endif
     </div>
   </div>

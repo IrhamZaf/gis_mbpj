@@ -1,7 +1,7 @@
 <div>
   @include('livewire.partials.dashboard-welcome', [
     'user' => $user,
-    'roleLabel' => 'Surveyor · Unit ' . $unitName,
+    'roleLabel' => __('app.role_surveyor_unit', ['unit' => $unitName]),
     'subtitle' => __('app.surveyor_dashboard_subtitle'),
     'heroIcon' => 'tabler-clipboard-list',
     'unitTheme' => $unitTheme,

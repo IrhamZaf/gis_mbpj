@@ -26,7 +26,7 @@
           </div>
         </li>
       @empty
-        <li class="list-group-item text-muted text-center py-4">Tiada rekod audit lagi.</li>
+        <li class="list-group-item text-muted text-center py-4">{{ __('app.no_audit_yet') }}</li>
       @endforelse
     </ul>
   </div>

@@ -45,7 +45,7 @@
                 <tr><td class="fw-semibold">Jarak</td><td>{{ $distanceKm }} km dari titik surveyor</td></tr>
               @endif
             </table>
-            <h6>Laporan PJ/PJK</h6>
+            <h6>{{ __('app.pj_pjk_report') }}</h6>
             <p style="white-space:pre-wrap;">{{ $report->siteVisit->laporan_pj_pjk }}</p>
             @if ($report->siteVisit->photos->count())
               <h6 class="mt-3">Foto Lawatan</h6>
@@ -74,7 +74,7 @@
         @error('remarks')<div class="invalid-feedback">{{ $message }}</div>@enderror
         <div class="d-flex flex-wrap gap-2 mt-3">
           @if ($report->workflow_status === 'director_rejected')
-            <button type="button" wire:click="resubmitToDirector" class="btn btn-outline-primary">Hantar Semula ke Proses Semakan</button>
+            <button type="button" wire:click="resubmitToDirector" class="btn btn-outline-primary">{{ __('app.resubmit_to_review') }}</button>
           @endif
           <button type="button" wire:click="verify" class="btn btn-success" wire:confirm="Sahkan laporan ini?">
             <i class="ti tabler-check me-1"></i>Sahkan

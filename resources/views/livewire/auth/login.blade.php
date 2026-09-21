@@ -8,11 +8,23 @@ $customizerHidden = 'customizer-hide';
     <div class="position-absolute top-0 end-0 p-4" style="z-index:10;">
       <div class="dropdown">
         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-          <i class="ti tabler-language me-1"></i>{{ app()->getLocale() === 'ms' ? __('app.malay') : __('app.english') }}
+          <i class="ti tabler-language me-1"></i>{{ app()->getLocale() === 'ms' ? __('app.lang_ms_short') : __('app.lang_en_short') }}
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
-          <li><a class="dropdown-item {{ app()->getLocale() === 'en' ? 'active' : '' }}" href="{{ route('lang.switch', 'en') }}">{{ __('app.english') }}</a></li>
-          <li><a class="dropdown-item {{ app()->getLocale() === 'ms' ? 'active' : '' }}" href="{{ route('lang.switch', 'ms') }}">{{ __('app.malay') }}</a></li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center justify-content-between {{ app()->getLocale() === 'en' ? 'active' : '' }}"
+              href="{{ route('lang.switch', 'en') }}">
+              <span>{{ __('app.english') }}</span>
+              <span class="badge bg-label-secondary ms-2">{{ __('app.lang_en_short') }}</span>
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item d-flex align-items-center justify-content-between {{ app()->getLocale() === 'ms' ? 'active' : '' }}"
+              href="{{ route('lang.switch', 'ms') }}">
+              <span>{{ __('app.malay') }}</span>
+              <span class="badge bg-label-secondary ms-2">{{ __('app.lang_ms_short') }}</span>
+            </a>
+          </li>
         </ul>
       </div>
     </div>

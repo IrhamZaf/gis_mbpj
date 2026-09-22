@@ -26,18 +26,18 @@ class UnitDashboardUniformTest extends TestCase
         $salCat = ReportCategory::where('unit_id', $saliran->id)->where('code', 'SINKHOLE')->firstOrFail();
         $jlnCat = ReportCategory::where('unit_id', $jalan->id)->where('code', 'SINKHOLE')->firstOrFail();
 
-        $surveyor = User::create([
-            'name' => 'Dash Surveyor',
-            'email' => 'dash-sv@example.com',
+        $consultant = User::create([
+            'name' => 'Dash Consultant',
+            'email' => 'dash-consultant@example.com',
             'password' => bcrypt('password'),
-            'role' => 'surveyor',
-            'unit_id' => $saliran->id,
+            'role' => 'consultant',
+            'unit_id' => null,
             'status' => 'active',
         ]);
 
         Report::create([
             'category_id' => $salCat->id,
-            'user_id' => $surveyor->id,
+            'user_id' => $consultant->id,
             'unit_id' => $saliran->id,
             'title' => 'Saliran only report title here',
             'description' => 'Description long enough for dashboard test.',
@@ -49,11 +49,11 @@ class UnitDashboardUniformTest extends TestCase
         ]);
 
         $other = User::create([
-            'name' => 'Jalan Surveyor',
+            'name' => 'Jalan Consultant',
             'email' => 'dash-jln@example.com',
             'password' => bcrypt('password'),
-            'role' => 'surveyor',
-            'unit_id' => $jalan->id,
+            'role' => 'consultant',
+            'unit_id' => null,
             'status' => 'active',
         ]);
 
@@ -71,7 +71,7 @@ class UnitDashboardUniformTest extends TestCase
         ]);
 
         foreach (UnitModule::UNIT_SLUGS as $slug => $code) {
-            $this->actingAs($surveyor)
+            $this->actingAs($consultant)
                 ->get(route($slug.'.dashboard'))
                 ->assertOk()
                 ->assertSee(__('app.total_reports'))
@@ -84,15 +84,15 @@ class UnitDashboardUniformTest extends TestCase
                 ->assertSee(__('app.quick_actions'));
         }
 
-        Livewire::actingAs($surveyor)
+        Livewire::actingAs($consultant)
             ->test(UnitDashboard::class, ['unitCode' => 'SAL-CERUN'])
-            ->assertSee('Dash Surveyor')
-            ->assertDontSee('Jalan Surveyor');
+            ->assertSee('Dash Consultant')
+            ->assertDontSee('Jalan Consultant');
 
-        Livewire::actingAs($surveyor)
+        Livewire::actingAs($consultant)
             ->test(UnitDashboard::class, ['unitCode' => 'JLN'])
-            ->assertSee('Jalan Surveyor')
-            ->assertDontSee('Dash Surveyor')
-            ->assertSee(__('app.read_only_badge'));
+            ->assertSee('Jalan Consultant')
+            ->assertDontSee('Dash Consultant')
+            ->assertDontSee(__('app.read_only_badge'));
     }
 }

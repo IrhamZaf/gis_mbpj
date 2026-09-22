@@ -27,9 +27,9 @@ class CrossUnitAccessTest extends TestCase
 
     private ReportCategory $jalanSinkhole;
 
-    private User $surveyorSaliran;
+    private User $consultantA;
 
-    private User $surveyorJalan;
+    private User $consultantB;
 
     private Report $saliranReport;
 
@@ -45,27 +45,27 @@ class CrossUnitAccessTest extends TestCase
         $this->saliranSinkhole = ReportCategory::where('unit_id', $this->saliran->id)->where('code', 'SINKHOLE')->firstOrFail();
         $this->jalanSinkhole = ReportCategory::where('unit_id', $this->jalan->id)->where('code', 'SINKHOLE')->firstOrFail();
 
-        $this->surveyorSaliran = User::create([
-            'name' => 'Surveyor Saliran',
-            'email' => 'sv-sal@example.com',
+        $this->consultantA = User::create([
+            'name' => 'Consultant A',
+            'email' => 'consultant-a@example.com',
             'password' => bcrypt('password'),
-            'role' => 'surveyor',
-            'unit_id' => $this->saliran->id,
+            'role' => 'consultant',
+            'unit_id' => null,
             'status' => 'active',
         ]);
 
-        $this->surveyorJalan = User::create([
-            'name' => 'Surveyor Jalan',
-            'email' => 'sv-jln@example.com',
+        $this->consultantB = User::create([
+            'name' => 'Consultant B',
+            'email' => 'consultant-b@example.com',
             'password' => bcrypt('password'),
-            'role' => 'surveyor',
-            'unit_id' => $this->jalan->id,
+            'role' => 'consultant',
+            'unit_id' => null,
             'status' => 'active',
         ]);
 
         $this->saliranReport = Report::create([
             'category_id' => $this->saliranSinkhole->id,
-            'user_id' => $this->surveyorSaliran->id,
+            'user_id' => $this->consultantA->id,
             'unit_id' => $this->saliran->id,
             'title' => 'Sinkhole Saliran submitted case',
             'description' => 'Description long enough for the report.',
@@ -78,7 +78,7 @@ class CrossUnitAccessTest extends TestCase
 
         $this->jalanReport = Report::create([
             'category_id' => $this->jalanSinkhole->id,
-            'user_id' => $this->surveyorJalan->id,
+            'user_id' => $this->consultantB->id,
             'unit_id' => $this->jalan->id,
             'title' => 'Sinkhole Jalan submitted case',
             'description' => 'Description long enough for the report.',
@@ -90,19 +90,19 @@ class CrossUnitAccessTest extends TestCase
         ]);
     }
 
-    public function test_policy_allows_cross_unit_view_but_not_update(): void
+    public function test_policy_allows_cross_unit_view_but_not_update_others(): void
     {
         $policy = new ReportPolicy;
 
-        $this->assertTrue($policy->view($this->surveyorSaliran, $this->jalanReport));
-        $this->assertFalse($policy->update($this->surveyorSaliran, $this->jalanReport));
-        $this->assertFalse($policy->uploadAttachment($this->surveyorSaliran, $this->jalanReport));
-        $this->assertFalse($policy->startSiteVisit($this->surveyorSaliran, $this->jalanReport));
+        $this->assertTrue($policy->view($this->consultantA, $this->jalanReport));
+        $this->assertFalse($policy->update($this->consultantA, $this->jalanReport));
+        $this->assertFalse($policy->uploadAttachment($this->consultantA, $this->jalanReport));
+        $this->assertFalse($policy->startSiteVisit($this->consultantA, $this->jalanReport));
 
         $draft = Report::create([
-            'category_id' => $this->saliranSinkhole->id,
-            'user_id' => $this->surveyorSaliran->id,
-            'unit_id' => $this->saliran->id,
+            'category_id' => $this->jalanSinkhole->id,
+            'user_id' => $this->consultantA->id,
+            'unit_id' => $this->jalan->id,
             'title' => 'Own draft report title here',
             'description' => 'Description long enough for the report.',
             'status' => 'draft',
@@ -110,49 +110,53 @@ class CrossUnitAccessTest extends TestCase
             'longitude' => 101.5,
         ]);
 
-        $this->assertTrue($policy->update($this->surveyorSaliran, $draft));
-        $this->assertFalse($policy->update($this->surveyorJalan, $draft));
-        $this->assertFalse($policy->view($this->surveyorJalan, $draft));
+        $this->assertTrue($policy->update($this->consultantA, $draft));
+        $this->assertFalse($policy->update($this->consultantB, $draft));
+        $this->assertFalse($policy->view($this->consultantB, $draft));
+
+        // Owner may edit own report while still Pending Site Visit
+        $this->assertTrue($policy->update($this->consultantB, $this->jalanReport));
+        $this->assertFalse($policy->update($this->consultantA, $this->jalanReport));
     }
 
-    public function test_saliran_surveyor_can_open_jalan_listing_read_only(): void
+    public function test_consultant_can_open_any_unit_listing_with_write_access(): void
     {
-        $this->actingAs($this->surveyorSaliran)
+        $this->actingAs($this->consultantA)
             ->get(route('jalan.sinkhole'))
             ->assertOk();
 
-        Livewire::actingAs($this->surveyorSaliran)
+        Livewire::actingAs($this->consultantA)
             ->withQueryParams([])
             ->test(CaseList::class, ['unitCode' => 'JLN', 'categoryCode' => 'SINKHOLE'])
             ->assertSet('unitCode', 'JLN')
             ->assertSee('Sinkhole Jalan submitted case')
-            ->assertSee(__('app.read_only_badge'));
+            ->assertDontSee(__('app.read_only_badge'));
     }
 
-    public function test_saliran_surveyor_can_view_jalan_case_but_not_edit_route(): void
+    public function test_consultant_can_view_others_case_but_not_edit(): void
     {
-        $this->actingAs($this->surveyorSaliran)
+        $this->actingAs($this->consultantA)
             ->get(route('jalan.cases.show', $this->jalanReport))
             ->assertOk();
 
-        Livewire::actingAs($this->surveyorSaliran)
+        Livewire::actingAs($this->consultantA)
             ->test(CaseShow::class, ['report' => $this->jalanReport])
-            ->assertSee(__('app.read_only_title'))
-            ->assertDontSee(__('app.edit'), false);
+            ->assertSee('Sinkhole Jalan submitted case')
+            ->assertSet('report.id', $this->jalanReport->id);
 
-        $this->actingAs($this->surveyorSaliran)
+        $this->actingAs($this->consultantA)
             ->get(route('jalan.cases.edit', $this->jalanReport))
             ->assertForbidden();
     }
 
-    public function test_cannot_create_case_for_other_unit(): void
+    public function test_consultant_can_create_case_for_any_unit(): void
     {
-        $this->actingAs($this->surveyorSaliran)
+        $this->actingAs($this->consultantA)
             ->get(route('jalan.cases.create', ['categoryCode' => 'SINKHOLE']))
-            ->assertForbidden();
+            ->assertOk();
 
-        Livewire::actingAs($this->surveyorSaliran)
+        Livewire::actingAs($this->consultantA)
             ->test(CaseForm::class, ['unitCode' => 'JLN', 'categoryCode' => 'SINKHOLE'])
-            ->assertForbidden();
+            ->assertOk();
     }
 }

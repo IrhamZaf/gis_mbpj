@@ -2,7 +2,7 @@
   <div class="card mb-6">
     <div class="card-header d-flex align-items-center justify-content-between">
       <h5 class="mb-0"><i class="ti tabler-file-plus me-2"></i>{{ __('app.create_new_report') }}</h5>
-      <a href="{{ route('surveyor.reports') }}" class="btn btn-sm btn-label-secondary">
+      <a href="{{ route('consultant.reports') }}" class="btn btn-sm btn-label-secondary">
         <i class="ti tabler-arrow-left me-1"></i>{{ __('app.back') }}
       </a>
     </div>
@@ -26,11 +26,22 @@
           {{-- ═══ LEFT: Form fields ═══ --}}
           <div class="col-lg-7">
 
-            {{-- Unit (auto, read-only) --}}
+            {{-- Unit --}}
             <div class="mb-4">
-              <label class="form-label">{{ __('app.unit') }}</label>
-              <input type="text" class="form-control" value="{{ $userUnit->name ?? '—' }}" readonly disabled>
-              <div class="form-text">{{ __('app.unit_auto_hint') }}</div>
+              <label class="form-label">{{ __('app.unit') }} @if ($isConsultant)<span class="text-danger">*</span>@endif</label>
+              @if ($isConsultant)
+                <select wire:model.live="unit_id" class="form-select @error('unit_id') is-invalid @enderror">
+                  <option value="">{{ __('app.select_unit') }}</option>
+                  @foreach ($units as $unit)
+                    <option value="{{ $unit->id }}">{{ $unit->name }} ({{ $unit->code }})</option>
+                  @endforeach
+                </select>
+                @error('unit_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <div class="form-text">{{ __('app.consultant_pick_unit_hint') }}</div>
+              @else
+                <input type="text" class="form-control" value="{{ $userUnit->name ?? '—' }}" readonly disabled>
+                <div class="form-text">{{ __('app.unit_auto_hint') }}</div>
+              @endif
             </div>
 
             <div class="mb-4">
@@ -179,7 +190,11 @@
 
           {{-- ═══ RIGHT: Map picker (optional visual aid) ═══ --}}
           <div class="col-lg-5">
-            <livewire:surveyor.report-map-picker wire:key="report-map-picker-create" />
+            <livewire:surveyor.report-map-picker
+              :latitude="$latitude"
+              :longitude="$longitude"
+              wire:key="report-map-picker-create"
+            />
           </div>
         </div>
       </form>

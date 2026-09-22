@@ -30,7 +30,7 @@ Route::get('/', function () {
 
     return match ($user->role) {
         'superadmin' => redirect()->route('superadmin.dashboard'),
-        'surveyor'   => redirect()->route('surveyor.dashboard'),
+        'consultant' => redirect()->route('consultant.dashboard'),
         'engineer'   => redirect()->route('engineer.dashboard'),
         'ta'         => redirect()->route('ta.dashboard'),
         'director'   => redirect()->route('director.dashboard'),
@@ -64,11 +64,11 @@ Route::middleware(['auth', 'role:superadmin'])
     });
 
 // ═══════════════════════════════════════════════════════
-// SURVEYOR
+// CONSULTANT (replaces former Surveyor / Vendor)
 // ═══════════════════════════════════════════════════════
-Route::middleware(['auth', 'role:surveyor'])
-    ->prefix('surveyor')
-    ->name('surveyor.')
+Route::middleware(['auth', 'role:consultant'])
+    ->prefix('consultant')
+    ->name('consultant.')
     ->group(function () {
         Route::get('/',                  App\Livewire\Surveyor\Dashboard::class)->name('dashboard');
         Route::get('/reports',           App\Livewire\Surveyor\ReportList::class)->name('reports');
@@ -77,6 +77,14 @@ Route::middleware(['auth', 'role:surveyor'])
         Route::get('/reports/{report}/edit', App\Livewire\Surveyor\ReportEdit::class)->name('reports.edit');
         Route::get('/map',                   App\Livewire\Shared\InteractiveMap::class)->name('map');
     });
+
+// Backward-compatible redirects from old /surveyor URLs
+Route::middleware(['auth'])->prefix('surveyor')->group(function () {
+    Route::redirect('/', '/consultant');
+    Route::redirect('/reports', '/consultant/reports');
+    Route::redirect('/reports/create', '/consultant/reports/create');
+    Route::redirect('/map', '/consultant/map');
+});
 
 // ═══════════════════════════════════════════════════════
 // TA

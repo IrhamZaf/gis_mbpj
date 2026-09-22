@@ -16,7 +16,9 @@ class ReportList extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $filterStatus = '';
+
     protected $paginationTheme = 'bootstrap';
 
     public function updatingSearch(): void
@@ -33,11 +35,9 @@ class ReportList extends Component
     {
         $user = Auth::user();
 
-        // Surveyor sees own reports within their unit (cannot see other surveyors' drafts outside ownership for edit,
-        // but can list all unit reports for awareness — keep own for list simplicity matching "My Reports")
+        // Consultant: own reports across all units
         $reports = Report::with(['category', 'unit'])
             ->where('user_id', $user->id)
-            ->where('unit_id', $user->unit_id)
             ->when($this->search, fn ($q) => $q->where(function ($q) {
                 $q->where('title', 'like', "%{$this->search}%")
                     ->orWhere('report_number', 'like', "%{$this->search}%");
@@ -53,8 +53,8 @@ class ReportList extends Component
             ->paginate(10);
 
         return view('livewire.surveyor.report-list', [
-            'reports'  => $reports,
-            'unitName' => $user->unit->name ?? '—',
+            'reports' => $reports,
+            'unitName' => __('app.role_consultant'),
         ]);
     }
 }

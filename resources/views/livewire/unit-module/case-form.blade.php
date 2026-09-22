@@ -16,6 +16,22 @@
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-header border-bottom"><h6 class="mb-0">{{ __('app.basic_info') }}</h6></div>
     <div class="card-body row g-3">
+      @if (! $report && $canPickUnit)
+        <div class="col-md-6">
+          <label class="form-label">{{ __('app.unit') }} <span class="text-danger">*</span></label>
+          <select wire:model.live="unitCode" class="form-select @error('unitCode') is-invalid @enderror">
+            @foreach ($selectableUnits as $u)
+              <option value="{{ $u->code }}">{{ $u->name }} ({{ $u->code }})</option>
+            @endforeach
+          </select>
+          @error('unitCode')<div class="invalid-feedback">{{ $message }}</div>@enderror
+          <div class="form-text">{{ __('app.consultant_pick_unit_hint') }}</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{{ __('app.category') }}</label>
+          <input type="text" class="form-control" value="{{ $category->display_name }}" readonly disabled>
+        </div>
+      @endif
       <div class="col-md-12">
         <label class="form-label">{{ __('app.title') }}</label>
         <input wire:model="title" type="text" class="form-control @error('title') is-invalid @enderror">
@@ -41,19 +57,9 @@
     <div class="card-header border-bottom"><h6 class="mb-0">{{ __('app.gis_location') }}</h6></div>
     <div class="card-body">
       <div class="row g-3 mb-3">
-        <div class="col-md-4">
+        <div class="col-md-12">
           <label class="form-label">{{ __('app.location_name') }}</label>
           <input wire:model="location_name" type="text" class="form-control">
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">{{ __('app.latitude') }}</label>
-          <input wire:model="latitude" type="text" class="form-control @error('latitude') is-invalid @enderror" readonly>
-          @error('latitude')<div class="invalid-feedback">{{ $message }}</div>@enderror
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">{{ __('app.longitude') }}</label>
-          <input wire:model="longitude" type="text" class="form-control @error('longitude') is-invalid @enderror" readonly>
-          @error('longitude')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
       </div>
       @livewire('surveyor.report-map-picker', [
@@ -64,52 +70,50 @@
   </div>
 
   <div class="card border-0 shadow-sm mb-4">
-    <div class="card-header border-bottom d-flex justify-content-between">
-      <h6 class="mb-0">{{ __('app.technical_docs') }}</h6>
-      <span class="badge bg-label-{{ $progress['complete'] ? 'success' : 'warning' }}">
-        {{ __('app.documents_uploaded', ['uploaded' => $progress['uploaded'], 'total' => $progress['total']]) }}
-      </span>
+    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+      <h6 class="mb-0">{{ __('app.documents') }}</h6>
+      @if ($report)
+        <span class="badge bg-label-info">{{ $report->attachments->count() }} {{ __('app.uploaded') }}</span>
+      @endif
     </div>
     <div class="card-body">
-      <div class="row g-3">
-        @foreach ($progress['items'] as $i => $item)
-          @php $type = $item['type']; @endphp
-          <div class="col-md-6">
-            <div class="border rounded p-3 h-100">
-              <div class="d-flex justify-content-between mb-2">
-                <strong>{{ $i+1 }}. {{ strtoupper($item['display_name']) }}</strong>
-                @if ($item['uploaded'])
-                  <span class="text-success">✓ {{ __('app.uploaded') }}</span>
-                @else
-                  <span class="text-danger">✕ {{ __('app.missing') }}</span>
-                @endif
+      @if ($report && $report->attachments->isNotEmpty())
+        <ul class="list-group list-group-flush mb-3">
+          @foreach ($report->attachments as $att)
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <div class="small">
+                <i class="ti tabler-paperclip me-1"></i>
+                {{ $att->original_filename ?? $att->file_name }}
+                <span class="text-muted">· {{ $att->file_size_formatted }}</span>
               </div>
-              @if ($item['attachment'])
-                <div class="small mb-2">
-                  {{ $item['attachment']->original_filename ?? $item['attachment']->file_name }}
-                  · v{{ $item['attachment']->version }} {{ __('app.current_version') }}
-                  · {{ $item['attachment']->file_size_formatted }}
-                </div>
-              @endif
-              <input type="file" wire:model="uploads.{{ $type->id }}" class="form-control form-control-sm mb-2">
-              <div wire:loading wire:target="uploads.{{ $type->id }}" class="small text-muted">{{ __('app.uploading') }}</div>
-              <button type="button" wire:click="uploadType({{ $type->id }})" class="btn btn-sm btn-outline-primary"
-                wire:loading.attr="disabled" wire:target="uploads.{{ $type->id }}">
-                {{ __('app.upload_file') }}
-              </button>
-              @error('uploads.'.$type->id)<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-            </div>
-          </div>
-        @endforeach
-      </div>
+              <a href="{{ route('attachment.download', $att) }}" class="btn btn-sm btn-outline-primary">{{ __('app.download') }}</a>
+            </li>
+          @endforeach
+        </ul>
+      @endif
+      <label class="form-label small text-muted">{{ __('app.upload_file') }}</label>
+      <input type="file" wire:model="looseFiles" class="form-control mb-2" multiple>
+      <div wire:loading wire:target="looseFiles" class="small text-muted mb-2">{{ __('app.uploading') }}</div>
+      @error('looseFiles') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
+      <button type="button" wire:click="uploadLoose" class="btn btn-sm btn-outline-primary"
+        wire:loading.attr="disabled" wire:target="looseFiles,uploadLoose">
+        {{ __('app.upload_file') }}
+      </button>
     </div>
   </div>
 
   <div class="d-flex flex-wrap gap-2 justify-content-end">
-    <button type="button" wire:click="saveDraft" class="btn btn-outline-primary">{{ __('app.save_draft') }}</button>
-    <button type="button" wire:click="saveAndSubmit" class="btn btn-primary"
-      wire:confirm="{{ __('app.confirm_submit_case') }}">
-      {{ __('app.save_and_submit') }}
+    @php
+      $isDraftCase = ! $report || ($report->status === 'draft' && $report->workflow_status === null);
+    @endphp
+    <button type="button" wire:click="saveDraft" class="btn btn-outline-primary">
+      {{ $isDraftCase ? __('app.save_draft') : __('app.save') }}
     </button>
+    @if ($isDraftCase)
+      <button type="button" wire:click="saveAndSubmit" class="btn btn-primary"
+        wire:confirm="{{ __('app.confirm_submit_case') }}">
+        {{ __('app.save_and_submit') }}
+      </button>
+    @endif
   </div>
 </div>

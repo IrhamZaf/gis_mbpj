@@ -11,7 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.master')]
-#[Title('Dashboard Surveyor')]
+#[Title('Dashboard Consultant')]
 class Dashboard extends Component
 {
     use BuildsUnitOverviewCards;
@@ -19,19 +19,16 @@ class Dashboard extends Component
     public function render()
     {
         $user = Auth::user();
-        $ownUnitId = $user->unit_id;
 
-        $myBase = Report::query()
-            ->where('user_id', $user->id)
-            ->when($ownUnitId, fn ($q) => $q->where('unit_id', $ownUnitId));
+        $myBase = Report::query()->where('user_id', $user->id);
 
         $unitCards = $this->buildUnitOverviewCards($user);
 
         return view('livewire.surveyor.dashboard', [
             'user' => $user,
-            'unitName' => $user->unit->name ?? '—',
-            'ownUnitId' => $ownUnitId,
-            'unitTheme' => UnitTheme::for($user->unit),
+            'unitName' => __('app.role_consultant'),
+            'ownUnitId' => null,
+            'unitTheme' => UnitTheme::for(null),
             'totalReports' => (clone $myBase)->count(),
             'draftReports' => (clone $myBase)->where('status', 'draft')->count(),
             'submittedReports' => (clone $myBase)->where('status', 'submitted')->count(),
@@ -44,7 +41,6 @@ class Dashboard extends Component
             'grandTotal' => $this->unitOverviewGrandTotal($unitCards),
             'recentReports' => Report::with(['category', 'unit'])
                 ->where('user_id', $user->id)
-                ->when($ownUnitId, fn ($q) => $q->where('unit_id', $ownUnitId))
                 ->latest()
                 ->take(8)
                 ->get(),

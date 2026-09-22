@@ -76,7 +76,7 @@
   </div>
 
   <div class="mt-4">
-    <a href="{{ route('surveyor.reports') }}" class="btn btn-outline-secondary"><i class="ti tabler-arrow-left me-1"></i>Kembali</a>
+    <a href="{{ route('consultant.reports') }}" class="btn btn-outline-secondary"><i class="ti tabler-arrow-left me-1"></i>Kembali</a>
   </div>
 
   <!-- Attachment Viewer Modal -->

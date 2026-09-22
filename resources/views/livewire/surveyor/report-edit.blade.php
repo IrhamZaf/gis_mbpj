@@ -2,7 +2,7 @@
   <div class="card mb-6">
     <div class="card-header d-flex align-items-center justify-content-between">
       <h5 class="mb-0"><i class="ti tabler-edit me-2"></i>{{ __('app.update_report_title', ['number' => $report->report_number]) }}</h5>
-      <a href="{{ route('surveyor.reports') }}" class="btn btn-sm btn-label-secondary">
+      <a href="{{ route('consultant.reports') }}" class="btn btn-sm btn-label-secondary">
         <i class="ti tabler-arrow-left me-1"></i>{{ __('app.back') }}
       </a>
     </div>
@@ -175,34 +175,54 @@
             @enderror
 
             {{-- ── Action buttons ── --}}
+            @php
+              $isDraftReport = $report->status === 'draft' && $report->workflow_status === null;
+            @endphp
             <div class="d-flex gap-2 pt-2">
               <button type="button" wire:click="saveDraft"
                       class="btn btn-outline-warning"
                       wire:loading.attr="disabled" wire:target="saveDraft,submit,attachments">
                 <span wire:loading.remove wire:target="saveDraft">
-                  <i class="ti tabler-device-floppy me-1"></i>Simpan Draf
+                  <i class="ti tabler-device-floppy me-1"></i>{{ $isDraftReport ? __('app.save_draft') : __('app.save') }}
                 </span>
                 <span wire:loading wire:target="saveDraft">
                   <span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...
                 </span>
               </button>
 
+              @if ($isDraftReport)
               <button type="submit"
                       class="btn btn-primary"
                       wire:loading.attr="disabled" wire:target="saveDraft,submit,attachments">
                 <span wire:loading.remove wire:target="submit">
-                  <i class="ti tabler-send me-1"></i>{{ __('app.update_report') }}
+                  <i class="ti tabler-send me-1"></i>{{ __('app.submit_report') }}
                 </span>
                 <span wire:loading wire:target="submit">
+                  <span class="spinner-border spinner-border-sm me-1"></span>Menghantar...
+                </span>
+              </button>
+              @else
+              <button type="button" wire:click="saveDraft"
+                      class="btn btn-primary"
+                      wire:loading.attr="disabled" wire:target="saveDraft,submit,attachments">
+                <span wire:loading.remove wire:target="saveDraft">
+                  <i class="ti tabler-device-floppy me-1"></i>{{ __('app.update_report') }}
+                </span>
+                <span wire:loading wire:target="saveDraft">
                   <span class="spinner-border spinner-border-sm me-1"></span>Mengemaskini...
                 </span>
               </button>
+              @endif
             </div>
           </div>
 
           {{-- ═══ RIGHT: Map picker (optional visual aid) ═══ --}}
           <div class="col-lg-5">
-            <livewire:surveyor.report-map-picker wire:key="report-map-picker-edit-{{ $report->id }}" />
+            <livewire:surveyor.report-map-picker
+              :latitude="$latitude"
+              :longitude="$longitude"
+              wire:key="report-map-picker-edit-{{ $report->id }}"
+            />
           </div>
         </div>
       </form>

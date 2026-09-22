@@ -29,12 +29,12 @@ class DatabaseSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'surveyor@mbsj.gov.my'],
+            ['email' => 'consultant@mbsj.gov.my'],
             [
-                'name'     => 'Admin Surveyor',
+                'name'     => 'Consultant MBSJ',
                 'password' => Hash::make('password'),
-                'role'     => 'surveyor',
-                'unit_id'  => $jalan?->id,
+                'role'     => 'consultant',
+                'unit_id'  => null,
                 'status'   => 'active',
             ]
         );
@@ -92,11 +92,13 @@ class DatabaseSeeder extends Seeder
         $this->call(UnitCategorySeeder::class);
         $this->call(SaliranCerunStaffSeeder::class);
         $this->call(SaliranCerunDemoSeeder::class);
+        $this->call(MbsjEmailDataSeeder::class);
+        $this->call(ConsultantSeeder::class);
 
         // Backfill unit_id on existing reports without unit
         if ($jalan) {
             Report::whereNull('unit_id')->update(['unit_id' => $jalan->id]);
-            User::whereIn('role', ['surveyor', 'engineer', 'ta'])
+            User::whereIn('role', ['engineer', 'ta'])
                 ->whereNull('unit_id')
                 ->update(['unit_id' => $jalan->id]);
         }

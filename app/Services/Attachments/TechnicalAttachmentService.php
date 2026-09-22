@@ -77,4 +77,57 @@ class TechnicalAttachmentService
 
         return $attachment;
     }
+
+    /**
+     * Free-form upload without the fixed attachment-type checklist (Cerun/Borehole/LiDAR/…).
+     */
+    public function uploadLoose(Report $report, UploadedFile $file, User $user): ReportAttachment
+    {
+        if (! $user->can('uploadAttachment', $report) && ! $user->can('update', $report)) {
+            abort(403);
+        }
+
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'bin');
+        $maxKb = 51200;
+        if ($file->getSize() > $maxKb * 1024) {
+            throw ValidationException::withMessages([
+                'file' => 'Saiz fail melebihi had '.$maxKb.' KB.',
+            ]);
+        }
+
+        $stored = Str::uuid()->toString().'.'.$ext;
+        $path = $file->storeAs('reports/'.$report->id.'/technical', $stored, 'public');
+
+        $attachment = ReportAttachment::create([
+            'report_id' => $report->id,
+            'attachment_type_id' => null,
+            'file_name' => $file->getClientOriginalName(),
+            'original_filename' => $file->getClientOriginalName(),
+            'stored_filename' => $stored,
+            'file_path' => $path,
+            'file_type' => strlen((string) $file->getMimeType()) > 50
+                ? $ext
+                : ($file->getMimeType() ?: $ext),
+            'file_size' => $file->getSize(),
+            'uploaded_by' => $user->id,
+            'uploaded_at' => now(),
+            'version' => 1,
+            'is_current' => true,
+            'document_type' => 'other',
+            'parse_status' => 'skipped',
+        ]);
+
+        WorkflowHistory::create([
+            'report_id' => $report->id,
+            'user_id' => $user->id,
+            'role' => $user->role,
+            'action' => 'document_uploaded',
+            'from_status' => $report->workflow_status,
+            'to_status' => $report->workflow_status,
+            'remarks' => 'File — '.$file->getClientOriginalName(),
+            'ip_address' => request()->ip(),
+        ]);
+
+        return $attachment;
+    }
 }

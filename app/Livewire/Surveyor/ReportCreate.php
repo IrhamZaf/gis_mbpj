@@ -5,6 +5,7 @@ namespace App\Livewire\Surveyor;
 use App\Livewire\Concerns\StoresSurveyAttachments;
 use App\Models\Report;
 use App\Models\ReportCategory;
+use App\Models\Unit;
 use App\Services\Workflow\ReportWorkflowService;
 use App\Support\SurveyVendor;
 use Illuminate\Support\Facades\Auth;
@@ -24,60 +25,98 @@ class ReportCreate extends Component
     use WithFileUploads;
 
     // ── Form fields ─────────────────────────────────────
+    public string $unit_id = '';
+
     public $category_id = '';
+
     public string $title = '';
+
     public string $description = '';
+
     public string $location_name = '';
+
     public string $vendor_name = '';
+
     public ?float $latitude = null;
+
     public ?float $longitude = null;
+
     public ?array $gis_data = null;
+
     public array $attachments = [];
 
     public function mount(): void
     {
+        $user = Auth::user();
         $this->vendor_name = SurveyVendor::name();
+        if ($user?->unit_id) {
+            $this->unit_id = (string) $user->unit_id;
+        }
+    }
+
+    public function updatedUnitId(): void
+    {
+        $this->category_id = '';
+    }
+
+    protected function resolvedUnitId(): ?int
+    {
+        $user = Auth::user();
+        if ($user?->isConsultant()) {
+            return $this->unit_id !== '' ? (int) $this->unit_id : null;
+        }
+
+        return $user?->unit_id ? (int) $user->unit_id : null;
     }
 
     // ── Validation ──────────────────────────────────────
     protected function rules(): array
     {
-        return [
-            'category_id'   => [
+        $user = Auth::user();
+        $unitId = $this->resolvedUnitId();
+
+        $rules = [
+            'category_id' => [
                 'required',
-                Rule::exists('report_categories', 'id')->where(function ($q) {
-                    $unitId = Auth::user()?->unit_id;
+                Rule::exists('report_categories', 'id')->where(function ($q) use ($unitId) {
                     if ($unitId) {
                         $q->where('unit_id', $unitId);
                     }
                 }),
             ],
-            'title'         => 'required|string|min:5|max:255',
-            'description'   => 'required|string|min:10',
+            'title' => 'required|string|min:5|max:255',
+            'description' => 'required|string|min:10',
             'location_name' => 'nullable|string|max:255',
-            'vendor_name'   => 'nullable|string|max:255',
-            'latitude'      => 'nullable|numeric|between:-90,90',
-            'longitude'     => 'nullable|numeric|between:-180,180',
+            'vendor_name' => 'nullable|string|max:255',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'attachments.*' => 'nullable|file|max:20480',
         ];
+
+        if ($user?->isConsultant()) {
+            $rules['unit_id'] = 'required|exists:units,id';
+        }
+
+        return $rules;
     }
 
     protected array $messages = [
+        'unit_id.required' => 'Sila pilih unit untuk laporan ini.',
         'category_id.required' => 'Sila pilih kategori laporan.',
-        'category_id.exists'   => 'Kategori laporan tidak sah.',
-        'title.required'       => 'Sila masukkan tajuk laporan.',
-        'title.min'            => 'Tajuk mestilah sekurang-kurangnya 5 aksara.',
+        'category_id.exists' => 'Kategori laporan tidak sah.',
+        'title.required' => 'Sila masukkan tajuk laporan.',
+        'title.min' => 'Tajuk mestilah sekurang-kurangnya 5 aksara.',
         'description.required' => 'Sila masukkan keterangan.',
-        'description.min'      => 'Keterangan mestilah sekurang-kurangnya 10 aksara.',
-        'attachments.*.max'    => 'Saiz fail maksimum ialah 20 MB.',
-        'attachments.*.file'   => 'Muat naik fail tidak sah.',
+        'description.min' => 'Keterangan mestilah sekurang-kurangnya 10 aksara.',
+        'attachments.*.max' => 'Saiz fail maksimum ialah 20 MB.',
+        'attachments.*.file' => 'Muat naik fail tidak sah.',
     ];
 
     // ── Map coordinate events (from child ReportMapPicker) ──
     #[On('report-coordinates-updated')]
     public function setCoordinates(float $latitude, float $longitude, ?string $label = null): void
     {
-        $this->latitude  = round($latitude, 7);
+        $this->latitude = round($latitude, 7);
         $this->longitude = round($longitude, 7);
 
         if ($label && trim($this->location_name) === '') {
@@ -113,8 +152,10 @@ class ReportCreate extends Component
         $this->validate();
 
         $user = Auth::user();
-        if (! $user->unit_id) {
-            $this->addError('submit', 'Akaun anda belum ditetapkan kepada unit. Sila hubungi Superadmin.');
+        $unitId = $this->resolvedUnitId();
+
+        if (! $unitId || ! $user->canWriteUnit($unitId)) {
+            $this->addError('submit', __('app.consultant_unit_denied'));
 
             return;
         }
@@ -122,22 +163,21 @@ class ReportCreate extends Component
         $this->authorize('create', Report::class);
 
         try {
-            // Default to MBSJ centre if no map coordinates set
             [$lat, $lng] = $this->resolvedReportAnchor($this->latitude, $this->longitude);
 
             $report = Report::create([
-                'category_id'     => (int) $this->category_id,
-                'user_id'         => $user->id,
-                'unit_id'         => $user->unit_id,
-                'title'           => $this->title,
-                'description'     => $this->description,
-                'status'          => 'draft',
+                'category_id' => (int) $this->category_id,
+                'user_id' => $user->id,
+                'unit_id' => $unitId,
+                'title' => $this->title,
+                'description' => $this->description,
+                'status' => 'draft',
                 'workflow_status' => null,
-                'latitude'        => $lat,
-                'longitude'       => $lng,
-                'location_name'   => $this->location_name ?: null,
-                'vendor_name'     => $this->vendor_name ?: SurveyVendor::name(),
-                'gis_data'        => $this->gis_data,
+                'latitude' => $lat,
+                'longitude' => $lng,
+                'location_name' => $this->location_name ?: null,
+                'vendor_name' => $this->vendor_name ?: SurveyVendor::name(),
+                'gis_data' => $this->gis_data,
             ]);
 
             if (! empty($this->attachments)) {
@@ -152,14 +192,14 @@ class ReportCreate extends Component
                 ? 'Laporan berjaya dihantar. Tugasan lawatan tapak dihantar kepada TA.'
                 : 'Draf laporan berjaya disimpan.');
 
-            $this->redirect(route('surveyor.reports'), navigate: false);
+            $this->redirect(route('consultant.reports'), navigate: false);
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (\Throwable $e) {
             Log::error('Report save failed', [
-                'status'  => $status,
+                'status' => $status,
                 'user_id' => Auth::id(),
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
             $this->addError('submit', 'Gagal menyimpan laporan. Sila cuba lagi.');
         }
@@ -169,14 +209,19 @@ class ReportCreate extends Component
     public function render()
     {
         $user = Auth::user();
+        $unitId = $this->resolvedUnitId();
+        $isConsultant = $user?->isConsultant() ?? false;
 
         return view('livewire.surveyor.report-create', [
             'categories' => ReportCategory::query()
                 ->active()
-                ->when($user->unit_id, fn ($q) => $q->forUnit($user->unit_id))
+                ->when($unitId, fn ($q) => $q->forUnit($unitId))
+                ->when(! $unitId && $isConsultant, fn ($q) => $q->whereRaw('1 = 0'))
                 ->orderBy('name')
                 ->get(),
-            'userUnit'   => $user->unit,
+            'userUnit' => $user?->unit,
+            'units' => $isConsultant ? Unit::orderBy('name')->get() : collect(),
+            'isConsultant' => $isConsultant,
         ]);
     }
 }

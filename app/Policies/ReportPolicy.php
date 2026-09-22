@@ -6,11 +6,10 @@ use App\Models\Report;
 use App\Models\User;
 
 /**
- * Cross-unit access: READ ALL, WRITE OWN UNIT.
- *
- * - view / download: any active staff role across units (drafts remain private to owner)
- * - update / delete / upload / site visit / verify: own unit + role rules
- * - approve: director / superadmin (global)
+ * Cross-unit access:
+ * - Most staff: READ ALL, WRITE OWN UNIT
+ * - Consultant: READ ALL, WRITE ALL UNITS (own reports only)
+ * - Superadmin / Director: global as before
  */
 class ReportPolicy
 {
@@ -29,18 +28,16 @@ class ReportPolicy
             return true;
         }
 
-        // Drafts are private to the owning surveyor (not visible cross-unit)
         if ($report->status === 'draft') {
-            return $user->isSurveyor() && (int) $report->user_id === (int) $user->id;
+            return $user->isConsultant() && (int) $report->user_id === (int) $user->id;
         }
 
-        // Non-draft reports: readable by all staff roles (including other units)
-        return $user->isSurveyor() || $user->isTa() || $user->isEngineer();
+        return $user->isConsultant() || $user->isTa() || $user->isEngineer();
     }
 
     public function create(User $user): bool
     {
-        return $user->isSurveyor() && $user->isActive() && $user->unit_id;
+        return $user->isActive() && $user->isConsultant();
     }
 
     public function update(User $user, Report $report): bool
@@ -50,23 +47,24 @@ class ReportPolicy
         }
 
         if ($user->isSuperadmin()) {
-            return $report->status === 'draft';
+            return $report->status === 'draft'
+                || $report->workflow_status === 'pending_site_visit';
         }
 
-        // Cross-unit write is never allowed
-        if (! $user->belongsToSameUnit($report)) {
+        if (! $user->isConsultant() || (int) $report->user_id !== (int) $user->id) {
             return false;
         }
 
-        if (! $user->isSurveyor()) {
+        if (! $user->canWriteUnit($report->unit_id)) {
             return false;
         }
 
-        if ((int) $report->user_id !== (int) $user->id) {
-            return false;
+        // Draft (not yet submitted) or still waiting for TA site visit
+        if ($report->status === 'draft' && $report->workflow_status === null) {
+            return true;
         }
 
-        return $report->status === 'draft' && $report->workflow_status === null;
+        return $report->workflow_status === 'pending_site_visit';
     }
 
     public function delete(User $user, Report $report): bool
@@ -79,14 +77,11 @@ class ReportPolicy
             return $report->status === 'draft';
         }
 
-        if (! $user->belongsToSameUnit($report)) {
+        if (! $user->isConsultant() || (int) $report->user_id !== (int) $user->id) {
             return false;
         }
 
-        return $user->isSurveyor()
-            && (int) $report->user_id === (int) $user->id
-            && $report->status === 'draft'
-            && $report->workflow_status === null;
+        return $report->status === 'draft' && $report->workflow_status === null;
     }
 
     public function uploadAttachment(User $user, Report $report): bool
@@ -136,8 +131,6 @@ class ReportPolicy
         }
 
         if ($user->isTa()) {
-            // Own-unit TA: print when visit is underway / done
-            // Other-unit TA: still may download when a visit record exists (read-only monitoring)
             if ($user->belongsToSameUnit($report)) {
                 return in_array($report->workflow_status, [
                     'site_visit_in_progress',
@@ -159,7 +152,6 @@ class ReportPolicy
             ], true);
         }
 
-        // Surveyor / Engineer — download when past site visit or completed
         if ($report->status === 'completed' || $report->workflow_status === 'approved') {
             return true;
         }

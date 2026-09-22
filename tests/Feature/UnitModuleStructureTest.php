@@ -59,11 +59,11 @@ class UnitModuleStructureTest extends TestCase
         $saliranSinkhole = ReportCategory::where('unit_id', $saliran->id)->where('code', 'SINKHOLE')->firstOrFail();
 
         $user = User::create([
-            'name' => 'Mismatch Surveyor',
+            'name' => 'Mismatch Consultant',
             'email' => 'mismatch@example.com',
             'password' => bcrypt('password'),
-            'role' => 'surveyor',
-            'unit_id' => $jalan->id,
+            'role' => 'consultant',
+            'unit_id' => null,
             'status' => 'active',
         ]);
 

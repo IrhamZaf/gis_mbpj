@@ -16,7 +16,11 @@ class InteractiveMapTest extends TestCase
 
     private function createReport(User $user, array $overrides = []): Report
     {
-        $category = ReportCategory::create(['name' => 'Sinkhole', 'slug' => 'sinkhole']);
+        $category = ReportCategory::query()->first()
+            ?? ReportCategory::create([
+                'name' => 'Sinkhole',
+                'slug' => 'sinkhole-'.uniqid(),
+            ]);
 
         return Report::create(array_merge([
             'category_id'   => $category->id,
@@ -32,43 +36,45 @@ class InteractiveMapTest extends TestCase
 
     public function test_map_routes_require_auth(): void
     {
-        $this->get(route('surveyor.map'))->assertRedirect(route('login'));
+        $this->get(route('consultant.map'))->assertRedirect(route('login'));
     }
 
     public function test_each_role_can_access_map_page(): void
     {
-        $surveyor = User::factory()->create(['role' => 'surveyor']);
+        $consultant = User::factory()->create(['role' => 'consultant']);
         $engineer = User::factory()->create(['role' => 'engineer']);
         $superadmin = User::factory()->create(['role' => 'superadmin']);
 
-        $this->actingAs($surveyor)->get(route('surveyor.map'))->assertOk();
+        $this->actingAs($consultant)->get(route('consultant.map'))->assertOk();
         $this->actingAs($engineer)->get(route('engineer.map'))->assertOk();
         $this->actingAs($superadmin)->get(route('superadmin.map'))->assertOk();
     }
 
-    public function test_surveyor_sees_only_own_markers(): void
+    public function test_consultant_sees_all_non_draft_markers(): void
     {
-        $surveyor = User::factory()->create(['role' => 'surveyor']);
-        $other = User::factory()->create(['role' => 'surveyor']);
+        $consultant = User::factory()->create(['role' => 'consultant']);
+        $other = User::factory()->create(['role' => 'consultant']);
 
-        $this->createReport($surveyor, ['title' => 'Milik Saya']);
+        $this->createReport($consultant, ['title' => 'Milik Saya']);
         $this->createReport($other, ['title' => 'Orang Lain', 'latitude' => 3.2, 'longitude' => 101.7]);
 
-        $markers = Livewire::actingAs($surveyor)
+        $markers = Livewire::actingAs($consultant)
             ->test(InteractiveMap::class)
             ->get('markers');
 
-        $this->assertCount(1, $markers);
-        $this->assertSame('Milik Saya', $markers[0]['title']);
+        $this->assertCount(2, $markers);
+        $titles = collect($markers)->pluck('title')->all();
+        $this->assertContains('Milik Saya', $titles);
+        $this->assertContains('Orang Lain', $titles);
     }
 
     public function test_engineer_sees_only_submitted_markers(): void
     {
-        $surveyor = User::factory()->create(['role' => 'surveyor']);
+        $consultant = User::factory()->create(['role' => 'consultant']);
         $engineer = User::factory()->create(['role' => 'engineer']);
 
-        $this->createReport($surveyor, ['status' => 'submitted', 'title' => 'Dihantar']);
-        $this->createReport($surveyor, [
+        $this->createReport($consultant, ['status' => 'submitted', 'title' => 'Dihantar']);
+        $this->createReport($consultant, [
             'status'      => 'draft',
             'title'       => 'Draf',
             'submitted_at' => null,
@@ -84,11 +90,11 @@ class InteractiveMapTest extends TestCase
 
     public function test_superadmin_sees_all_markers(): void
     {
-        $surveyor = User::factory()->create(['role' => 'surveyor']);
+        $consultant = User::factory()->create(['role' => 'consultant']);
         $superadmin = User::factory()->create(['role' => 'superadmin']);
 
-        $this->createReport($surveyor, ['title' => 'Laporan A']);
-        $this->createReport($surveyor, ['title' => 'Laporan B', 'latitude' => 3.11, 'longitude' => 101.61]);
+        $this->createReport($consultant, ['title' => 'Laporan A']);
+        $this->createReport($consultant, ['title' => 'Laporan B', 'latitude' => 3.11, 'longitude' => 101.61]);
 
         $markers = Livewire::actingAs($superadmin)
             ->test(InteractiveMap::class)
@@ -100,10 +106,10 @@ class InteractiveMapTest extends TestCase
     public function test_reports_without_coordinates_are_excluded(): void
     {
         $superadmin = User::factory()->create(['role' => 'superadmin']);
-        $surveyor = User::factory()->create(['role' => 'surveyor']);
+        $consultant = User::factory()->create(['role' => 'consultant']);
 
-        $this->createReport($surveyor);
-        $this->createReport($surveyor, [
+        $this->createReport($consultant);
+        $this->createReport($consultant, [
             'title'     => 'Tiada Koordinat',
             'latitude'  => null,
             'longitude' => null,

@@ -83,7 +83,7 @@ class Dashboard extends Component
         return view('livewire.superadmin.dashboard', [
             'user'               => Auth::user(),
             'totalUsers'         => User::count(),
-            'totalSurveyors'     => User::where('role', 'surveyor')->count(),
+            'totalConsultants'   => User::where('role', 'consultant')->count(),
             'totalEngineers'     => User::where('role', 'engineer')->count(),
             'totalTa'            => User::where('role', 'ta')->count(),
             'totalUnits'         => Unit::count(),

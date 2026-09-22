@@ -30,6 +30,7 @@ let onGisDataChange = null;
 let currentSurvey2dDay = null;
 let searchAbort = null;
 let searchDebounce = null;
+let updatingInputsProgrammatically = false;
 
 const satelliteLayer = L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -71,26 +72,34 @@ function ensureAnchor() {
 }
 
 function updateAnchorInputs(lat, lng) {
+  // Inputs are Livewire-bound; avoid fighting the framework by writing DOM values.
+  // Marker movement is the source of truth until Livewire re-renders the fields.
   const latEl = document.getElementById('report-anchor-lat');
   const lngEl = document.getElementById('report-anchor-lng');
-  if (latEl) {
-    latEl.value = lat;
-    latEl.dispatchEvent(new Event('input', { bubbles: true }));
-    latEl.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-  if (lngEl) {
-    lngEl.value = lng;
-    lngEl.dispatchEvent(new Event('input', { bubbles: true }));
-    lngEl.dispatchEvent(new Event('change', { bubbles: true }));
+  if (!latEl || !lngEl) return;
+  updatingInputsProgrammatically = true;
+  try {
+    if (document.activeElement !== latEl) {
+      latEl.value = Number(lat).toFixed(7);
+    }
+    if (document.activeElement !== lngEl) {
+      lngEl.value = Number(lng).toFixed(7);
+    }
+  } finally {
+    updatingInputsProgrammatically = false;
   }
 }
 
-function setAnchor(lat, lng, label = null) {
+function bindManualCoordinateInputs() {
+  // no-op: coordinates are applied via Livewire ReportMapPicker
+}
+
+function setAnchor(lat, lng, label = null, notify = true) {
   if (!map) return;
   setSiteMarker(lat, lng);
   map.setView([lat, lng], Math.max(map.getZoom(), 16));
   updateAnchorInputs(lat, lng);
-  if (onCoordinatesChange) onCoordinatesChange(lat, lng, label);
+  if (notify && onCoordinatesChange) onCoordinatesChange(lat, lng, label);
   const searchInput = document.getElementById('gis-location-search');
   if (searchInput && label) searchInput.value = label;
   hideSearchResults();
@@ -344,6 +353,10 @@ function initMapPicker(options = {}) {
   const mapElId = options.mapElementId || 'gis-map';
   const el = document.getElementById(mapElId);
   if (!el) return null;
+
+  // Always refresh callbacks so Livewire remounts keep a live wire handle.
+  onCoordinatesChange = options.onCoordinatesChange || onCoordinatesChange || null;
+  onGisDataChange = options.onGisDataChange || onGisDataChange || null;
 
   if (map) {
     if (mapContainerIsAlive(mapElId)) {

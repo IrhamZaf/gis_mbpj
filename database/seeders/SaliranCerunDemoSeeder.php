@@ -20,12 +20,12 @@ class SaliranCerunDemoSeeder extends Seeder
         $sinkhole = ReportCategory::where('unit_id', $unit->id)->where('code', 'SINKHOLE')->firstOrFail();
         $cerun = ReportCategory::where('unit_id', $unit->id)->where('code', 'CERUN')->firstOrFail();
 
-        $surveyor = User::where('email', 'surveyor.saliran-cerun@mbsj.gov.my')->first()
-            ?? User::where('role', 'surveyor')->where('unit_id', $unit->id)->first()
+        $consultant = User::where('email', 'consultant@mbsj.gov.my')->first()
+            ?? User::where('role', 'consultant')->first()
             ?? User::where('email', 'surveyor@mbsj.gov.my')->first();
 
-        if (! $surveyor) {
-            $this->command?->error('No surveyor found for Saliran & Cerun demo.');
+        if (! $consultant) {
+            $this->command?->error('No consultant found for Saliran & Cerun demo.');
 
             return;
         }
@@ -34,14 +34,14 @@ class SaliranCerunDemoSeeder extends Seeder
         Report::where('report_number', 'RPT-WF-SALIRAN-01')->update([
             'unit_id' => $unit->id,
             'category_id' => $sinkhole->id,
-            'user_id' => $surveyor->id,
+            'user_id' => $consultant->id,
             'title' => 'Sinkhole di SS12 — Saliran & Cerun',
         ]);
 
         Report::where('report_number', 'RPT-WF-CERUN-01')->update([
             'unit_id' => $unit->id,
             'category_id' => $cerun->id,
-            'user_id' => $surveyor->id,
+            'user_id' => $consultant->id,
             'title' => 'Cerun Runtuh di Ara Damansara',
         ]);
 
@@ -106,7 +106,7 @@ class SaliranCerunDemoSeeder extends Seeder
                 'report_number' => 'CR-2026-0002',
                 'category_id' => $cerun->id,
                 'title' => 'Retakan cerun di kawasan kediaman',
-                'description' => 'Retakan pada cerun belakang rumah — draf surveyor.',
+                'description' => 'Retakan pada cerun belakang rumah — draf consultant.',
                 'status' => 'draft',
                 'workflow_status' => null,
                 'latitude' => 3.1105,
@@ -150,7 +150,7 @@ class SaliranCerunDemoSeeder extends Seeder
             $report = Report::updateOrCreate(
                 ['report_number' => $demo['report_number']],
                 array_merge($demo, [
-                    'user_id' => $surveyor->id,
+                    'user_id' => $consultant->id,
                     'unit_id' => $unit->id,
                     'vendor_name' => 'NZ Survey Consultant',
                 ])
@@ -163,8 +163,8 @@ class SaliranCerunDemoSeeder extends Seeder
                 if (! $exists) {
                     WorkflowHistory::create([
                         'report_id' => $report->id,
-                        'user_id' => $surveyor->id,
-                        'role' => $surveyor->role,
+                        'user_id' => $consultant->id,
+                        'role' => $consultant->role,
                         'action' => 'submit_report',
                         'from_status' => null,
                         'to_status' => 'pending_site_visit',

@@ -23,13 +23,14 @@ trait BuildsUnitOverviewCards
 
         foreach (UnitModule::navUnits() as $unit) {
             $theme = UnitTheme::for($unit);
+            $canWrite = $user->canWriteUnit($unit->id);
             $isOwn = $user->unit_id && (int) $user->unit_id === (int) $unit->id;
             $isGlobal = $user->isSuperadmin() || $user->isDirector();
 
             $base = Report::query()->where('unit_id', $unit->id);
 
-            if ($isGlobal) {
-                // Full visibility including drafts for monitoring
+            if ($isGlobal || $user->isConsultant()) {
+                // Full visibility including drafts for monitoring / all-unit writers
             } elseif ($isOwn) {
                 $base->where(function ($q) use ($user) {
                     $q->where('status', '!=', 'draft')->orWhere('user_id', $user->id);
@@ -57,8 +58,8 @@ trait BuildsUnitOverviewCards
                 'unit' => $unit,
                 'theme' => $theme,
                 'icon' => UnitModule::unitIcon($unit->code),
-                'isOwn' => $isOwn,
-                'isReadOnly' => ! $isGlobal && ! $isOwn,
+                'isOwn' => $isOwn || $user->isConsultant(),
+                'isReadOnly' => ! $isGlobal && ! $canWrite,
                 'dashboardUrl' => UnitModule::dashboardRoute($unit->code),
                 'total' => (clone $base)->count(),
                 'sinkhole' => $sinkholeId ? (int) ($catCounts[$sinkholeId] ?? 0) : 0,

@@ -89,10 +89,10 @@
     {{-- ═══════════════════════════════════════════════════════════ --}}
     {{-- SURVEYOR MENU                                              --}}
     {{-- ═══════════════════════════════════════════════════════════ --}}
-    @elseif ($user && $user->isSurveyor())
+    @elseif ($user && $user->isConsultant())
       <li class="menu-header small"><span class="menu-header-text">{{ __("app.main") }}</span></li>
-      <li class="menu-item {{ $currentRouteName === 'surveyor.dashboard' ? 'active' : '' }}">
-        <a href="{{ route('surveyor.dashboard') }}" class="menu-link">
+      <li class="menu-item {{ $currentRouteName === 'consultant.dashboard' ? 'active' : '' }}">
+        <a href="{{ route('consultant.dashboard') }}" class="menu-link">
           <i class="icon-base ti tabler-smart-home"></i>
           <div>{{ __("app.dashboard") }}</div>
         </a>
@@ -100,22 +100,22 @@
 
       @include('component.sidebar-unit-menus', compact('user', 'currentRouteName', 'navUnits'))
 
-      <li class="menu-item {{ $currentRouteName === 'surveyor.map' ? 'active' : '' }}">
-        <a href="{{ route('surveyor.map') }}" class="menu-link">
+      <li class="menu-item {{ $currentRouteName === 'consultant.map' ? 'active' : '' }}">
+        <a href="{{ route('consultant.map') }}" class="menu-link">
           <i class="icon-base ti tabler-map"></i>
           <div>{{ __("app.interactive_map") }}</div>
         </a>
       </li>
 
       <li class="menu-header small"><span class="menu-header-text">{{ __("app.reports") }}</span></li>
-      <li class="menu-item {{ $currentRouteName === 'surveyor.reports.create' ? 'active' : '' }}">
-        <a href="{{ route('surveyor.reports.create') }}" class="menu-link">
+      <li class="menu-item {{ $currentRouteName === 'consultant.reports.create' ? 'active' : '' }}">
+        <a href="{{ route('consultant.reports.create') }}" class="menu-link">
           <i class="icon-base ti tabler-plus"></i>
           <div>{{ __("app.create_report") }}</div>
         </a>
       </li>
-      <li class="menu-item {{ str_starts_with($currentRouteName, 'surveyor.reports') && $currentRouteName !== 'surveyor.reports.create' ? 'active' : '' }}">
-        <a href="{{ route('surveyor.reports') }}" class="menu-link">
+      <li class="menu-item {{ str_starts_with($currentRouteName, 'consultant.reports') && $currentRouteName !== 'consultant.reports.create' ? 'active' : '' }}">
+        <a href="{{ route('consultant.reports') }}" class="menu-link">
           <i class="icon-base ti tabler-list"></i>
           <div>{{ __("app.my_reports") }}</div>
         </a>

@@ -6,7 +6,7 @@
   <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h5 class="mb-0">{{ __('app.my_report_list') }}</h5>
-      <a href="{{ route('surveyor.reports.create') }}" class="btn btn-primary btn-sm"><i class="ti tabler-plus me-1"></i>{{ __('app.create_report_btn') }}</a>
+      <a href="{{ route('consultant.reports.create') }}" class="btn btn-primary btn-sm"><i class="ti tabler-plus me-1"></i>{{ __('app.create_report_btn') }}</a>
     </div>
     <div class="card-body">
       <div class="row mb-4">
@@ -38,10 +38,10 @@
               <td>{{ $r->created_at->format('d/m/Y') }}</td>
               <td>
                 <div class="d-flex gap-1">
-                  <a href="{{ route('surveyor.reports.view', $r) }}" class="btn btn-sm btn-icon btn-text-info" title="{{ __('app.view') }}"><i class="ti tabler-eye"></i></a>
-                  @if ($r->status === 'draft')
-                    <a href="{{ route('surveyor.reports.edit', $r) }}" class="btn btn-sm btn-icon btn-text-secondary" title="{{ __('app.update') }}"><i class="ti tabler-pencil"></i></a>
-                  @endif
+                  <a href="{{ route('consultant.reports.view', $r) }}" class="btn btn-sm btn-icon btn-text-info" title="{{ __('app.view') }}"><i class="ti tabler-eye"></i></a>
+                  @can('update', $r)
+                    <a href="{{ route('consultant.reports.edit', $r) }}" class="btn btn-sm btn-icon btn-text-secondary" title="{{ __('app.update') }}"><i class="ti tabler-pencil"></i></a>
+                  @endcan
                 </div>
               </td>
             </tr>

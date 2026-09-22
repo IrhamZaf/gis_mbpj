@@ -15,7 +15,7 @@
           <select wire:model.live="filterRole" class="form-select">
             <option value="">Semua Role</option>
             <option value="superadmin">Superadmin</option>
-            <option value="surveyor">Surveyor</option>
+            <option value="consultant">Consultant</option>
             <option value="engineer">Engineer</option>
             <option value="ta">TA</option>
             <option value="director">Pengarah</option>
@@ -52,7 +52,7 @@
                 <div class="small text-muted">{{ $u->phone ?? '—' }}</div>
               </td>
               <td>{{ $u->email }}</td>
-              <td><span class="badge bg-label-{{ $u->role === 'superadmin' ? 'danger' : ($u->role === 'surveyor' ? 'primary' : 'info') }}">{{ $u->role_label }}</span></td>
+              <td><span class="badge bg-label-{{ $u->role === 'superadmin' ? 'danger' : ($u->role === 'consultant' ? 'primary' : 'info') }}">{{ $u->role_label }}</span></td>
               <td>{{ $u->unit->name ?? '—' }}</td>
               <td>{!! $u->status_badge !!}</td>
               <td class="small text-muted text-nowrap">{{ $u->created_at->format('d/m/Y') }}</td>
@@ -92,13 +92,13 @@
             <div class="mb-3"><label class="form-label">Role</label>
               <select wire:model.live="role" class="form-select">
                 <option value="superadmin">Superadmin</option>
-                <option value="surveyor">Surveyor</option>
+                <option value="consultant">Consultant</option>
                 <option value="engineer">Engineer</option>
                 <option value="ta">TA</option>
                 <option value="director">Pengarah</option>
               </select>
             </div>
-            @if (! in_array($role, ['superadmin', 'director'], true))
+            @if (! in_array($role, ['superadmin', 'director', 'consultant'], true))
               <div class="mb-3">
                 <label class="form-label">Unit <span class="text-danger">*</span></label>
                 <select wire:model="unit_id" class="form-select @error('unit_id') is-invalid @enderror">
@@ -108,6 +108,10 @@
                   @endforeach
                 </select>
                 @error('unit_id')<span class="invalid-feedback">{{ $message }}</span>@enderror
+              </div>
+            @elseif ($role === 'consultant')
+              <div class="alert alert-info small py-2">
+                {{ __('app.consultant_no_unit_hint') }}
               </div>
             @endif
             <div class="mb-3"><label class="form-label">Status</label>

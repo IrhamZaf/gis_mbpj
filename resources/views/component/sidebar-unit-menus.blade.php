@@ -20,7 +20,7 @@
       <i class="icon-base ti {{ UnitModule::unitIcon($navUnit->code) }}"></i>
       <div>
         {{ $navUnit->name }}
-        @if (! $user->isSuperadmin() && ! $user->isDirector() && ! $isOwnUnit)
+        @if (! $user->isSuperadmin() && ! $user->isDirector() && ! $user->isConsultant() && ! $isOwnUnit)
           <span class="badge bg-label-secondary ms-1" style="font-size:.65rem;">{{ __('app.read_only_badge') }}</span>
         @endif
       </div>

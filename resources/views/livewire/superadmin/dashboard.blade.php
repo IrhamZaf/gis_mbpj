@@ -74,7 +74,7 @@
           <p class="mb-2 text-muted fw-medium">{{ __('app.total_users') }}</p>
           <hr class="my-2">
           <div class="d-flex justify-content-between small text-muted">
-            <span><i class="ti tabler-user-search me-1 text-primary"></i>{{ $totalSurveyors }} surveyor</span>
+            <span><i class="ti tabler-user-search me-1 text-primary"></i>{{ $totalConsultants }} consultant</span>
             <span><i class="ti tabler-tools me-1 text-success"></i>{{ $totalEngineers }} engineer</span>
           </div>
           <div class="small text-muted mt-1">

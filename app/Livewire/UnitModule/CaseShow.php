@@ -44,6 +44,10 @@ class CaseShow extends Component
     public function setTab(string $tab): void
     {
         $this->tab = $tab;
+
+        if ($tab === 'gis') {
+            $this->dispatch('case-gis-tab-shown');
+        }
     }
 
     public function submitCase(): void
@@ -60,7 +64,6 @@ class CaseShow extends Component
     public function render()
     {
         $user = Auth::user();
-        $progress = $this->report->requiredDocumentsProgress();
         $siteStatus = match ($this->report->workflow_status) {
             'pending_site_visit' => __('app.pending'),
             'site_visit_in_progress', 'engineer_returned' => __('app.in_progress'),
@@ -73,16 +76,21 @@ class CaseShow extends Component
         $canUpdate = $user->can('update', $this->report);
         $isReadOnly = ! $user->isSuperadmin()
             && ! $user->isDirector()
-            && ! $user->belongsToSameUnit($this->report);
+            && ! $user->canWriteUnit($this->report->unit_id);
+
+        $reportsByUnit = [];
+        foreach (UnitModule::navUnits() as $u) {
+            $reportsByUnit[] = [
+                'unit' => $u,
+                'theme' => \App\Support\UnitTheme::for($u),
+                'total' => Report::query()->forUnitListing($user, $u->id)->count(),
+                'dashboardUrl' => UnitModule::dashboardRoute($u->code),
+            ];
+        }
 
         return view('livewire.unit-module.case-show', [
-            'progress' => $progress,
             'siteStatus' => $siteStatus,
-            'histories' => $this->report->attachments()->where('is_current', false)
-                ->orderByDesc('attachment_type_id')
-                ->orderByDesc('version')
-                ->get()
-                ->groupBy('attachment_type_id'),
+            'reportsByUnit' => $reportsByUnit,
             'listUrl' => UnitModule::categoryRoute($unitCode, $this->report->category?->code ?? 'SINKHOLE'),
             'editUrl' => UnitModule::caseEditRoute($unitCode, $this->report),
             'dashboardUrl' => UnitModule::dashboardRoute($unitCode),

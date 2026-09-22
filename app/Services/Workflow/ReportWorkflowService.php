@@ -17,8 +17,8 @@ class ReportWorkflowService
     public function submitReport(Report $report, User $actor): Report
     {
         $this->assertActive($actor);
-        if (! $actor->isSurveyor() || $report->user_id !== $actor->id) {
-            throw new AccessDeniedHttpException('Hanya surveyor pemilik laporan boleh menghantar.');
+        if (! $actor->isReportCreator() || $report->user_id !== $actor->id) {
+            throw new AccessDeniedHttpException('Hanya consultant pemilik laporan boleh menghantar.');
         }
         if (! in_array($report->status, ['draft'], true) && $report->workflow_status !== 'engineer_returned') {
             // Allow resubmit only from draft; engineer_returned is for TA corrections on site visit
@@ -43,7 +43,7 @@ class ReportWorkflowService
                 'submitted_at'    => now(),
             ]);
 
-            $this->audit($report, $actor, 'submit_report', $from, 'pending_site_visit', 'Laporan dihantar oleh Surveyor');
+            $this->audit($report, $actor, 'submit_report', $from, 'pending_site_visit', 'Laporan dihantar oleh Consultant');
 
             return $report->fresh();
         });

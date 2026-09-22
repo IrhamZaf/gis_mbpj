@@ -117,8 +117,8 @@
                 <td class="small">{{ $r->created_at?->format('d/m/Y') }}</td>
                 <td>{{ $r->user->name ?? '-' }}</td>
                 <td>
-                  <span class="badge {{ $docsTotal > 0 && $docsUploaded >= $docsTotal ? 'bg-label-success' : 'bg-label-warning' }}">
-                    {{ $docsUploaded }}/{{ $docsTotal }}
+                  <span class="badge bg-label-secondary">
+                    {{ $docsUploaded }}
                   </span>
                 </td>
                 <td>{!! $r->status_badge !!}</td>

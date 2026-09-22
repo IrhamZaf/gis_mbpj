@@ -40,7 +40,7 @@ class Login extends Component
 
             return match ($user->role) {
                 'superadmin' => redirect()->route('superadmin.dashboard'),
-                'surveyor'   => redirect()->route('surveyor.dashboard'),
+                'consultant' => redirect()->route('consultant.dashboard'),
                 'engineer'   => redirect()->route('engineer.dashboard'),
                 'ta'         => redirect()->route('ta.dashboard'),
                 'director'   => redirect()->route('director.dashboard'),

@@ -75,56 +75,157 @@
           <code>{{ $report->latitude }}, {{ $report->longitude }}</code>
           @if ($report->gps_accuracy)<span class="small text-muted ms-2">±{{ $report->gps_accuracy }} m</span>@endif
         </div>
-        <div id="case-gis-map" style="height:420px;" class="rounded border"></div>
+        @if ($report->latitude && $report->longitude)
+          <div id="case-gis-map" wire:ignore style="height:420px;width:100%;" class="rounded border bg-light"></div>
+        @else
+          <div class="alert alert-warning mb-0">{{ __('app.no_geo_reports') }}</div>
+        @endif
       </div>
     </div>
-    @assets
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    @endassets
-    @script
-    <script>
-      const lat = {{ $report->latitude ?? 'null' }};
-      const lng = {{ $report->longitude ?? 'null' }};
-      const cat = @json($report->category->code ?? '');
-      if (lat && lng && window.L) {
-        const map = L.map('case-gis-map').setView([lat, lng], 16);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-        const color = (cat === 'CERUN' || cat === 'CERUN_RUNTUH') ? '#dc3545' : (cat === 'BOREHOLE' ? '#6c757d' : '#0dcaf0');
-        L.circleMarker([lat, lng], { radius: 10, color, fillColor: color, fillOpacity: 0.9 })
-          .addTo(map)
-          .bindPopup(`<strong>{{ $report->report_number }}</strong><br>{{ $report->category->name }}<br>{{ addslashes($report->title) }}`);
-      }
-    </script>
-    @endscript
   @endif
 
+  @assets
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  @endassets
+
+  @script
+  <script>
+    let caseGisMap = null;
+
+    const caseGis = {
+      lat: {{ $report->latitude !== null ? (float) $report->latitude : 'null' }},
+      lng: {{ $report->longitude !== null ? (float) $report->longitude : 'null' }},
+      cat: @json($report->category?->code ?? ''),
+      popup: @json('<strong>'.e($report->report_number).'</strong><br>'.e($report->category?->display_name ?? $report->category?->name ?? '').'<br>'.e($report->title)),
+    };
+
+    function categoryColor(cat) {
+      if (cat === 'CERUN' || cat === 'CERUN_RUNTUH') return '#dc3545';
+      if (cat === 'BOREHOLE') return '#6c757d';
+      return '#0dcaf0';
+    }
+
+    function destroyCaseGisMap() {
+      if (caseGisMap) {
+        try { caseGisMap.remove(); } catch (e) {}
+        caseGisMap = null;
+      }
+    }
+
+    function renderCaseGisMap() {
+      const el = document.getElementById('case-gis-map');
+      if (!el || caseGis.lat == null || caseGis.lng == null || !window.L) {
+        return false;
+      }
+
+      // Fresh DOM node after Livewire tab switch
+      if (caseGisMap && !el._leaflet_id) {
+        caseGisMap = null;
+      }
+
+      if (!caseGisMap) {
+        // Clear leftover leaflet id if Livewire reused markup oddly
+        if (el._leaflet_id) {
+          try { el._leaflet_id = null; el.innerHTML = ''; } catch (e) {}
+        }
+
+        caseGisMap = L.map(el, { scrollWheelZoom: true }).setView([caseGis.lat, caseGis.lng], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap',
+        }).addTo(caseGisMap);
+
+        const color = categoryColor(caseGis.cat);
+        L.circleMarker([caseGis.lat, caseGis.lng], {
+          radius: 10,
+          color,
+          fillColor: color,
+          fillOpacity: 0.9,
+          weight: 2,
+        }).addTo(caseGisMap).bindPopup(caseGis.popup);
+      }
+
+      setTimeout(() => caseGisMap && caseGisMap.invalidateSize(), 80);
+      setTimeout(() => caseGisMap && caseGisMap.invalidateSize(), 300);
+      return true;
+    }
+
+    function waitAndRenderCaseGis(attempts = 0) {
+      if (renderCaseGisMap()) return;
+      if (attempts >= 50) return;
+      setTimeout(() => waitAndRenderCaseGis(attempts + 1), 100);
+    }
+
+    // Initial (if GIS tab already active)
+    waitAndRenderCaseGis();
+
+    Livewire.on('case-gis-tab-shown', () => {
+      destroyCaseGisMap();
+      setTimeout(() => waitAndRenderCaseGis(), 60);
+    });
+
+    $wire.$watch('tab', (value) => {
+      if (value === 'gis') {
+        destroyCaseGisMap();
+        setTimeout(() => waitAndRenderCaseGis(), 60);
+      } else {
+        destroyCaseGisMap();
+      }
+    });
+  </script>
+  @endscript
+
   @if ($tab === 'documents')
-    <div class="card border-0 shadow-sm">
+    <div class="card border-0 shadow-sm mb-4">
       <div class="card-header border-bottom d-flex justify-content-between">
-        <h6 class="mb-0">{{ __('app.technical_documents') }}</h6>
-        <span class="badge bg-label-{{ $progress['complete'] ? 'success' : 'warning' }}">{{ $progress['uploaded'] }} / {{ $progress['total'] }}</span>
+        <h6 class="mb-0">{{ __('app.documents') }}</h6>
+        <span class="badge bg-label-info">{{ $report->attachments->where('is_current', true)->count() }} {{ __('app.uploaded') }}</span>
       </div>
       <div class="card-body">
-        @foreach ($progress['items'] as $i => $item)
-          <div class="border rounded p-3 mb-3">
-            <div class="d-flex justify-content-between">
-              <strong>{{ $i+1 }}. {{ $item['display_name'] }}</strong>
-              @if ($item['uploaded']) <span class="text-success">✓ {{ __('app.uploaded') }}</span>
-              @else <span class="text-danger">✕ {{ __('app.missing') }}</span> @endif
+        @forelse ($report->attachments->where('is_current', true) as $att)
+          <div class="border rounded p-3 mb-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="small">
+              <i class="ti tabler-paperclip me-1"></i>
+              <strong>{{ $att->original_filename ?? $att->file_name }}</strong>
+              <span class="text-muted">
+                · {{ $att->file_size_formatted }}
+                · {{ $att->uploader->name ?? '-' }}
+                · {{ $att->uploaded_at?->format('d/m/Y H:i') }}
+              </span>
             </div>
-            @if ($item['attachment'])
-              <div class="small mt-2">
-                {{ $item['attachment']->original_filename ?? $item['attachment']->file_name }}
-                · {{ __('app.version', ['n' => $item['attachment']->version]) }} <span class="badge bg-label-success">{{ __('app.current_version') }}</span>
-                · {{ $item['attachment']->file_size_formatted }}
-                · {{ $item['attachment']->uploader->name ?? '-' }}
-                · {{ $item['attachment']->uploaded_at?->format('d/m/Y H:i') }}
-                <a href="{{ route('attachment.download', $item['attachment']) }}" class="ms-2">{{ __('app.download') }}</a>
-              </div>
-            @endif
+            <a href="{{ route('attachment.download', $att) }}" class="btn btn-sm btn-outline-primary">{{ __('app.download') }}</a>
           </div>
-        @endforeach
+        @empty
+          <p class="text-muted mb-0">{{ __('app.no_attachments') }}</p>
+        @endforelse
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">{{ __('app.reports_by_unit') }}</h6>
+        <span class="badge bg-label-secondary">{{ collect($reportsByUnit)->sum('total') }} {{ __('app.total_reports') }}</span>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          @foreach ($reportsByUnit as $block)
+            @php
+              $u = $block['unit'];
+              $theme = $block['theme'];
+            @endphp
+            <div class="col-md-6 col-xl-3">
+              <a href="{{ $block['dashboardUrl'] }}" class="text-decoration-none">
+                <div class="border rounded p-3 h-100" style="border-top:3px solid {{ $theme['color'] }} !important;">
+                  <div class="fw-semibold text-body">{{ $u->name }}</div>
+                  <div class="small text-muted mb-2">{{ $u->code }}</div>
+                  <div class="fs-4 fw-bold" style="color:{{ $theme['color'] }};">{{ number_format($block['total']) }}</div>
+                  <div class="small text-muted">{{ __('app.total_reports') }}</div>
+                </div>
+              </a>
+            </div>
+          @endforeach
+        </div>
       </div>
     </div>
   @endif

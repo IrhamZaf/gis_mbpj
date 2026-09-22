@@ -49,6 +49,9 @@ class CaseForm extends Component
     /** @var array<int, mixed> */
     public array $uploads = [];
 
+    /** @var array<int, mixed> Free-form files (no typed category slots) */
+    public array $looseFiles = [];
+
     public function mount(?Report $report = null, ?string $categoryCode = null, ?string $unitCode = null): void
     {
         $routeUnit = request()->route()?->parameter('unitCode')
@@ -89,13 +92,12 @@ class CaseForm extends Component
             return;
         }
 
-        // Create for another unit is never allowed
+        // Create: consultant / superadmin may write any unit
         if (! $report || ! $report->exists) {
             $user = Auth::user();
-            if (! $user || (! $user->isSuperadmin() && ! $user->canWriteUnit(
-                Unit::where('code', $this->unitCode)->value('id')
-            ))) {
-                abort(403, __('app.surveyor_unit_only'));
+            $targetUnitId = Unit::where('code', $this->unitCode)->value('id');
+            if (! $user || (! $user->isSuperadmin() && ! $user->canWriteUnit($targetUnitId))) {
+                abort(403, __('app.consultant_unit_denied'));
             }
         }
 
@@ -132,6 +134,15 @@ class CaseForm extends Component
         $this->uploadPendingFiles($report);
         $report->refresh();
 
+        $isDraft = $report->status === 'draft' && $report->workflow_status === null;
+
+        if (! $isDraft) {
+            session()->flash('message', __('app.case_saved', ['message' => '']));
+            $this->redirect(UnitModule::caseShowRoute($this->unitCode, $report), navigate: false);
+
+            return;
+        }
+
         try {
             app(ReportWorkflowService::class)->submitReport($report, Auth::user());
             session()->flash('message', __('app.case_submitted'));
@@ -147,18 +158,30 @@ class CaseForm extends Component
 
     public function uploadType(int $typeId): void
     {
+        // Typed checklist (Cerun/Borehole/LiDAR/…) removed — use free-form upload instead.
+        $this->uploadLoose();
+    }
+
+    public function uploadLoose(): void
+    {
         $report = $this->persist(false);
-        $file = $this->uploads[$typeId] ?? null;
-        if (! $file) {
-            $this->addError('uploads.'.$typeId, __('app.select_file'));
+        if (empty($this->looseFiles)) {
+            $this->addError('looseFiles', __('app.select_file'));
 
             return;
         }
 
-        $type = AttachmentType::findOrFail($typeId);
-        app(TechnicalAttachmentService::class)->upload($report, $type, $file, Auth::user());
-        unset($this->uploads[$typeId]);
-        session()->flash('message', __('app.uploaded_ok', ['name' => $type->name]));
+        $service = app(TechnicalAttachmentService::class);
+        $count = 0;
+        foreach ($this->looseFiles as $file) {
+            if (! $file) {
+                continue;
+            }
+            $service->uploadLoose($report, $file, Auth::user());
+            $count++;
+        }
+        $this->looseFiles = [];
+        session()->flash('message', __('app.uploaded_ok', ['name' => $count.' file(s)']));
     }
 
     protected function persist(bool $submit): Report
@@ -173,12 +196,12 @@ class CaseForm extends Component
             ->firstOrFail();
         $user = Auth::user();
 
-        if (! $user->isSurveyor() && ! $user->isSuperadmin()) {
+        if (! $user->isReportCreator() && ! $user->isSuperadmin()) {
             abort(403);
         }
 
-        if ($user->isSurveyor() && (int) $user->unit_id !== (int) $unit->id) {
-            abort(403, __('app.surveyor_unit_only'));
+        if ($user->isConsultant() && ! $user->canWriteUnit($unit->id)) {
+            abort(403, __('app.consultant_unit_denied'));
         }
 
         $this->categoryCode = UnitModule::normalizeCategoryCode($category->code) ?? $category->code;
@@ -242,6 +265,16 @@ class CaseForm extends Component
     protected function uploadPendingFiles(Report $report): void
     {
         $service = app(TechnicalAttachmentService::class);
+
+        foreach ($this->looseFiles as $file) {
+            if (! $file) {
+                continue;
+            }
+            $service->uploadLoose($report, $file, Auth::user());
+        }
+        $this->looseFiles = [];
+
+        // Legacy typed uploads (if any remain in session)
         foreach ($this->uploads as $typeId => $file) {
             if (! $file) {
                 continue;
@@ -255,8 +288,26 @@ class CaseForm extends Component
         $this->uploads = [];
     }
 
+    public function updatedUnitCode(string $value): void
+    {
+        if ($this->reportId) {
+            return;
+        }
+
+        $user = Auth::user();
+        $unitId = Unit::where('code', $value)->value('id');
+        if (! $user || (! $user->isSuperadmin() && ! $user->canWriteUnit($unitId))) {
+            $this->addError('unitCode', __('app.consultant_unit_denied'));
+
+            return;
+        }
+
+        $this->resetErrorBag('unitCode');
+    }
+
     public function render()
     {
+        $user = Auth::user();
         $unit = Unit::where('code', $this->unitCode)->firstOrFail();
         $category = ReportCategory::with('attachmentTypes')
             ->active()
@@ -271,24 +322,19 @@ class CaseForm extends Component
             ? Report::with(['attachments' => fn ($q) => $q->where('is_current', true)])->find($this->reportId)
             : null;
 
-        $progress = $report ? $report->requiredDocumentsProgress() : [
-            'total' => $category->attachmentTypes->count(),
-            'uploaded' => 0,
-            'items' => $category->attachmentTypes->map(fn ($t) => [
-                'type' => $t,
-                'display_name' => $t->pivot->display_name ?? $t->name,
-                'uploaded' => false,
-                'attachment' => null,
-            ])->all(),
-            'complete' => false,
-        ];
+        $selectableUnits = UnitModule::navUnits()->filter(
+            fn (Unit $u) => $user?->isSuperadmin() || $user?->canWriteUnit($u->id)
+        )->values();
+
+        $canPickUnit = ! $report && $selectableUnits->count() > 1;
 
         return view('livewire.unit-module.case-form', [
             'unit' => $unit,
             'category' => $category,
             'report' => $report,
-            'progress' => $progress,
             'listUrl' => UnitModule::categoryRoute($unit->code, $category->code),
+            'selectableUnits' => $selectableUnits,
+            'canPickUnit' => $canPickUnit,
         ])->title(($report ? __('app.edit') : __('app.create')).' '.$category->display_name);
     }
 }

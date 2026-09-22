@@ -37,7 +37,7 @@ class UserManagement extends Component
             ? "required|email|unique:users,email,{$this->editingId}"
             : 'required|email|unique:users,email';
 
-        $unitRule = in_array($this->role, ['surveyor', 'engineer', 'ta'], true)
+        $unitRule = in_array($this->role, ['engineer', 'ta'], true)
             ? 'required|exists:units,id'
             : 'nullable|exists:units,id';
 
@@ -45,7 +45,7 @@ class UserManagement extends Component
             'name'     => 'required|min:3',
             'email'    => $emailRule,
             'phone'    => 'nullable|string|max:20',
-            'role'     => 'required|in:superadmin,surveyor,engineer,ta,director',
+            'role'     => 'required|in:superadmin,consultant,engineer,ta,director',
             'unit_id'  => $unitRule,
             'status'   => 'required|in:active,inactive',
             'password' => $this->editingId ? 'nullable|min:6' : 'required|min:6',
@@ -53,7 +53,7 @@ class UserManagement extends Component
     }
 
     protected array $messages = [
-        'unit_id.required' => 'Surveyor, Engineer dan TA mesti ditetapkan kepada satu unit.',
+        'unit_id.required' => 'Engineer dan TA mesti ditetapkan kepada satu unit.',
     ];
 
     public function updatingSearch(): void
@@ -103,7 +103,7 @@ class UserManagement extends Component
             'phone'   => $this->phone ?: null,
             'role'    => $this->role,
             'status'  => $this->status,
-            'unit_id' => in_array($this->role, ['superadmin', 'director'], true)
+            'unit_id' => in_array($this->role, ['superadmin', 'director', 'consultant'], true)
                 ? null
                 : ($this->unit_id !== '' ? (int) $this->unit_id : null),
         ];

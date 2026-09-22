@@ -1,25 +1,52 @@
-<div wire:ignore class="report-map-picker-root">
-  <label class="form-label">Lokasi GIS</label>
-  <div class="gis-location-search-wrap mb-2 position-relative">
-    <div class="input-group">
-      <span class="input-group-text"><i class="ti tabler-search"></i></span>
-      <input type="text" id="gis-location-search" class="form-control" placeholder="Cari alamat di Subang Jaya..." autocomplete="off" />
-      <button type="button" id="gis-location-search-btn" class="btn btn-outline-primary">Cari</button>
+<div class="report-map-picker-root">
+  <div wire:ignore>
+    <label class="form-label">Lokasi GIS</label>
+    <div class="gis-location-search-wrap mb-2 position-relative">
+      <div class="input-group">
+        <span class="input-group-text"><i class="ti tabler-search"></i></span>
+        <input type="text" id="gis-location-search" class="form-control" placeholder="Cari alamat di Subang Jaya..." autocomplete="off" />
+        <button type="button" id="gis-location-search-btn" class="btn btn-outline-primary">Cari</button>
+      </div>
+      <ul id="gis-location-results" class="list-group position-absolute w-100 shadow-sm d-none gis-location-results"></ul>
     </div>
-    <ul id="gis-location-results" class="list-group position-absolute w-100 shadow-sm d-none gis-location-results"></ul>
+    <small class="text-muted d-block mb-2">Cari lokasi atau klik peta untuk tetapkan tapak laporan.</small>
+    <div id="gis-map" class="gis-report-map" style="height:400px;min-height:400px;border-radius:8px;border:1px solid var(--bs-border-color);"></div>
   </div>
-  <small class="text-muted d-block mb-2">Cari lokasi atau klik peta untuk tetapkan tapak laporan.</small>
-  <div id="gis-map" class="gis-report-map" style="height:400px;min-height:400px;border-radius:8px;border:1px solid var(--bs-border-color);"></div>
-  <div class="row g-2 mt-2 mb-2">
-    <div class="col-6">
-      <label class="form-label small mb-1">Latitud</label>
-      <input id="report-anchor-lat" type="text" class="form-control form-control-sm" readonly placeholder="—" />
+
+  <div class="row g-2 mt-2 mb-1 align-items-end">
+    <div class="col-sm-5">
+      <label class="form-label small mb-1" for="report-anchor-lat">{{ __('app.latitude') }}</label>
+      <input
+        id="report-anchor-lat"
+        wire:model.blur="latitude"
+        type="number"
+        step="any"
+        inputmode="decimal"
+        class="form-control form-control-sm @error('latitude') is-invalid @enderror"
+        placeholder="cth: 3.1073"
+      />
+      @error('latitude')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
-    <div class="col-6">
-      <label class="form-label small mb-1">Longitud</label>
-      <input id="report-anchor-lng" type="text" class="form-control form-control-sm" readonly placeholder="—" />
+    <div class="col-sm-5">
+      <label class="form-label small mb-1" for="report-anchor-lng">{{ __('app.longitude') }}</label>
+      <input
+        id="report-anchor-lng"
+        wire:model.blur="longitude"
+        type="number"
+        step="any"
+        inputmode="decimal"
+        class="form-control form-control-sm @error('longitude') is-invalid @enderror"
+        placeholder="cth: 101.6067"
+      />
+      @error('longitude')<div class="invalid-feedback">{{ $message }}</div>@enderror
+    </div>
+    <div class="col-sm-2">
+      <button type="button" class="btn btn-sm btn-outline-primary w-100" wire:click="applyManualCoordinates">
+        {{ __('app.apply') }}
+      </button>
     </div>
   </div>
+  <small class="text-muted d-block mb-2">Edit latitud/longitud, kemudian blur / tekan Apply — marker peta akan ikut.</small>
   <div class="d-flex flex-wrap gap-2 mt-2 small text-muted">
     <span><span class="gis-legend-risk-area d-inline-block align-middle"></span> Kawasan risiko</span>
     <span><span style="width:10px;height:10px;border-radius:50%;background:#3498db;display:inline-block;"></span> Titik 3D</span>

@@ -42,9 +42,15 @@ class User extends Authenticatable
         return $this->role === 'superadmin';
     }
 
-    public function isSurveyor(): bool
+    public function isConsultant(): bool
     {
-        return $this->role === 'surveyor';
+        return $this->role === 'consultant';
+    }
+
+    /** Field report creator (replaces former Surveyor / Vendor role). */
+    public function isReportCreator(): bool
+    {
+        return $this->isConsultant();
     }
 
     public function isEngineer(): bool
@@ -71,22 +77,22 @@ class User extends Authenticatable
     {
         return match ($this->role) {
             'superadmin' => 'Superadmin',
-            'surveyor'   => 'Surveyor / Vendor',
-            'engineer'   => 'Engineer MBSJ',
-            'ta'         => 'TA (Pembantu Teknik)',
-            'director'   => 'Pengarah',
-            default      => ucfirst($this->role),
+            'consultant' => 'Consultant',
+            'engineer' => 'Engineer MBSJ',
+            'ta' => 'TA (Pembantu Teknik)',
+            'director' => 'Pengarah',
+            default => ucfirst($this->role),
         };
     }
 
     public function getDefaultDesignationAttribute(): string
     {
         return match ($this->role) {
-            'ta'       => 'Pembantu Teknik',
+            'ta' => 'Pembantu Teknik',
             'engineer' => 'Jurutera',
             'director' => 'Pengarah Kejuruteraan',
-            'surveyor' => 'Surveyor',
-            default    => $this->role_label,
+            'consultant' => 'Consultant',
+            default => $this->role_label,
         };
     }
 
@@ -109,14 +115,9 @@ class User extends Authenticatable
 
     public function requiresUnit(): bool
     {
-        return in_array($this->role, ['surveyor', 'engineer', 'ta'], true);
+        return in_array($this->role, ['engineer', 'ta'], true);
     }
 
-    /**
-     * Whether this user belongs to the same engineering unit as the report.
-     * Superadmin / Director are not unit-bound for write checks — callers should
-     * treat them separately when full access is intended.
-     */
     public function belongsToSameUnit(Report $report): bool
     {
         if (! $this->unit_id || ! $report->unit_id) {
@@ -126,22 +127,19 @@ class User extends Authenticatable
         return (int) $this->unit_id === (int) $report->unit_id;
     }
 
-    /**
-     * Staff who may browse / read reports across all units.
-     */
     public function canBrowseAllUnits(): bool
     {
         return $this->isActive() && (
             $this->isSuperadmin()
             || $this->isDirector()
-            || $this->isSurveyor()
+            || $this->isConsultant()
             || $this->isEngineer()
             || $this->isTa()
         );
     }
 
     /**
-     * Write / mutate a unit's reports (create, edit, upload, workflow actions).
+     * Consultant may write every unit; engineer/ta only their own.
      */
     public function canWriteUnit(?int $unitId): bool
     {
@@ -153,8 +151,11 @@ class User extends Authenticatable
             return true;
         }
 
+        if ($this->isConsultant()) {
+            return $unitId !== null;
+        }
+
         if ($this->isDirector()) {
-            // Director approves globally but does not "own" a unit for edits
             return false;
         }
 

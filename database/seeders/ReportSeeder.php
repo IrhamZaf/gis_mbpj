@@ -11,12 +11,14 @@ class ReportSeeder extends Seeder
 {
     public function run(): void
     {
-        $surveyor = User::where('email', 'surveyor@mbsj.gov.my')->first();
-        if (!$surveyor) {
-            $this->command?->warn('Surveyor user not found. Run DatabaseSeeder first.');
+        $consultant = User::where('email', 'consultant@mbsj.gov.my')->first();
+        if (!$consultant) {
+            $this->command?->warn('Consultant user not found. Run DatabaseSeeder first.');
 
             return;
         }
+
+        $unitId = \App\Models\Unit::where('code', 'JLN')->value('id');
 
         $categories = ReportCategory::all()->keyBy('slug');
         if ($categories->isEmpty()) {
@@ -159,8 +161,8 @@ class ReportSeeder extends Seeder
             Report::updateOrCreate(
                 ['report_number' => $data['report_number']],
                 array_merge($data, [
-                    'user_id' => $surveyor->id,
-                    'unit_id' => $surveyor->unit_id,
+                    'user_id' => $consultant->id,
+                    'unit_id' => $unitId,
                 ])
             );
         }

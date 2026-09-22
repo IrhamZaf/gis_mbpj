@@ -484,7 +484,7 @@ class UnitDashboard extends Component
             ],
         ];
 
-        if ($isOwnUnit && ($user->isSurveyor() || $user->isSuperadmin())) {
+        if ($isOwnUnit && ($user->isReportCreator() || $user->isSuperadmin())) {
             array_unshift($actions, [
                 'label' => __('app.add_report'),
                 'url' => UnitModule::caseCreateRoute($unit->code, 'SINKHOLE'),
@@ -500,7 +500,7 @@ class UnitDashboard extends Component
     {
         return match (true) {
             $user->isSuperadmin() => route('superadmin.map'),
-            $user->isSurveyor() => route('surveyor.map'),
+            $user->isConsultant() => route('consultant.map'),
             $user->isEngineer() => route('engineer.map'),
             $user->isTa() => route('ta.map'),
             $user->isDirector() => route('director.map'),

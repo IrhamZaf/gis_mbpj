@@ -1,14 +1,14 @@
 <div>
   @include('livewire.partials.dashboard-welcome', [
     'user' => $user,
-    'roleLabel' => __('app.role_surveyor_unit', ['unit' => $unitName]),
-    'subtitle' => __('app.surveyor_dashboard_subtitle'),
+    'roleLabel' => __('app.role_consultant'),
+    'subtitle' => __('app.consultant_dashboard_subtitle'),
     'heroIcon' => 'tabler-clipboard-list',
     'unitTheme' => $unitTheme,
     'actions' => [
-      ['label' => __('app.add_report'), 'url' => route('surveyor.reports.create'), 'icon' => 'tabler-plus', 'class' => 'btn-primary'],
-      ['label' => __('app.my_reports'), 'url' => route('surveyor.reports'), 'icon' => 'tabler-list', 'class' => 'btn-outline-primary'],
-      ['label' => __('app.interactive_map'), 'url' => route('surveyor.map'), 'icon' => 'tabler-map', 'class' => 'btn-outline-secondary'],
+      ['label' => __('app.add_report'), 'url' => route('consultant.reports.create'), 'icon' => 'tabler-plus', 'class' => 'btn-primary'],
+      ['label' => __('app.my_reports'), 'url' => route('consultant.reports'), 'icon' => 'tabler-list', 'class' => 'btn-outline-primary'],
+      ['label' => __('app.interactive_map'), 'url' => route('consultant.map'), 'icon' => 'tabler-map', 'class' => 'btn-outline-secondary'],
     ],
   ])
 
@@ -21,7 +21,7 @@
           {{ __('app.please_update_resubmit') }}
         </div>
       </div>
-      <a href="{{ route('surveyor.reports') }}" class="btn btn-sm btn-danger">{{ __('app.review_reports') }}</a>
+      <a href="{{ route('consultant.reports') }}" class="btn btn-sm btn-danger">{{ __('app.review_reports') }}</a>
     </div>
   @elseif ($draftReports > 0)
     <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4" role="alert">
@@ -32,7 +32,7 @@
           {{ __('app.complete_and_submit') }}
         </div>
       </div>
-      <a href="{{ route('surveyor.reports') }}" class="btn btn-sm btn-warning">
+      <a href="{{ route('consultant.reports') }}" class="btn btn-sm btn-warning">
         <i class="ti tabler-pencil me-1"></i>{{ __('app.review_drafts') }}
       </a>
     </div>
@@ -82,7 +82,7 @@
           <h6 class="mb-0 fw-semibold">
             <i class="ti tabler-clock me-2 text-primary"></i>{{ __('app.my_recent_reports') }}
           </h6>
-          <a href="{{ route('surveyor.reports.create') }}" class="btn btn-primary btn-sm">
+          <a href="{{ route('consultant.reports.create') }}" class="btn btn-primary btn-sm">
             <i class="ti tabler-plus me-1"></i>{{ __('app.add_report') }}
           </a>
         </div>
@@ -118,9 +118,9 @@
                   <td>{!! $r->status_badge !!}</td>
                   <td class="text-nowrap small text-muted">{{ $r->created_at->format('d/m/Y') }}</td>
                   <td class="text-end text-nowrap">
-                    <a href="{{ route('surveyor.reports.view', $r) }}" class="btn btn-sm btn-outline-primary">{{ __('app.view') }}</a>
+                    <a href="{{ route('consultant.reports.view', $r) }}" class="btn btn-sm btn-outline-primary">{{ __('app.view') }}</a>
                     @can('update', $r)
-                      <a href="{{ route('surveyor.reports.edit', $r) }}" class="btn btn-sm btn-outline-secondary">{{ __('app.edit') }}</a>
+                      <a href="{{ route('consultant.reports.edit', $r) }}" class="btn btn-sm btn-outline-secondary">{{ __('app.edit') }}</a>
                     @endcan
                   </td>
                 </tr>
@@ -129,7 +129,7 @@
                   <td colspan="6" class="text-center py-5 text-muted">
                     <i class="ti tabler-inbox icon-32px d-block mb-2"></i>
                     {{ __('app.no_reports_found') }}
-                    <a href="{{ route('surveyor.reports.create') }}">{{ __('app.add_report') }}</a>
+                    <a href="{{ route('consultant.reports.create') }}">{{ __('app.add_report') }}</a>
                   </td>
                 </tr>
               @endforelse
@@ -147,7 +147,7 @@
           </h6>
         </div>
         <div class="card-body d-flex flex-column gap-3">
-          <a href="{{ route('surveyor.reports.create') }}"
+          <a href="{{ route('consultant.reports.create') }}"
             class="d-flex align-items-center gap-3 p-3 rounded border text-decoration-none text-body"
             style="background:rgba(13,110,253,.04);">
             <span class="avatar flex-shrink-0"><span class="avatar-initial rounded bg-label-primary"><i class="ti tabler-plus"></i></span></span>
@@ -158,7 +158,7 @@
             <i class="ti tabler-chevron-right ms-auto text-muted"></i>
           </a>
 
-          <a href="{{ route('surveyor.map') }}"
+          <a href="{{ route('consultant.map') }}"
             class="d-flex align-items-center gap-3 p-3 rounded border text-decoration-none text-body"
             style="background:rgba(25,135,84,.04);">
             <span class="avatar flex-shrink-0"><span class="avatar-initial rounded bg-label-success"><i class="ti tabler-map"></i></span></span>

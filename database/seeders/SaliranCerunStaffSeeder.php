@@ -44,15 +44,14 @@ class SaliranCerunStaffSeeder extends Seeder
             ]
         );
 
-        // Optional: assign surveyor demo to SAL-CERUN for this phase testing
-        // Keep surveyor@ on Jalan for legacy; add dedicated surveyor for module
+        // Consultant is global (all units) — no per-unit surveyor accounts
         User::updateOrCreate(
-            ['email' => 'surveyor.saliran-cerun@mbsj.gov.my'],
+            ['email' => 'consultant@mbsj.gov.my'],
             [
-                'name' => 'Surveyor NZ Survey Consultant',
+                'name' => 'Consultant MBSJ',
                 'password' => $password,
-                'role' => 'surveyor',
-                'unit_id' => $unit->id,
+                'role' => 'consultant',
+                'unit_id' => null,
                 'status' => 'active',
                 'phone' => '012-7001003',
             ]

@@ -254,6 +254,11 @@ class Report extends Model
             return $query;
         }
 
+        // Consultant: all own reports across units (queues elsewhere stay unit-scoped)
+        if ($user->isConsultant()) {
+            return $query->where('user_id', $user->id);
+        }
+
         if (! $user->unit_id) {
             return $query->whereRaw('1 = 0');
         }
@@ -266,7 +271,7 @@ class Report extends Model
             $query->forEngineerQueue();
         } elseif ($user->isTa()) {
             $query->forTaQueue();
-        } elseif ($user->isSurveyor()) {
+        } elseif ($user->isConsultant()) {
             $query->where('user_id', $user->id);
         }
 
@@ -284,11 +289,15 @@ class Report extends Model
             return $query;
         }
 
-        $isOwnUnit = $user->unit_id && (int) $user->unit_id === (int) $unitId;
+        $canWrite = $user->canWriteUnit($unitId);
 
-        if ($user->isSurveyor()) {
-            if ($isOwnUnit) {
-                return $query->where('user_id', $user->id);
+        if ($user->isReportCreator()) {
+            if ($canWrite) {
+                // Own reports in this unit + other users' non-drafts for monitoring
+                return $query->where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                        ->orWhere('status', '!=', 'draft');
+                });
             }
 
             return $query->where('status', '!=', 'draft');
@@ -379,7 +388,7 @@ class Report extends Model
         }
 
         $labels = [
-            'pending_site_visit'            => 'Surveyor Dihantar',
+            'pending_site_visit'            => 'Consultant Dihantar',
             'site_visit_in_progress'        => 'Lawatan TA',
             'pending_engineer_verification' => 'Laporan Lawatan',
             'engineer_verified'             => 'Pengesahan Engineer',

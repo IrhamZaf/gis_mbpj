@@ -30,15 +30,17 @@ function paintLayers(layers) {
 }
 
 function applyMapInit(payload) {
-  const p = payload?.[0] ?? payload ?? {};
-  if (p.latitude != null && p.longitude != null) {
-    window.gisMapPicker?.setAnchor?.(p.latitude, p.longitude, p.locationLabel ?? '');
+  const p = Array.isArray(payload) ? (payload[0] ?? {}) : (payload ?? {});
+  const lat = p.latitude ?? p.lat ?? null;
+  const lng = p.longitude ?? p.lng ?? null;
+  if (lat != null && lng != null) {
+    // notify=false — Livewire already owns the coordinate state
+    window.gisMapPicker?.setAnchor?.(Number(lat), Number(lng), p.locationLabel ?? '', false);
   }
   paintLayers(p.surveyLayers ?? []);
 }
 
 function bootMap() {
-  const wire = mapPickerWire();
   if (!document.getElementById('gis-map')) return;
 
   bootSurveyReportMap({
@@ -48,11 +50,14 @@ function bootMap() {
     initialZoom: 14,
     initialGisData: null,
     initialLocationLabel: '',
-    livewire: wire,
+    livewire: null,
     onCoordinatesChange(lat, lng, label) {
+      // Resolve wire on every call — component may remount.
+      const wire = mapPickerWire();
       wire?.call?.('updateCoordinates', lat, lng, label ?? null);
     },
     onGisDataChange(data) {
+      const wire = mapPickerWire();
       wire?.call?.('updateGisData', data ?? null);
     },
   });
@@ -61,6 +66,16 @@ function bootMap() {
     const init = pendingMapInit;
     pendingMapInit = null;
     setTimeout(() => applyMapInit(init), 100);
+  }
+
+  // Seed marker from current Livewire lat/lng if present
+  const wire = mapPickerWire();
+  if (wire) {
+    const lat = wire.get?.('latitude');
+    const lng = wire.get?.('longitude');
+    if (lat != null && lng != null && window.gisMapPicker?.getMap?.()) {
+      window.gisMapPicker.setAnchor(Number(lat), Number(lng), '', false);
+    }
   }
 }
 

@@ -32,9 +32,9 @@
           </select>
         </div>
         <div class="col-md-3">
-          <select wire:model.live="filterSurveyor" class="form-select">
+          <select wire:model.live="filterConsultant" class="form-select">
             <option value="">{{ __('app.all_surveyors') }}</option>
-            @foreach($surveyors as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
+            @foreach($consultants as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach
           </select>
         </div>
       </div>
@@ -79,7 +79,18 @@
           </tbody>
         </table>
       </div>
-      <div class="mt-3">{{ $reports->links() }}</div>
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+        <div class="small text-muted">
+          {{ __('app.showing', [
+            'from' => $reports->firstItem() ?? 0,
+            'to' => $reports->lastItem() ?? 0,
+            'total' => $reports->total(),
+          ]) }}
+        </div>
+        <div>
+          {{ $reports->links() }}
+        </div>
+      </div>
     </div>
   </div>
 </div>

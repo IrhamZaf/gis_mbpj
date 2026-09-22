@@ -50,7 +50,7 @@ class UnitDashboard extends Component
                 'total'             => (clone $base)->count(),
             ],
             'staff' => User::where('unit_id', $unitId)
-                ->whereIn('role', ['ta', 'engineer', 'surveyor'])
+                ->whereIn('role', ['ta', 'engineer'])
                 ->orderBy('role')
                 ->orderBy('name')
                 ->get(),

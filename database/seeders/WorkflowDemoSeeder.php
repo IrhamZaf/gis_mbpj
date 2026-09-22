@@ -42,15 +42,21 @@ class WorkflowDemoSeeder extends Seeder
             ['name' => 'Super Admin', 'password' => $password, 'role' => 'superadmin', 'unit_id' => null, 'status' => 'active', 'phone' => '03-8000-0001']
         );
 
-        // Surveyor kekal akaun sedia ada (vendor) — jangan seed surveyor baharu per unit
+        // Consultant (replaces former Surveyor / Vendor) — global, all units
+        $consultant = User::updateOrCreate(
+            ['email' => 'consultant@mbsj.gov.my'],
+            ['name' => 'Consultant MBSJ', 'password' => $password, 'role' => 'consultant', 'unit_id' => null, 'status' => 'active', 'phone' => '012-1111001']
+        );
+
+        // Keep legacy emails as aliases pointing to consultant role for older seed lookups
         $surveyorJln = User::updateOrCreate(
             ['email' => 'surveyor@mbsj.gov.my'],
-            ['name' => 'Surveyor NZ Survey Consultant', 'password' => $password, 'role' => 'surveyor', 'unit_id' => $jalan->id, 'status' => 'active', 'phone' => '012-1111001']
+            ['name' => 'Consultant MBSJ', 'password' => $password, 'role' => 'consultant', 'unit_id' => null, 'status' => 'active', 'phone' => '012-1111001']
         );
 
         $surveyorSalCerun = User::updateOrCreate(
             ['email' => 'surveyor.saliran-cerun@mbsj.gov.my'],
-            ['name' => 'Surveyor NZ Survey Consultant', 'password' => $password, 'role' => 'surveyor', 'unit_id' => $saliranCerun->id, 'status' => 'active', 'phone' => '012-1111002']
+            ['name' => 'Consultant Saliran & Cerun', 'password' => $password, 'role' => 'consultant', 'unit_id' => null, 'status' => 'active', 'phone' => '012-1111002']
         );
 
         $director = User::updateOrCreate(
@@ -70,8 +76,8 @@ class WorkflowDemoSeeder extends Seeder
         $engByCode = [];
         $accountTable = [
             ['admin@mbsj.gov.my', 'superadmin', '-'],
-            ['surveyor@mbsj.gov.my', 'surveyor', 'Jalan'],
-            ['surveyor.saliran-cerun@mbsj.gov.my', 'surveyor', 'Saliran & Cerun'],
+            ['consultant@mbsj.gov.my', 'consultant', 'All units'],
+            ['surveyor@mbsj.gov.my', 'consultant (legacy email)', 'All units'],
             ['director@mbsj.gov.my', 'director', '-'],
         ];
 
@@ -193,7 +199,7 @@ class WorkflowDemoSeeder extends Seeder
             'vendor_name'     => 'NZ Survey Consultant',
             'submitted_at'    => now()->subDays(1),
         ]);
-        $this->history($pendingVisit, $surveyorJln, 'submit_report', null, 'pending_site_visit', 'Laporan dihantar oleh Surveyor', now()->subDays(1));
+        $this->history($pendingVisit, $surveyorJln, 'submit_report', null, 'pending_site_visit', 'Laporan dihantar oleh Consultant', now()->subDays(1));
 
         // 3) SITE VISIT IN PROGRESS
         $inProgress = $this->makeReport([

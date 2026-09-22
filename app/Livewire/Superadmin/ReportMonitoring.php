@@ -17,11 +17,13 @@ class ReportMonitoring extends Component
 {
     use WithPagination;
 
+    protected string $paginationTheme = 'bootstrap';
+
     public string $search = '';
     public string $filterStatus = '';
     public string $filterCategory = '';
     public string $filterUnit = '';
-    public string $filterSurveyor = '';
+    public string $filterConsultant = '';
 
     public function updatingSearch(): void
     {
@@ -43,7 +45,7 @@ class ReportMonitoring extends Component
         $this->resetPage();
     }
 
-    public function updatingFilterSurveyor(): void
+    public function updatingFilterConsultant(): void
     {
         $this->resetPage();
     }
@@ -64,7 +66,7 @@ class ReportMonitoring extends Component
             })
             ->when($this->filterCategory, fn ($q) => $q->where('category_id', $this->filterCategory))
             ->when($this->filterUnit, fn ($q) => $q->where('unit_id', $this->filterUnit))
-            ->when($this->filterSurveyor, fn ($q) => $q->where('user_id', $this->filterSurveyor))
+            ->when($this->filterConsultant, fn ($q) => $q->where('user_id', $this->filterConsultant))
             ->orderByDesc('created_at')
             ->paginate(10);
 
@@ -72,7 +74,7 @@ class ReportMonitoring extends Component
             'reports'    => $reports,
             'categories' => ReportCategory::orderBy('name')->get(),
             'units'      => Unit::active()->orderBy('sort_order')->get(),
-            'surveyors'  => User::where('role', 'surveyor')->orderBy('name')->get(),
+            'consultants'  => User::where('role', 'consultant')->orderBy('name')->get(),
         ]);
     }
 }

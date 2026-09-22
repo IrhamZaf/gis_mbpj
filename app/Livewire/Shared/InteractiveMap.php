@@ -73,7 +73,7 @@ class InteractiveMap extends Component
             });
         }
 
-        // Surveyor map: can see all units' non-draft + own drafts (not limited to own reports only for cross-unit)
+        // Consultant map: all units' non-draft + own drafts
         // Engineer/TA: exclude drafts already handled above
 
         $query
@@ -108,7 +108,7 @@ class InteractiveMap extends Component
                 'category_id' => $categoryId,
                 'category_color' => $this->categoryColor($categoryId, $report->category?->display_name ?? null),
                 'unit' => $report->unit->name ?? '-',
-                'surveyor' => $report->user->name ?? '-',
+                'consultant' => $report->user->name ?? '-',
                 'location_name' => $report->location_name,
                 'date' => $report->created_at?->format('d/m/Y'),
                 'url' => $this->reportUrl($report, $user),
@@ -164,10 +164,10 @@ class InteractiveMap extends Component
             return route('superadmin.reports.show', $report);
         }
 
-        if ($user->isSurveyor()) {
+        if ($user->isConsultant()) {
             return $user->can('update', $report)
-                ? route('surveyor.reports.edit', $report)
-                : route('surveyor.reports.view', $report);
+                ? route('consultant.reports.edit', $report)
+                : route('consultant.reports.view', $report);
         }
 
         return null;

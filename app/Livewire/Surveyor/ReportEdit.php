@@ -47,7 +47,7 @@ class ReportEdit extends Component
         $this->longitude     = $report->longitude;
         $this->gis_data      = $report->gis_data;
 
-        $this->dispatch('init-report-map', latitude: $this->latitude, longitude: $this->longitude, locationLabel: $this->location_name, surveyLayers: $this->existingSurveyLayers());
+        $this->dispatch('report-map-init', latitude: $this->latitude, longitude: $this->longitude, locationLabel: $this->location_name, surveyLayers: $this->existingSurveyLayers());
     }
 
     protected function rules(): array
@@ -113,7 +113,7 @@ class ReportEdit extends Component
 
     public function saveDraft()
     {
-        $this->store('draft');
+        $this->store('save');
     }
 
     public function submit()
@@ -138,7 +138,7 @@ class ReportEdit extends Component
             ->all();
     }
 
-    private function store(string $status): void
+    private function store(string $action): void
     {
         $this->authorize('update', $this->report);
         $this->validate();
@@ -160,13 +160,17 @@ class ReportEdit extends Component
                 $this->storeAttachments($this->report, $this->attachments, $lat, $lng);
             }
 
-            if ($status === 'submitted') {
-                app(ReportWorkflowService::class)->submitReport($this->report->fresh(['unit']), Auth::user());
+            $fresh = $this->report->fresh(['unit']);
+            $isDraft = $fresh->status === 'draft' && $fresh->workflow_status === null;
+
+            if ($action === 'submitted' && $isDraft) {
+                app(ReportWorkflowService::class)->submitReport($fresh, Auth::user());
+                session()->flash('message', 'Laporan berjaya dihantar.');
+            } else {
+                session()->flash('message', 'Laporan berjaya dikemaskini.');
             }
 
-            session()->flash('message', $status === 'submitted' ? 'Laporan berjaya dihantar.' : 'Draf berjaya dikemaskini.');
-
-            $this->redirect(route('surveyor.reports'), navigate: false);
+            $this->redirect(route('consultant.reports'), navigate: false);
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (\Throwable $e) {

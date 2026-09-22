@@ -138,50 +138,10 @@
     </div>
 
     <div class="col-lg-8">
-      <div class="card h-100 border-0 shadow-sm">
-        <div class="card-header d-flex justify-content-between align-items-center border-bottom">
-          <h6 class="mb-0 fw-semibold">
-            <i class="ti tabler-category me-2 text-success"></i>{{ __('app.reports_by_category') }}
-          </h6>
-          <a href="{{ route('engineer.map') }}" class="btn btn-sm btn-outline-success">
-            <i class="ti tabler-map me-1"></i>{{ __('app.view_on_map') }}
-          </a>
-        </div>
-        <div class="card-body">
-          @php
-            $colors = ['success','primary','info','warning','danger','secondary'];
-            $catTotal = $reportsByCategory->sum('reports_count');
-          @endphp
-          @forelse ($reportsByCategory as $i => $cat)
-            @php
-              $pct = $catTotal > 0 ? round(($cat->reports_count / $catTotal) * 100) : 0;
-              $color = $colors[$i % count($colors)];
-            @endphp
-            <div class="mb-3">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <div class="d-flex align-items-center gap-2">
-                  <span class="badge bg-label-{{ $color }}" style="width:10px;height:10px;padding:0;border-radius:50%;display:inline-block;"></span>
-                  <span class="fw-medium small">{{ $cat->name }}</span>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="fw-semibold small">{{ $cat->reports_count }}</span>
-                  <span class="text-muted small" style="min-width:36px;text-align:right;">{{ $pct }}%</span>
-                </div>
-              </div>
-              <div class="progress" style="height:7px;border-radius:4px;">
-                <div class="progress-bar bg-{{ $color }}" role="progressbar"
-                  style="width:{{ $pct }}%;border-radius:4px;"
-                  aria-valuenow="{{ $pct }}" aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
-            </div>
-          @empty
-            <div class="text-center text-muted py-5">
-              <i class="ti tabler-folder-off icon-40px d-block mb-2 text-muted"></i>
-              <p class="mb-0">{{ __('app.no_reports_yet') }}</p>
-            </div>
-          @endforelse
-        </div>
-      </div>
+      @include('livewire.partials.reports-by-category', [
+        'reportsByCategory' => $reportsByCategory,
+        'headerAction' => '<a href="'.route('engineer.map').'" class="btn btn-sm btn-outline-success"><i class="ti tabler-map me-1"></i>'.e(__('app.view_on_map')).'</a>',
+      ])
     </div>
   </div>
 

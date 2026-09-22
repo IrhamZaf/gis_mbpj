@@ -5,6 +5,7 @@ namespace App\Livewire\Engineering;
 use App\Models\Report;
 use App\Models\Unit;
 use App\Models\User;
+use App\Support\ReportsByCategory;
 use App\Support\UnitTheme;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -49,6 +50,7 @@ class UnitDashboard extends Component
                 'rejected'          => (clone $base)->where('workflow_status', 'director_rejected')->count(),
                 'total'             => (clone $base)->count(),
             ],
+            'reportsByCategory' => ReportsByCategory::summarize(unitId: $unitId),
             'staff' => User::where('unit_id', $unitId)
                 ->whereIn('role', ['ta', 'engineer'])
                 ->orderBy('role')

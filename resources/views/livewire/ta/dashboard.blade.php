@@ -43,40 +43,47 @@
     </div>
   </div>
 
-  <div class="card border-0 shadow-sm">
-    <div class="card-header border-bottom d-flex justify-content-between">
-      <h6 class="mb-0">{{ __('app.recent_tasks') }}</h6>
-      <a href="{{ route('ta.reports') }}" class="btn btn-sm btn-outline-primary">{{ __('app.view_all') }}</a>
+  <div class="row g-4 mb-4">
+    <div class="col-lg-5">
+      @include('livewire.partials.reports-by-category', ['reportsByCategory' => $reportsByCategory])
     </div>
-    <div class="table-responsive">
-      <table class="table table-hover mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>{{ __('app.file_number') }}</th>
-            <th>{{ __('app.title') }}</th>
-            <th>{{ __('app.surveyor') }}</th>
-            <th>{{ __('app.status') }}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse ($recent as $r)
-            <tr>
-              <td><code>{{ $r->file_number ?? $r->report_number }}</code></td>
-              <td>{{ $r->title }}</td>
-              <td>{{ $r->user->name ?? '-' }}</td>
-              <td>{!! $r->status_badge !!}</td>
-              <td class="text-end">
-                @if (in_array($r->workflow_status, ['pending_site_visit', 'site_visit_in_progress', 'engineer_returned'], true))
-                  <a href="{{ route('site-visits.form', $r) }}" class="btn btn-sm btn-primary">{{ __('app.open') }}</a>
-                @endif
-              </td>
-            </tr>
-          @empty
-            <tr><td colspan="5" class="text-center text-muted py-4">{{ __('app.no_tasks') }}</td></tr>
-          @endforelse
-        </tbody>
-      </table>
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header border-bottom d-flex justify-content-between">
+          <h6 class="mb-0">{{ __('app.recent_tasks') }}</h6>
+          <a href="{{ route('ta.reports') }}" class="btn btn-sm btn-outline-primary">{{ __('app.view_all') }}</a>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>{{ __('app.file_number') }}</th>
+                <th>{{ __('app.title') }}</th>
+                <th>{{ __('app.surveyor') }}</th>
+                <th>{{ __('app.status') }}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @forelse ($recent as $r)
+                <tr>
+                  <td><code>{{ $r->file_number ?? $r->report_number }}</code></td>
+                  <td>{{ $r->title }}</td>
+                  <td>{{ $r->user->name ?? '-' }}</td>
+                  <td>{!! $r->status_badge !!}</td>
+                  <td class="text-end">
+                    @if (in_array($r->workflow_status, ['pending_site_visit', 'site_visit_in_progress', 'engineer_returned'], true))
+                      <a href="{{ route('site-visits.form', $r) }}" class="btn btn-sm btn-primary">{{ __('app.open') }}</a>
+                    @endif
+                  </td>
+                </tr>
+              @empty
+                <tr><td colspan="5" class="text-center text-muted py-4">{{ __('app.no_tasks') }}</td></tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </div>

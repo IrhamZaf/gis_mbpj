@@ -74,9 +74,9 @@
     'grandTotal' => $grandTotal,
   ])
 
-  {{-- Recent + Quick actions --}}
+  {{-- Recent + Category + Quick actions --}}
   <div class="row g-4">
-    <div class="col-xl-8">
+    <div class="col-xl-5">
       <div class="card h-100 border-0 shadow-sm">
         <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom">
           <h6 class="mb-0 fw-semibold">
@@ -137,6 +137,10 @@
           </table>
         </div>
       </div>
+    </div>
+
+    <div class="col-xl-3">
+      @include('livewire.partials.reports-by-category', ['reportsByCategory' => $reportsByCategory])
     </div>
 
     <div class="col-xl-4">

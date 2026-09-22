@@ -3,12 +3,10 @@
 namespace App\Livewire\Concerns;
 
 use App\Models\Report;
-use App\Models\ReportCategory;
 use App\Models\User;
+use App\Support\ReportsByCategory;
 use App\Support\UnitModule;
 use App\Support\UnitTheme;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 trait BuildsUnitOverviewCards
 {
@@ -39,20 +37,23 @@ trait BuildsUnitOverviewCards
                 $base->where('status', '!=', 'draft');
             }
 
-            $categories = ReportCategory::active()
-                ->forUnit($unit->id)
-                ->whereIn('code', UnitModule::CATEGORY_CODES)
-                ->get()
-                ->keyBy('code');
+            $byCode = ReportsByCategory::summarize(
+                unitId: $unit->id,
+                scope: function ($q) use ($user, $isGlobal, $isOwn) {
+                    if ($isGlobal || $user->isConsultant()) {
+                        return;
+                    }
 
-            $catCounts = (clone $base)
-                ->select('category_id', DB::raw('COUNT(*) as total'))
-                ->groupBy('category_id')
-                ->pluck('total', 'category_id');
-
-            $sinkholeId = $categories->get('SINKHOLE')?->id;
-            $cerunId = $categories->get('CERUN')?->id;
-            $boreholeId = $categories->get('BOREHOLE')?->id;
+                    if ($isOwn) {
+                        $q->where(function ($inner) use ($user) {
+                            $inner->where('reports.status', '!=', 'draft')
+                                ->orWhere('reports.user_id', $user->id);
+                        });
+                    } else {
+                        $q->where('reports.status', '!=', 'draft');
+                    }
+                },
+            )->mapWithKeys(fn (array $row) => [$row['code'] => $row['reports_count']]);
 
             $cards[] = [
                 'unit' => $unit,
@@ -62,9 +63,9 @@ trait BuildsUnitOverviewCards
                 'isReadOnly' => ! $isGlobal && ! $canWrite,
                 'dashboardUrl' => UnitModule::dashboardRoute($unit->code),
                 'total' => (clone $base)->count(),
-                'sinkhole' => $sinkholeId ? (int) ($catCounts[$sinkholeId] ?? 0) : 0,
-                'cerun' => $cerunId ? (int) ($catCounts[$cerunId] ?? 0) : 0,
-                'borehole' => $boreholeId ? (int) ($catCounts[$boreholeId] ?? 0) : 0,
+                'sinkhole' => (int) ($byCode['SINKHOLE'] ?? 0),
+                'cerun' => (int) ($byCode['CERUN'] ?? 0),
+                'borehole' => (int) ($byCode['BOREHOLE'] ?? 0),
                 'pending' => (clone $base)->where('workflow_status', 'pending_site_visit')->count(),
                 'completed' => (clone $base)->where(function ($q) {
                     $q->where('workflow_status', 'approved')->orWhere('status', 'completed');

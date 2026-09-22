@@ -4,6 +4,7 @@ namespace App\Livewire\Director;
 
 use App\Livewire\Concerns\BuildsUnitOverviewCards;
 use App\Models\Report;
+use App\Support\ReportsByCategory;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -20,6 +21,7 @@ class Dashboard extends Component
         $user = Auth::user();
         $base = Report::query();
         $unitCards = $this->buildUnitOverviewCards($user);
+        $reportsByCategory = ReportsByCategory::summarize(excludeDrafts: true);
 
         return view('livewire.director.dashboard', [
             'user' => $user,
@@ -31,6 +33,7 @@ class Dashboard extends Component
                 ->latest('updated_at')
                 ->take(8)
                 ->get(),
+            'reportsByCategory' => $reportsByCategory,
             'unitCards' => $unitCards,
             'grandTotal' => $this->unitOverviewGrandTotal($unitCards),
         ]);

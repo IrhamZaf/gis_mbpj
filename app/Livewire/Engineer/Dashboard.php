@@ -4,7 +4,7 @@ namespace App\Livewire\Engineer;
 
 use App\Livewire\Concerns\BuildsUnitOverviewCards;
 use App\Models\Report;
-use App\Models\ReportCategory;
+use App\Support\ReportsByCategory;
 use App\Support\UnitTheme;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -41,10 +41,10 @@ class Dashboard extends Component
             ];
         });
 
-        $reportsByCategory = ReportCategory::query()
-            ->withCount(['reports' => fn ($q) => $q->where('unit_id', $unitId)->where('status', '!=', 'draft')])
-            ->orderByDesc('reports_count')
-            ->get();
+        $reportsByCategory = ReportsByCategory::summarize(
+            unitId: $unitId,
+            excludeDrafts: true,
+        );
 
         $unitCards = $this->buildUnitOverviewCards($user);
 
@@ -63,7 +63,7 @@ class Dashboard extends Component
             'completedReports' => (clone $base)->where('workflow_status', 'approved')->count(),
             'mappedReports' => (clone $base)->whereNotNull('latitude')->whereNotNull('longitude')->where('status', '!=', 'draft')->count(),
             'reportsByCategory' => $reportsByCategory,
-            'totalCategories' => ReportCategory::count(),
+            'totalCategories' => 3,
             'recentReports' => Report::with(['category', 'user'])
                 ->where('unit_id', $unitId)
                 ->whereIn('workflow_status', ['pending_engineer_verification', 'director_rejected', 'pending_director_approval', 'approved', 'engineer_returned'])

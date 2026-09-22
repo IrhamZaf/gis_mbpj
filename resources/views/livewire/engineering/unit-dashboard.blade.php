@@ -34,6 +34,13 @@
 
   <div class="row g-4">
     <div class="col-lg-4">
+      @include('livewire.partials.reports-by-category', [
+        'reportsByCategory' => $reportsByCategory,
+        'title' => __('app.report_by_category'),
+      ])
+    </div>
+
+    <div class="col-lg-4">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-header border-bottom">
           <h6 class="mb-0">{{ __('app.staff_unit', ['unit' => $unit->name]) }}</h6>
@@ -56,7 +63,7 @@
       </div>
     </div>
 
-    <div class="col-lg-8">
+    <div class="col-lg-4">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-header border-bottom d-flex justify-content-between">
           <h6 class="mb-0">{{ __('app.recent_reports_title') }}</h6>

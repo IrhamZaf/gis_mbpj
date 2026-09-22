@@ -3,9 +3,10 @@
 namespace App\Livewire\Superadmin;
 
 use App\Models\Report;
-use App\Models\ReportCategory;
 use App\Models\Unit;
 use App\Models\User;
+use App\Support\ReportsByCategory;
+use App\Support\UnitModule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -22,12 +23,19 @@ class Dashboard extends Component
 
     public function render()
     {
-        $reportsByCategory = ReportCategory::query()
-            ->withCount(['reports' => function ($q) {
-                $this->applyFilters($q);
-            }])
-            ->orderByDesc('reports_count')
-            ->get();
+        $reportsByCategory = ReportsByCategory::summarize(
+            unitId: $this->filterUnit !== '' ? (int) $this->filterUnit : null,
+            scope: function ($q) {
+                $q->when($this->filterStatus, function ($q) {
+                    if (in_array($this->filterStatus, ['draft', 'submitted', 'completed'], true)) {
+                        $q->where('reports.status', $this->filterStatus);
+                    } else {
+                        $q->where('reports.workflow_status', $this->filterStatus);
+                    }
+                });
+                $this->applyCategoryCodeFilter($q, 'report_categories.code');
+            },
+        );
 
         $reportsByUnit = Unit::active()
             ->withCount(['reports' => function ($q) {
@@ -42,10 +50,10 @@ class Dashboard extends Component
         $reportsThisWeek = (clone $base)->where('created_at', '>=', now()->startOfWeek())->count();
         $submittedThisWeek = Report::query()
             ->when($this->filterUnit, fn ($q) => $q->where('unit_id', $this->filterUnit))
-            ->when($this->filterCategory, fn ($q) => $q->where('category_id', $this->filterCategory))
             ->where('status', '!=', 'draft')
-            ->where('submitted_at', '>=', now()->startOfWeek())
-            ->count();
+            ->where('submitted_at', '>=', now()->startOfWeek());
+        $this->applyCategoryCodeFilter($submittedThisWeek);
+        $submittedThisWeek = $submittedThisWeek->count();
 
         $mappedReports = (clone $base)->whereNotNull('latitude')->whereNotNull('longitude')->count();
 
@@ -57,11 +65,9 @@ class Dashboard extends Component
                 } else {
                     $q->where('workflow_status', $this->filterStatus);
                 }
-            })
-            ->when($this->filterCategory, fn ($q) => $q->where('category_id', $this->filterCategory))
-            ->latest()
-            ->take(8)
-            ->get();
+            });
+        $this->applyCategoryCodeFilter($recentReports);
+        $recentReports = $recentReports->latest()->take(8)->get();
 
         $weeklyTrend = Report::query()
             ->select(DB::raw('DATE(created_at) as day'), DB::raw('COUNT(*) as total'))
@@ -94,7 +100,7 @@ class Dashboard extends Component
             'pendingSiteVisit'   => (clone $base)->where('workflow_status', 'pending_site_visit')->count(),
             'pendingEngineer'    => (clone $base)->where('workflow_status', 'pending_engineer_verification')->count(),
             'pendingDirector'    => (clone $base)->where('workflow_status', 'pending_director_approval')->count(),
-            'totalCategories'    => ReportCategory::count(),
+            'totalCategories'    => count(UnitModule::CATEGORY_CODES),
             'mappedReports'      => $mappedReports,
             'reportsThisWeek'    => $reportsThisWeek,
             'submittedThisWeek'  => $submittedThisWeek,
@@ -104,7 +110,16 @@ class Dashboard extends Component
             'trendDays'          => $trendDays,
             'trendMax'           => max(1, $trendDays->max('total')),
             'units'              => Unit::active()->orderBy('sort_order')->get(),
-            'categories'         => ReportCategory::orderBy('name')->get(),
+            'categories'         => collect(UnitModule::CATEGORY_CODES)->map(fn (string $code) => (object) [
+                'id' => $code,
+                'code' => $code,
+                'name' => match ($code) {
+                    'SINKHOLE' => __('app.sinkhole'),
+                    'CERUN' => __('app.cerun'),
+                    'BOREHOLE' => __('app.borehole'),
+                    default => $code,
+                },
+            ]),
         ]);
     }
 
@@ -118,7 +133,26 @@ class Dashboard extends Component
                 } else {
                     $q->where('workflow_status', $this->filterStatus);
                 }
-            })
-            ->when($this->filterCategory, fn ($q) => $q->where('category_id', $this->filterCategory));
+            });
+
+        $this->applyCategoryCodeFilter($query);
+    }
+
+    private function applyCategoryCodeFilter($query, string $codeColumn = 'category_id'): void
+    {
+        if ($this->filterCategory === '') {
+            return;
+        }
+
+        $code = UnitModule::normalizeCategoryCode($this->filterCategory) ?? $this->filterCategory;
+        $codes = $code === 'CERUN' ? ['CERUN', 'CERUN_RUNTUH'] : [$code];
+
+        if ($codeColumn === 'category_id') {
+            $query->whereHas('category', fn ($q) => $q->whereIn('code', $codes));
+
+            return;
+        }
+
+        $query->whereIn($codeColumn, $codes);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Livewire\Ta;
 
 use App\Livewire\Concerns\BuildsUnitOverviewCards;
 use App\Models\Report;
+use App\Support\ReportsByCategory;
 use App\Support\UnitTheme;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -21,6 +22,10 @@ class Dashboard extends Component
         $theme = UnitTheme::for($unit);
         $base = Report::query()->where('unit_id', $user->unit_id);
         $unitCards = $this->buildUnitOverviewCards($user);
+        $reportsByCategory = ReportsByCategory::summarize(
+            unitId: $user->unit_id,
+            excludeDrafts: true,
+        );
 
         return view('livewire.ta.dashboard', [
             'user' => $user,
@@ -36,6 +41,7 @@ class Dashboard extends Component
                 ->latest('submitted_at')
                 ->take(8)
                 ->get(),
+            'reportsByCategory' => $reportsByCategory,
             'unitCards' => $unitCards,
             'grandTotal' => $this->unitOverviewGrandTotal($unitCards),
         ])->title('Dashboard TA — Unit '.$theme['name']);

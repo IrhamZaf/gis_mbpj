@@ -100,9 +100,18 @@ class UnitDashboard extends Component
 
         $categories = ReportCategory::active()
             ->forUnit($unit->id)
-            ->whereIn('code', UnitModule::CATEGORY_CODES)
-            ->orderByRaw("CASE code WHEN 'SINKHOLE' THEN 1 WHEN 'CERUN' THEN 2 WHEN 'BOREHOLE' THEN 3 ELSE 9 END")
-            ->get();
+            ->whereIn('code', array_merge(UnitModule::CATEGORY_CODES, ['CERUN_RUNTUH']))
+            ->orderByRaw("CASE code WHEN 'SINKHOLE' THEN 1 WHEN 'CERUN' THEN 2 WHEN 'CERUN_RUNTUH' THEN 2 WHEN 'BOREHOLE' THEN 3 ELSE 9 END")
+            ->get()
+            ->unique(fn (ReportCategory $c) => UnitModule::normalizeCategoryCode($c->code) ?? $c->code)
+            ->values();
+
+        // Prefer CERUN over CERUN_RUNTUH row for display
+        $categories = $categories->map(function (ReportCategory $c) {
+            $c->code = UnitModule::normalizeCategoryCode($c->code) ?? $c->code;
+
+            return $c;
+        });
 
         $base = $this->unitBaseQuery($unit->id);
 
@@ -180,13 +189,18 @@ class UnitDashboard extends Component
 
         $quickActions = $this->quickActions($unit, $user, $isOwnUnit);
 
-        $byCategory = $categories->map(fn (ReportCategory $c) => [
-            'code' => $c->code,
-            'name' => $c->display_name,
-            'total' => $categoryCounts[$c->code] ?? 0,
-            'color' => UnitTheme::forCategory($c->code)['color'],
-            'url' => UnitModule::categoryRoute($unit->code, $c->code),
-        ]);
+        $byCategory = collect($categoryCounts)->map(fn (int $total, string $code) => [
+            'code' => $code,
+            'name' => match ($code) {
+                'SINKHOLE' => __('app.sinkhole'),
+                'CERUN' => __('app.cerun'),
+                'BOREHOLE' => __('app.borehole'),
+                default => $code,
+            },
+            'total' => $total,
+            'color' => UnitTheme::forCategory($code)['color'],
+            'url' => UnitModule::categoryRoute($unit->code, $code),
+        ])->values();
 
         $categoryMax = max(1, (int) collect($categoryCounts)->max());
         $statusMax = max(1, (int) collect($statusBreakdown)->max('total'));
@@ -276,17 +290,25 @@ class UnitDashboard extends Component
      */
     protected function categoryCounts(int $unitId, Collection $categories): array
     {
-        $rows = $this->unitBaseQuery($unitId)
-            ->select('category_id', DB::raw('COUNT(*) as total'))
-            ->groupBy('category_id')
-            ->pluck('total', 'category_id');
+        return \App\Support\ReportsByCategory::summarize(
+            unitId: $unitId,
+            scope: fn ($q) => $this->applyCategoryScope($q),
+        )->mapWithKeys(fn (array $row) => [$row['code'] => $row['reports_count']])->all();
+    }
 
-        $out = [];
-        foreach ($categories as $cat) {
-            $out[$cat->code] = (int) ($rows[$cat->id] ?? 0);
+    protected function applyCategoryScope($query): void
+    {
+        $user = Auth::user();
+        if (! $user->isSuperadmin() && ! $user->isDirector()) {
+            $query->where(function ($q) use ($user) {
+                $q->where('reports.status', '!=', 'draft')
+                    ->orWhere('reports.user_id', $user->id);
+            });
         }
 
-        return $out;
+        if ($this->filterYear !== '') {
+            $query->whereYear('reports.created_at', (int) $this->filterYear);
+        }
     }
 
     /**

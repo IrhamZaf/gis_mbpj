@@ -7,6 +7,7 @@ use App\Models\Report;
 use App\Models\ReportCategory;
 use App\Models\Unit;
 use App\Services\Workflow\ReportWorkflowService;
+use App\Support\MbsjArea;
 use App\Support\SurveyVendor;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -116,6 +117,12 @@ class ReportCreate extends Component
     #[On('report-coordinates-updated')]
     public function setCoordinates(float $latitude, float $longitude, ?string $label = null): void
     {
+        if (! MbsjArea::contains($latitude, $longitude)) {
+            $this->addError('latitude', MbsjArea::validationMessage());
+
+            return;
+        }
+
         $this->latitude = round($latitude, 7);
         $this->longitude = round($longitude, 7);
 
@@ -156,6 +163,13 @@ class ReportCreate extends Component
 
         if (! $unitId || ! $user->canWriteUnit($unitId)) {
             $this->addError('submit', __('app.consultant_unit_denied'));
+
+            return;
+        }
+
+        if ($this->latitude !== null && $this->longitude !== null
+            && ! MbsjArea::contains((float) $this->latitude, (float) $this->longitude)) {
+            $this->addError('latitude', MbsjArea::validationMessage());
 
             return;
         }

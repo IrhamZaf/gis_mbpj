@@ -6,6 +6,7 @@ use App\Models\Report;
 use App\Models\ReportAttachment;
 use App\Services\Survey\SurveyAttachmentProcessor;
 use App\Services\Survey\SurveyDocumentClassifier;
+use App\Support\MbsjArea;
 use Illuminate\Http\UploadedFile;
 
 trait StoresSurveyAttachments
@@ -13,10 +14,14 @@ trait StoresSurveyAttachments
     /** @return array{0: float, 1: float} */
     protected function resolvedReportAnchor(?float $latitude = null, ?float $longitude = null): array
     {
-        return [
-            $latitude ?? (float) config('gis.default_latitude'),
-            $longitude ?? (float) config('gis.default_longitude'),
-        ];
+        $lat = $latitude ?? MbsjArea::CENTER_LAT;
+        $lng = $longitude ?? MbsjArea::CENTER_LNG;
+
+        if (! MbsjArea::contains($lat, $lng)) {
+            return [MbsjArea::CENTER_LAT, MbsjArea::CENTER_LNG];
+        }
+
+        return [$lat, $lng];
     }
 
     protected function validateSurveyFiles(array $files, ?float $latitude, ?float $longitude): void

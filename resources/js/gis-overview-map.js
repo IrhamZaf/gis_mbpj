@@ -8,6 +8,12 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
+import {
+  MBSJ_CENTER as MBSJ_CENTER_OBJ,
+  applyMbsjMapLimits,
+  isInsideMbsj,
+} from './mbsj-area';
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -15,7 +21,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const MBSJ_CENTER = [3.0565, 101.5851];
+const MBSJ_CENTER = [MBSJ_CENTER_OBJ.lat, MBSJ_CENTER_OBJ.lng];
 const DEFAULT_ZOOM = 13;
 
 const HEAT_OPTIONS = {
@@ -180,6 +186,9 @@ function updateMarkers(markers) {
   const heatPoints = toHeatPoints(markers);
 
   markers.forEach((marker) => {
+    if (!isInsideMbsj(marker.latitude, marker.longitude)) {
+      return;
+    }
     const latLng = [marker.latitude, marker.longitude];
     bounds.extend(latLng);
 
@@ -193,9 +202,9 @@ function updateMarkers(markers) {
   });
 
   if (!heatLayer) {
-    heatLayer = L.heatLayer(heatPoints, HEAT_OPTIONS);
+    heatLayer = L.heatLayer(heatPoints.filter((p) => isInsideMbsj(p[0], p[1])), HEAT_OPTIONS);
   } else {
-    heatLayer.setLatLngs(heatPoints);
+    heatLayer.setLatLngs(heatPoints.filter((p) => isInsideMbsj(p[0], p[1])));
   }
 
   if (geoFeatures.length) {
@@ -205,7 +214,11 @@ function updateMarkers(markers) {
     ).addTo(map);
   }
 
-  map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+  if (bounds.isValid()) {
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+  } else {
+    map.setView(MBSJ_CENTER, DEFAULT_ZOOM);
+  }
   applyViewMode();
 }
 
@@ -213,7 +226,13 @@ function initMap() {
   const el = document.getElementById('gis-overview-map');
   if (!el || map) return;
 
-  map = L.map(el, { center: MBSJ_CENTER, zoom: DEFAULT_ZOOM, layers: [satelliteLayer] });
+  map = L.map(el, {
+    center: MBSJ_CENTER,
+    zoom: DEFAULT_ZOOM,
+    layers: [satelliteLayer],
+    maxBoundsViscosity: 1.0,
+  });
+  applyMbsjMapLimits(map, L, { minZoom: 12 });
 
   L.control.layers(
     {

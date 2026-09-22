@@ -336,14 +336,24 @@
     el.style.display = '';
 
     if (!dashMap) {
-      dashMap = L.map(el).setView([3.0738, 101.5183], 12);
+      dashMap = L.map(el, {
+        center: [3.0565, 101.5851],
+        zoom: 13,
+        maxBounds: [[2.97, 101.51], [3.165, 101.69]],
+        maxBoundsViscosity: 1.0,
+        minZoom: 12,
+      });
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(dashMap);
+      L.rectangle([[2.97, 101.51], [3.165, 101.69]], {
+        color: '#0d6efd', weight: 2, dashArray: '6 4', fill: false, interactive: false
+      }).addTo(dashMap);
       dashLayer = L.layerGroup().addTo(dashMap);
     }
 
     dashLayer.clearLayers();
     const bounds = [];
     points.forEach(p => {
+      if (p.lat < 2.97 || p.lat > 3.165 || p.lng < 101.51 || p.lng > 101.69) return;
       const color = categoryColor(p.cat);
       const m = L.circleMarker([p.lat, p.lng], {
         radius: 8, color, fillColor: color, fillOpacity: 0.85
@@ -356,7 +366,9 @@
     });
 
     if (bounds.length) {
-      dashMap.fitBounds(bounds, { padding: [30, 30] });
+      dashMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
+    } else {
+      dashMap.setView([3.0565, 101.5851], 13);
     }
     setTimeout(() => dashMap.invalidateSize(), 120);
   }

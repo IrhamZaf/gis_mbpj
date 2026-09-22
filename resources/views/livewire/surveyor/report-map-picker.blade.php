@@ -1,15 +1,15 @@
 <div class="report-map-picker-root">
   <div wire:ignore>
-    <label class="form-label">Lokasi GIS</label>
+    <label class="form-label">{{ __('app.location') }}</label>
     <div class="gis-location-search-wrap mb-2 position-relative">
       <div class="input-group">
         <span class="input-group-text"><i class="ti tabler-search"></i></span>
-        <input type="text" id="gis-location-search" class="form-control" placeholder="Cari alamat di Subang Jaya..." autocomplete="off" />
+        <input type="text" id="gis-location-search" class="form-control" placeholder="{{ __('app.location_search_mbsj_placeholder') }}" autocomplete="off" />
         <button type="button" id="gis-location-search-btn" class="btn btn-outline-primary">Cari</button>
       </div>
       <ul id="gis-location-results" class="list-group position-absolute w-100 shadow-sm d-none gis-location-results"></ul>
     </div>
-    <small class="text-muted d-block mb-2">Cari lokasi atau klik peta untuk tetapkan tapak laporan.</small>
+    <small id="gis-mbsj-bounds-hint" class="text-muted d-block mb-2">{{ __('app.location_mbsj_hint') }}</small>
     <div id="gis-map" class="gis-report-map" style="height:400px;min-height:400px;border-radius:8px;border:1px solid var(--bs-border-color);"></div>
   </div>
 

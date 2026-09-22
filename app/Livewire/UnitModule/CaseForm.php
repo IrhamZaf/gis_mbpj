@@ -8,6 +8,7 @@ use App\Models\ReportCategory;
 use App\Models\Unit;
 use App\Services\Attachments\TechnicalAttachmentService;
 use App\Services\Workflow\ReportWorkflowService;
+use App\Support\MbsjArea;
 use App\Support\SurveyVendor;
 use App\Support\UnitModule;
 use Illuminate\Support\Facades\Auth;
@@ -108,6 +109,12 @@ class CaseForm extends Component
     #[On('report-coordinates-updated')]
     public function setCoordinates(float $latitude, float $longitude, ?string $label = null): void
     {
+        if (! MbsjArea::contains($latitude, $longitude)) {
+            $this->addError('latitude', MbsjArea::validationMessage());
+
+            return;
+        }
+
         $this->latitude = round($latitude, 7);
         $this->longitude = round($longitude, 7);
         if ($label && trim($this->location_name) === '') {
@@ -216,6 +223,12 @@ class CaseForm extends Component
             'longitude' => 'required|numeric|between:-180,180',
             'categoryCode' => ['required', Rule::exists('report_categories', 'code')->where('unit_id', $unit->id)],
         ]);
+
+        if (! MbsjArea::contains((float) $this->latitude, (float) $this->longitude)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'latitude' => MbsjArea::validationMessage(),
+            ]);
+        }
 
         // Enforce category ↔ unit integrity
         if ((int) $category->unit_id !== (int) $unit->id) {

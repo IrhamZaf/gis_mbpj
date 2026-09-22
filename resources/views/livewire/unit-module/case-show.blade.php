@@ -130,10 +130,18 @@
           try { el._leaflet_id = null; el.innerHTML = ''; } catch (e) {}
         }
 
-        caseGisMap = L.map(el, { scrollWheelZoom: true }).setView([caseGis.lat, caseGis.lng], 16);
+        caseGisMap = L.map(el, {
+          scrollWheelZoom: true,
+          maxBounds: [[2.97, 101.51], [3.165, 101.69]],
+          maxBoundsViscosity: 1.0,
+          minZoom: 12,
+        }).setView([caseGis.lat, caseGis.lng], 16);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
           attribution: '&copy; OpenStreetMap',
+        }).addTo(caseGisMap);
+        L.rectangle([[2.97, 101.51], [3.165, 101.69]], {
+          color: '#0d6efd', weight: 2, dashArray: '6 4', fill: false, interactive: false
         }).addTo(caseGisMap);
 
         const color = categoryColor(caseGis.cat);

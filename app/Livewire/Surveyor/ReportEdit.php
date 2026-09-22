@@ -7,6 +7,7 @@ use App\Models\Report;
 use App\Models\ReportAttachment;
 use App\Models\ReportCategory;
 use App\Services\Workflow\ReportWorkflowService;
+use App\Support\MbsjArea;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -85,6 +86,12 @@ class ReportEdit extends Component
     #[On('report-coordinates-updated')]
     public function setCoordinates(float $latitude, float $longitude, ?string $label = null): void
     {
+        if (! MbsjArea::contains($latitude, $longitude)) {
+            $this->addError('latitude', MbsjArea::validationMessage());
+
+            return;
+        }
+
         $this->latitude  = round($latitude, 7);
         $this->longitude = round($longitude, 7);
 
@@ -142,6 +149,13 @@ class ReportEdit extends Component
     {
         $this->authorize('update', $this->report);
         $this->validate();
+
+        if ($this->latitude !== null && $this->longitude !== null
+            && ! MbsjArea::contains((float) $this->latitude, (float) $this->longitude)) {
+            $this->addError('latitude', MbsjArea::validationMessage());
+
+            return;
+        }
 
         try {
             [$lat, $lng] = $this->resolvedReportAnchor($this->latitude, $this->longitude);

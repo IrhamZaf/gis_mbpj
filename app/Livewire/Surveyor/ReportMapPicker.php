@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Surveyor;
 
+use App\Support\MbsjArea;
 use Livewire\Component;
 
 /**
@@ -22,6 +23,12 @@ class ReportMapPicker extends Component
 
     public function updateCoordinates(float $latitude, float $longitude, ?string $label = null): void
     {
+        if (! MbsjArea::contains($latitude, $longitude)) {
+            $this->addError('latitude', MbsjArea::validationMessage());
+
+            return;
+        }
+
         $this->latitude = round($latitude, 7);
         $this->longitude = round($longitude, 7);
         $this->dispatch('report-coordinates-updated', latitude: $this->latitude, longitude: $this->longitude, label: $label);
@@ -42,6 +49,13 @@ class ReportMapPicker extends Component
             return;
         }
 
+        if (! MbsjArea::contains($lat, $lng)) {
+            $this->addError('latitude', MbsjArea::validationMessage());
+
+            return;
+        }
+
+        $this->resetErrorBag('latitude');
         $this->latitude = $lat;
         $this->longitude = $lng;
         $this->dispatch('report-coordinates-updated', latitude: $lat, longitude: $lng, label: null);

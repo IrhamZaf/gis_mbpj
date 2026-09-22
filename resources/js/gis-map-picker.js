@@ -8,6 +8,12 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 import { displacementColor } from './survey-parse-utils';
+import {
+  MBSJ_CENTER,
+  MBSJ_VIEWBOX,
+  applyMbsjMapLimits,
+  isInsideMbsj,
+} from './mbsj-area';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -16,10 +22,10 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-export const MBSJ_DEFAULT = { lat: 3.0565, lng: 101.5851 };
+export const MBSJ_DEFAULT = { ...MBSJ_CENTER };
 const MBSJ = [MBSJ_DEFAULT.lat, MBSJ_DEFAULT.lng];
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
-const SJ_VIEWBOX = '101.50,3.00,101.68,3.12'; // west,south,east,north
+const OUTSIDE_MBSJ_MSG = 'Lokasi mesti dalam kawasan MBSJ (Subang Jaya) sahaja.';
 
 let map = null;
 let siteMarker = null;
@@ -94,8 +100,26 @@ function bindManualCoordinateInputs() {
   // no-op: coordinates are applied via Livewire ReportMapPicker
 }
 
+function flashOutsideMbsj() {
+  const hint = document.getElementById('gis-mbsj-bounds-hint');
+  if (!hint) {
+    window.alert?.(OUTSIDE_MBSJ_MSG);
+    return;
+  }
+  hint.classList.remove('d-none');
+  hint.classList.add('text-danger');
+  clearTimeout(flashOutsideMbsj._t);
+  flashOutsideMbsj._t = setTimeout(() => {
+    hint.classList.remove('text-danger');
+  }, 3500);
+}
+
 function setAnchor(lat, lng, label = null, notify = true) {
   if (!map) return;
+  if (!isInsideMbsj(lat, lng)) {
+    flashOutsideMbsj();
+    return;
+  }
   setSiteMarker(lat, lng);
   map.setView([lat, lng], Math.max(map.getZoom(), 16));
   updateAnchorInputs(lat, lng);
@@ -266,10 +290,10 @@ async function searchLocation(query) {
     q: `${q}, Subang Jaya, Selangor, Malaysia`,
     format: 'json',
     addressdetails: '0',
-    limit: '6',
+    limit: '8',
     countrycodes: 'my',
-    viewbox: SJ_VIEWBOX,
-    bounded: '0',
+    viewbox: MBSJ_VIEWBOX,
+    bounded: '1',
   });
 
   try {
@@ -282,11 +306,13 @@ async function searchLocation(query) {
     });
     if (!res.ok) throw new Error('Geocoding failed');
     const data = await res.json();
-    const items = data.map((row) => ({
-      lat: parseFloat(row.lat),
-      lng: parseFloat(row.lon),
-      label: row.display_name,
-    }));
+    const items = data
+      .map((row) => ({
+        lat: parseFloat(row.lat),
+        lng: parseFloat(row.lon),
+        label: row.display_name,
+      }))
+      .filter((item) => isInsideMbsj(item.lat, item.lng));
     showSearchResults(items, (item) => setAnchor(item.lat, item.lng, item.label));
   } catch (err) {
     if (err.name !== 'AbortError') {
@@ -369,11 +395,21 @@ function initMapPicker(options = {}) {
   onCoordinatesChange = options.onCoordinatesChange || null;
   onGisDataChange = options.onGisDataChange || null;
 
-  const lat = options.initialLat ?? MBSJ[0];
-  const lng = options.initialLng ?? MBSJ[1];
-  const zoom = options.initialZoom ?? 14;
+  const hasInitial =
+    options.initialLat != null &&
+    options.initialLng != null &&
+    isInsideMbsj(options.initialLat, options.initialLng);
+  const lat = hasInitial ? options.initialLat : MBSJ[0];
+  const lng = hasInitial ? options.initialLng : MBSJ[1];
+  const zoom = options.initialZoom ?? 13;
 
-  map = L.map(el, { center: [lat, lng], zoom, layers: [satelliteLayer] });
+  map = L.map(el, {
+    center: [lat, lng],
+    zoom,
+    layers: [satelliteLayer],
+    maxBoundsViscosity: 1.0,
+  });
+  applyMbsjMapLimits(map, L, { minZoom: 12 });
   L.control.layers({ Satelit: satelliteLayer, 'Peta Jalan': osmLayer }, {}, { position: 'topright' }).addTo(map);
 
   surveyLayerGroup = L.layerGroup().addTo(map);
@@ -383,7 +419,7 @@ function initMapPicker(options = {}) {
     L.geoJSON(options.initialGisData).eachLayer((l) => drawnItems.addLayer(l));
   }
 
-  if (options.initialLat != null && options.initialLng != null) {
+  if (hasInitial) {
     setSiteMarker(lat, lng);
     updateAnchorInputs(lat, lng);
   }
@@ -468,6 +504,7 @@ window.gisMapPicker = {
   refreshMapLayout,
   destroyMapInstance,
   mapContainerIsAlive,
+  isInsideMbsj,
   getMap: () => map,
 };
 

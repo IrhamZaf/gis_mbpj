@@ -16,7 +16,7 @@ $customizerHidden = 'customizer-hide';
   <!-- Logo -->
   <a href="{{ url('/') }}" class="auth-cover-brand d-flex align-items-center gap-2">
     <span class="app-brand-logo demo">@include('_partials.macros', ["width" => 72, "height" => 72])</span>
-    <span class="app-brand-text demo text-heading fw-bold">{{ config('variables.templateName') }}</span>
+    <span class="app-brand-text demo text-heading fw-bold">{{ __('app.login_app_name') }}</span>
   </a>
   <!-- /Logo -->
   <div class="authentication-inner row m-0">
@@ -46,7 +46,7 @@ $customizerHidden = 'customizer-hide';
             class="mb-3"
             style="object-fit:contain;display:inline-block;background:#fff;border-radius:50%;padding:6px;" />
         </div>
-        <h4 class="mb-1">Selamat datang ke {{ config('variables.templateName') }}!</h4>
+        <h4 class="mb-1">Selamat datang ke {{ __('app.login_app_name') }}!</h4>
         <p class="mb-6">Sila log masuk ke akaun anda untuk meneruskan</p>
 
         <form id="formAuthentication" class="mb-6" action="{{ route('login') }}" method="POST">

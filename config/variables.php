@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'templateName'        => 'GIS MBSJ',
+    'templateName'        => 'AMS MBSJ',
     'templateSuffix'      => 'Sistem GIS',
     'templateVersion'     => '1.0.0',
     'templateFree'        => false,

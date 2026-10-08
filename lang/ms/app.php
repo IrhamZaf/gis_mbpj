@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'app_name' => 'GIS MBSJ',
+    'app_name' => 'AMS MBSJ',
+    'login_app_name' => 'AMS MBSJ',
     'welcome' => 'Selamat datang ke :app!',
     'login_subtitle' => 'Sila log masuk ke akaun anda',
     'email' => 'E-mel',
